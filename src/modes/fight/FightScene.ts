@@ -15,10 +15,10 @@ export interface Speaker { x: number; headY: number }
 interface Bubble { box: Phaser.GameObjects.Container; who: Speaker; until: number }
 interface Waiter { pred: () => boolean; resolve: () => void }
 
-export type RoundEnd = 'time' | 'foeDown' | 'ko';
+export type RoundEnd = 'time' | 'ko';
 
 // How a knockdown count goes: who gets up and when, and what the ref says at the end.
-export interface CountPlan { getUpAt: number | null; lastWord?: string }
+export interface CountPlan { getUpAt: number | null; lastWord?: string; getUpHp?: number /* share of max hp, default 0.6 */ }
 
 // The reusable 1-on-1 fight engine (Mortal Kombat / Fight Night style, side view, big sprites).
 // A mission extends it: dresses the arena, makes the opponent, and scripts the rounds and the story.
@@ -347,7 +347,8 @@ export abstract class FightScene extends Phaser.Scene {
   onSuperReady() { this.toast('SUPER READY!'); this.sfx('pickup', 0.6); this.tip('super'); }
 
   // ---------------------------------------------------------------- rounds
-  // Runs one round until the clock runs out or someone stays down.
+  // Runs one round until the clock runs out or someone stays down. A fighter who beats the
+  // count gets back up and the round carries on; only the clock (the bell) ends it.
   async fightRound(n: number, seconds: number | null): Promise<RoundEnd> {
     this.round = n;
     this.clock = seconds;
@@ -380,8 +381,12 @@ export abstract class FightScene extends Phaser.Scene {
         await this.beforeCount(down, plan);
         const up = await this.count(down, plan);
         if (!up) return 'ko';
-        await this.settle();
-        return 'foeDown';
+        // beat the count: the round goes on until the bell
+        down.invuln = 0.8;
+        await this.wait(300);
+        for (const f of [this.player, this.foeF]) { f.toIdle(); f.controllable = true; }
+        this.fighting = true;
+        continue;
       }
       // Mane is down: tap to get up before ten
       const up = await this.maneCount();
@@ -392,8 +397,7 @@ export abstract class FightScene extends Phaser.Scene {
       }
       this.player.invuln = 1.2;
       await this.wait(500);
-      this.foeF.toIdle();
-      this.player.toIdle();
+      for (const f of [this.player, this.foeF]) { f.toIdle(); f.controllable = true; }
       this.fighting = true;
     }
   }
@@ -423,7 +427,7 @@ export abstract class FightScene extends Phaser.Scene {
       this.events.emit('count', word);
       this.sfx(last ? 'ding' : 'blip', last ? 0.8 : 0.8);
       if (plan.getUpAt !== null && i === plan.getUpAt) {
-        f.getUp(f.maxHp);
+        f.getUp(Math.round(f.maxHp * (plan.getUpHp ?? 0.6)));
         this.events.emit('count', null);
         this.counting = false;
         this.refTo(this.midX, true);
