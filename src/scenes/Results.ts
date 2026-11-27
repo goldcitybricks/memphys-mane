@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { MANE } from '../missions/lines';
 import { Audio } from '../core/audio';
 import { COLORS, MEMPHYS_URL } from '../core/config';
 import { px } from '../core/text';
@@ -28,7 +29,7 @@ export class Results extends Phaser.Scene {
     this.add.tileSprite(0, 0, W, 216, m.mode === 'fight' ? (m.number === 7 ? 'riverStage' : 'arena') : m.mode === 'driving' ? (m.number === 8 ? 'loopFar' : 'driveFar') : m.mode === 'shooter' ? (m.number === 9 ? 'gigantumExt' : 'plantExt') : m.number === 10 ? 'sourceExt' : m.number === 6 ? 'bealeExt' : 'egypt').setOrigin(0).setAlpha(0.35);
     this.add.rectangle(0, 0, W, 216, 0x070a1c, 0.55).setOrigin(0);
     px(this, W / 2, 12, `MISSION ${m.number} COMPLETE`, COLORS.goldHi, 2).setOrigin(0.5, 0);
-    px(this, W / 2, 34, !next && m.number === 10 ? 'THE END. THANKS FOR PLAYING!' : 'ROYAL BY NATURE.', COLORS.cream).setOrigin(0.5, 0);
+    px(this, W / 2, 34, !next && m.number === 10 ? 'THE END. THANKS FOR PLAYING!' : m.number === 3 ? MANE.victory : 'ROYAL BY NATURE.', COLORS.cream).setOrigin(0.5, 0);
 
     const mane = this.add.sprite(70, 150, m.mode === 'fight' ? 'maneBox' : 'mane').setScale(2).setOrigin(0.5, 61 / 64);
     mane.play(`${mane.texture.key}:victory`);

@@ -3,6 +3,7 @@ import { FightScene, CountPlan, RoundEnd, Speaker } from '../modes/fight/FightSc
 import { Fighter, Move, FLOOR_Y } from '../modes/fight/Fighter';
 import { Pip, PipStyle } from '../modes/fight/Pip';
 import { Audio } from '../core/audio';
+import { Controls } from '../core/controls';
 import { COLORS } from '../core/config';
 import { px } from '../core/text';
 import { MANE, PIP } from './lines';
@@ -15,11 +16,17 @@ const ROUNDS: PipStyle[] = [
   { gap: [0.6, 1.25], weights: { jab: 3, jab2: 2, jab3: 2, hay: 3, cap: 2, flip: 3, taunt: 1 }, guard: 0.35, crinkle: 0.3, speed: 1.16, power: 1.15, daze: 0.8 },
 ];
 const ROUND_SECONDS = 75;
+// Pip beats the count at 3, 5, 7, then 9, and gets up weaker each time; the 5th knockdown recycles him.
+// It can happen in any round: five knockdowns and the fight's over.
+const GET_UP_AT = [3, 5, 7, 9];
+const GET_UP_HP = [0.6, 0.45, 0.32, 0.2];
+const KNOCKDOWNS_TO_RECYCLE = GET_UP_AT.length + 1;
 
 // Mission 3: FIGHT NIGHT. Mid-South Coliseum. MEMPHYS Mane vs Pip, the DeNile Water mascot. Three rounds.
 export class Mission3 extends FightScene {
   private pip!: Pip;
   private arenaImg!: Phaser.GameObjects.Image;
+  private koPhoto?: HTMLImageElement;
   private spot!: Phaser.GameObjects.Image;
   private bulbs?: Phaser.Time.TimerEvent;
 
@@ -27,6 +34,10 @@ export class Mission3 extends FightScene {
 
   buildArena() {
     this.missionId = 'm3-fight-night';
+    this.kdSlots = KNOCKDOWNS_TO_RECYCLE;
+    // the KO photo is a real picture: load it early so it's there the moment he drops
+    this.koPhoto = new Image();
+    this.koPhoto.src = 'assets/img/ko-meme.jpg';
     this.arenaImg = this.add.image(this.midX, 0, 'arena').setOrigin(0.5, 0).setDepth(-100);
     this.spot = this.add.image(this.midX, 0, 'spotlight').setOrigin(0.5, 0).setScale(1.6, 1).setDepth(20).setBlendMode(Phaser.BlendModes.ADD).setAlpha(0.7);
     this.ref = this.add.sprite(this.midX + 120, FLOOR_Y - 8, 'ref').setOrigin(0.5, 61 / 64).setScale(2).setDepth(5).setFlipX(true).play('ref:idle');
@@ -46,8 +57,7 @@ export class Mission3 extends FightScene {
   }
 
   foeCount(kd: number): CountPlan {
-    // rounds 1 and 2 he beats the count and the round goes on; round 3 he's recycled
-    if (this.round < 3) return { getUpAt: kd <= 1 ? 5 : 7 };
+    if (kd < KNOCKDOWNS_TO_RECYCLE) return { getUpAt: GET_UP_AT[kd - 1], getUpHp: GET_UP_HP[kd - 1] };
     return { getUpAt: null, lastWord: 'RECYCLED!' };
   }
 
@@ -87,15 +97,19 @@ export class Mission3 extends FightScene {
     Audio.music(this, 'music_fight', 0.45);
     this.tip('start');
     this.pip.setStyle(ROUNDS[0]);
+    // five knockdowns ends it in any round; the final round has no clock, so it ends when he's recycled
     let how: RoundEnd = await this.fightRound(1, ROUND_SECONDS);
-    await this.corner(1, how);
-    this.pip.setStyle(ROUNDS[1]);
-    how = await this.fightRound(2, ROUND_SECONDS);
-    await this.corner(2, how);
-    this.pip.setStyle(ROUNDS[2]);
-    this.pip.tint = 0xc8e8ff;
-    // the final round has no clock: it ends when somebody gets recycled
-    while ((how = await this.fightRound(3, null)) !== 'ko') { /* he can't get up in round 3 */ }
+    if (how !== 'ko') {
+      await this.corner(1, how);
+      this.pip.setStyle(ROUNDS[1]);
+      how = await this.fightRound(2, ROUND_SECONDS);
+    }
+    if (how !== 'ko') {
+      await this.corner(2, how);
+      this.pip.setStyle(ROUNDS[2]);
+      this.pip.tint = 0xc8e8ff;
+      while ((how = await this.fightRound(3, null)) !== 'ko') { /* keep going till he's recycled */ }
+    }
     await this.ending();
   }
 
@@ -280,45 +294,50 @@ export class Mission3 extends FightScene {
   async beforeCount(f: Fighter, plan: CountPlan) {
     if (f !== this.pip || plan.getUpAt !== null) return;
     Audio.stopMusic();
-    await this.wait(900);
-    const p = this.player, pip = this.pip;
     this.events.emit('cutscene', true);
-    // Mane stands over him, just like the poster: Pip flat in front, Mane behind him
-    this.refTo(this.midX, true);
-    p.setState('scripted');
-    pip.setState('scripted');
-    pip.x = Phaser.Math.Clamp(pip.x, this.midX - 40, this.midX + 90);
-    pip.z = -12;
-    pip.sprite.setDepth(12);
-    p.x = pip.x - 34; p.facing = 1;
-    p.play('standOver', true);
+    await this.wait(700);
+    // flashbulbs, then the picture everybody's gonna post
     const cam = this.cameras.main;
-    const W = this.W;
-    const layer = this.add.container(0, 0).setDepth(30);
-    layer.add(this.add.rectangle(0, 0, W, 216, 0x8a5a20, 0.32).setOrigin(0).setBlendMode(Phaser.BlendModes.MULTIPLY));
-    layer.add(this.add.rectangle(0, 0, W, 216, 0xffe0a0, 0.08).setOrigin(0).setBlendMode(Phaser.BlendModes.ADD));
-    for (const [x, y, w, hh] of [[0, 0, W, 18], [0, 198, W, 18], [0, 0, 22, 216], [W - 22, 0, 22, 216]]) layer.add(this.add.rectangle(x, y, w, hh, 0x000000, 0.55).setOrigin(0));
-    cam.pan((p.x + pip.x) / 2 + 4, 128, 500, 'Sine.easeInOut');
-    cam.zoomTo(1.35, 500, 'Sine.easeInOut');
     this.sfx('ooh', 0.8);
-    for (let i = 0; i < 9; i++) {
-      this.time.delayedCall(300 + i * 260 + Math.random() * 120, () => {
-        this.sfx('flash', 0.6);
-        this.bulb(undefined, undefined, true);
-        if (i % 3 === 0) cam.flash(90, 255, 255, 255);
-      });
-    }
-    this.time.delayedCall(1200, () => p.play('standOver', true));
-    await this.wait(3400);
-    cam.zoomTo(1, 400, 'Sine.easeInOut');
-    cam.pan(W / 2, 108, 400, 'Sine.easeInOut');
-    await this.wait(420);
-    layer.destroy();
-    cam.setScroll(0, 0);
-    p.x = this.homes().mane - 20;
-    p.play('idle');
-    pip.z = 0; pip.setState('down');
+    for (let i = 0; i < 4; i++) this.time.delayedCall(i * 140, () => { this.sfx('flash', 0.6); this.bulb(undefined, undefined, true); });
+    await this.wait(600);
+    cam.flash(160, 255, 255, 255);
+    await this.showKoPhoto();
     this.events.emit('cutscene', false);
+  }
+
+  // Jack's KO picture over the whole game, full resolution. Tap or press a key to move on.
+  private showKoPhoto() {
+    const canvas = this.game.canvas;
+    const r = canvas.getBoundingClientRect();
+    const host = (document.fullscreenElement as HTMLElement | null) ?? document.body;
+    const wrap = document.createElement('div');
+    Object.assign(wrap.style, {
+      position: 'fixed', left: r.left + 'px', top: r.top + 'px', width: r.width + 'px', height: r.height + 'px',
+      background: 'rgba(4,6,18,0.94)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+      zIndex: '50', opacity: '0', transition: 'opacity 220ms ease-out', cursor: 'pointer',
+    } as Partial<CSSStyleDeclaration>);
+    const img = (this.koPhoto?.complete ? this.koPhoto : null) ?? Object.assign(new Image(), { src: 'assets/img/ko-meme.jpg' });
+    img.alt = 'MEMPHYS Mane stands over a knocked-out Pip';
+    Object.assign(img.style, {
+      height: '92%', maxWidth: '92%', objectFit: 'contain', border: '3px solid #f3e2b0', borderRadius: '2px',
+      boxShadow: '0 6px 30px rgba(0,0,0,0.7)', transform: 'rotate(-1.5deg) scale(1.06)', transition: 'transform 400ms ease-out',
+    } as Partial<CSSStyleDeclaration>);
+    wrap.appendChild(img);
+    host.appendChild(wrap);
+    requestAnimationFrame(() => { wrap.style.opacity = '1'; img.style.transform = 'rotate(-1.5deg) scale(1)'; });
+    const t0 = this.time.now;
+    let tapped = false;
+    wrap.addEventListener('pointerdown', () => { tapped = true; });
+    const close = () => wrap.remove();
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, close);
+    this.time.delayedCall(250, () => this.sfx('flash', 0.7));
+    return this.waitUntil(() => this.time.now - t0 > 4200 || (this.time.now - t0 > 700 && (tapped || Controls.consume('attack', 300))))
+      .then(async () => {
+        wrap.style.opacity = '0';
+        await this.wait(230);
+        close();
+      });
   }
 
   // ------------------------------------------------------------------ ending: recycled, O.G. pays up, the tanker tip

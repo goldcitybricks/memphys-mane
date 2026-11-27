@@ -29,6 +29,7 @@ export abstract class FightScene extends Phaser.Scene {
   missionId = '';
   round = 0;
   clock: number | null = null; // seconds left, or null for no clock
+  kdSlots = 3; // knockdown cans on the foe's HUD
   fighting = false; // fighters can act
   inCutscene = false;
   skipping = false;
@@ -413,13 +414,29 @@ export abstract class FightScene extends Phaser.Scene {
     for (const f of [this.player, this.foeF]) if (f.state !== 'down' && f.state !== 'out') { f.toIdle(); f.controllable = false; }
   }
 
+  // During a count the fighter still standing backs off to a neutral corner, and the ref
+  // stands between them, clear of the one lying on the mat.
+  neutralCorner(down: Fighter) {
+    const o = this.other(down);
+    const dir = Math.sign(o.x - down.x) || (down === this.player ? 1 : -1);
+    const lim = this.ringHalf();
+    this.refTo(Phaser.Math.Clamp(down.x + dir * 94, this.midX - lim - 20, this.midX + lim + 20));
+    if (o.state === 'down' || o.state === 'out') return;
+    const ox = Phaser.Math.Clamp(down.x + dir * 160, this.midX - lim, this.midX + lim);
+    if (Math.abs(ox - o.x) < 6) return;
+    o.move = null;
+    o.setState('scripted');
+    o.play('walk', true);
+    this.tweens.add({ targets: o, x: ox, duration: Math.min(900, Math.abs(ox - o.x) * 8 + 150), onComplete: () => { if (o.state === 'scripted') o.play('idle', true); } });
+  }
+
   // The ref counts. Returns true if the fighter beats the count.
   async count(f: Fighter, plan: CountPlan) {
     this.counting = true;
     const other = this.other(f);
     other.controllable = false;
     await this.wait(700);
-    this.refTo(f.x + (f === this.player ? 46 : -46));
+    this.neutralCorner(f);
     for (let i = 1; i <= 10; i++) {
       const last = i === 10 || (plan.lastWord && i === 10);
       const word = i === 10 && plan.lastWord ? plan.lastWord : String(i);
@@ -450,7 +467,7 @@ export abstract class FightScene extends Phaser.Scene {
     const need = 8 + p.knockdowns * 5;
     let taps = 0;
     await this.wait(600);
-    this.refTo(p.x + 46);
+    this.neutralCorner(p);
     this.events.emit('mash', 0);
     Controls.clear();
     for (let i = 1; i <= 10; i++) {

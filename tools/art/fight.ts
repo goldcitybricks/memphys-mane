@@ -72,7 +72,8 @@ export function maneBoxFrames() {
     { x: -3, tilt: -6, sx: 2, sy: -2, front: A(4, -11), back: A(-6, -10), ff: [3, 0], bf: [-3, 0], face: 'hurt' },
     { x: -1, tilt: -3, sx: 1, sy: -1, front: A(7, -6), back: A(-7, -6), ff: [3, 0], bf: [-3, 0], face: 'hurt' },
   ]);
-  const flat = layFlat(finish(drawMane(B({ front: A(8, -6), back: A(-8, -6), ff: [3, 0], bf: [-3, 0], face: 'ko' }))), 61);
+  // gloves rest on the chest (to the right standing = up once laid flat), so the body itself lies on the mat
+  const flat = layFlat(finish(drawMane(B({ front: A(10, -4), back: A(6, -12), ff: [3, 0], bf: [-3, 0], face: 'ko' }))), 61);
   add('knockdown', [
     { x: -4, y: 2, tilt: -9, sx: 1, sy: -2, front: A(6, -10), back: A(-6, -12), ff: [5, -3], bf: [2, -1], face: 'hurt' },
     flat,
@@ -350,7 +351,7 @@ export function pipFrames() {
     { x: -1, tilt: -3, front: A(7, 8), back: A(-6, 8), ff: [3, 0], bf: [-3, 0], face: 'dizzy' },
     { x: 1, tilt: 3, front: A(7, 8), back: A(-6, 8), ff: [3, 0], bf: [-3, 0], face: 'dizzy' },
   ]);
-  const flat = layFlat(drawPip({ front: A(9, -8), back: A(-8, -9), ff: [3, 0], bf: [-3, 0], face: 'ko', crinkle: 1 }), 61);
+  const flat = layFlat(drawPip({ front: A(11, -4), back: A(7, -13), ff: [3, 0], bf: [-3, 0], face: 'ko', crinkle: 1 }), 61);
   add('knockdown', [
     { x: -4, y: 2, tilt: -9, sx: 1, sy: -2, crinkle: 0.8, front: A(6, -12), back: A(-6, -13), ff: [5, -3], bf: [2, -1], face: 'hurt' },
     flat,
