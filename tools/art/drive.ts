@@ -131,7 +131,7 @@ export function bigBlueSide(): Pix[] {
 // AetherCorp's self-driving pod: white shell, a blue light bar, a spinning sensor on the roof,
 // and GigaZ's smiling cloud with river-blue eyes on the back screen.
 const AE_W = hex('#eef2f8'), AE_S = hex('#b8c2d4'), AE_D = hex('#7c889e'), AE_LED = hex('#5ce1ff');
-function gigazFace(g: Pix, x: number, y: number, mood: 'smile' | 'glitch' = 'smile') {
+export function gigazFace(g: Pix, x: number, y: number, mood: 'smile' | 'glitch' = 'smile') {
   // a little cloud: three puffs, two eyes, a smile
   const C = hex('#e8f4ff');
   g.circle(x - 3, y + 1, 2, C); g.circle(x, y - 1, 3, C); g.circle(x + 3, y + 1, 2, C); g.rect(x - 4, y + 1, 9, 2, C);

@@ -1365,6 +1365,281 @@
   "btnDolla": {
    "file": "btnDolla.png"
   },
+  "crewDrill": {
+   "file": "crewDrill.png",
+   "frameWidth": 64,
+   "frameHeight": 64,
+   "anims": {
+    "idle": [
+     0,
+     1
+    ],
+    "walk": [
+     2,
+     5
+    ],
+    "punch": [
+     6,
+     8
+    ],
+    "throw": [
+     9,
+     11
+    ],
+    "hurt": [
+     12,
+     13
+    ],
+    "knockdown": [
+     14,
+     16
+    ],
+    "dazed": [
+     17,
+     18
+    ]
+   }
+  },
+  "crewWrench": {
+   "file": "crewWrench.png",
+   "frameWidth": 64,
+   "frameHeight": 64,
+   "anims": {
+    "idle": [
+     0,
+     1
+    ],
+    "walk": [
+     2,
+     5
+    ],
+    "punch": [
+     6,
+     8
+    ],
+    "throw": [
+     9,
+     11
+    ],
+    "hurt": [
+     12,
+     13
+    ],
+    "knockdown": [
+     14,
+     16
+    ],
+    "dazed": [
+     17,
+     18
+    ]
+   }
+  },
+  "crewCoolant": {
+   "file": "crewCoolant.png",
+   "frameWidth": 64,
+   "frameHeight": 64,
+   "anims": {
+    "idle": [
+     0,
+     1
+    ],
+    "walk": [
+     2,
+     5
+    ],
+    "punch": [
+     6,
+     8
+    ],
+    "throw": [
+     9,
+     11
+    ],
+    "hurt": [
+     12,
+     13
+    ],
+    "knockdown": [
+     14,
+     16
+    ],
+    "dazed": [
+     17,
+     18
+    ]
+   }
+  },
+  "ghostBlues": {
+   "file": "ghostBlues.png",
+   "frameWidth": 64,
+   "frameHeight": 64,
+   "anims": {
+    "play": [
+     0,
+     1
+    ]
+   }
+  },
+  "ghostSoul": {
+   "file": "ghostSoul.png",
+   "frameWidth": 64,
+   "frameHeight": 64,
+   "anims": {
+    "play": [
+     0,
+     1
+    ]
+   }
+  },
+  "ghostRock": {
+   "file": "ghostRock.png",
+   "frameWidth": 64,
+   "frameHeight": 64,
+   "anims": {
+    "play": [
+     0,
+     1
+    ]
+   }
+  },
+  "bgWall6": {
+   "file": "bgWall6.png"
+  },
+  "uncleTLost": {
+   "file": "uncleTLost.png",
+   "frameWidth": 64,
+   "frameHeight": 64,
+   "anims": {
+    "idle": [
+     0,
+     1
+    ],
+    "talk": [
+     2,
+     3
+    ],
+    "walk": [
+     4,
+     7
+    ],
+    "lifted": [
+     8,
+     9
+    ],
+    "blank": [
+     10,
+     11
+    ]
+   }
+  },
+  "driller": {
+   "file": "driller.png",
+   "frameWidth": 96,
+   "frameHeight": 96,
+   "anims": {
+    "idle": [
+     0,
+     1
+    ],
+    "walk": [
+     2,
+     5
+    ],
+    "punch": [
+     6,
+     8
+    ],
+    "throw": [
+     9,
+     11
+    ],
+    "hurt": [
+     12,
+     13
+    ],
+    "knockdown": [
+     14,
+     16
+    ],
+    "dazed": [
+     17,
+     18
+    ],
+    "dash": [
+     19,
+     20
+    ],
+    "slam": [
+     21,
+     23
+    ]
+   }
+  },
+  "bgSky6": {
+   "file": "bgSky6.png"
+  },
+  "bgFar6": {
+   "file": "bgFar6.png"
+  },
+  "bgGround6": {
+   "file": "bgGround6.png"
+  },
+  "breach": {
+   "file": "breach.png"
+  },
+  "pipeStack": {
+   "file": "pipeStack.png"
+  },
+  "supplyCrate": {
+   "file": "supplyCrate.png",
+   "frameWidth": 20,
+   "frameHeight": 28
+  },
+  "canister": {
+   "file": "canister.png",
+   "frameWidth": 12,
+   "frameHeight": 12,
+   "anims": {
+    "spin": [
+     0,
+     3
+    ]
+   }
+  },
+  "drillCart": {
+   "file": "drillCart.png",
+   "frameWidth": 128,
+   "frameHeight": 48
+  },
+  "rock": {
+   "file": "rock.png"
+  },
+  "jarRig": {
+   "file": "jarRig.png"
+  },
+  "gigazScreen": {
+   "file": "gigazScreen.png",
+   "frameWidth": 40,
+   "frameHeight": 30
+  },
+  "drone": {
+   "file": "drone.png",
+   "frameWidth": 32,
+   "frameHeight": 24,
+   "anims": {
+    "hover": [
+     0,
+     1
+    ]
+   }
+  },
+  "bealeExt": {
+   "file": "bealeExt.png"
+  },
+  "factPanel": {
+   "file": "factPanel.png"
+  },
   "font": {
    "file": "font.png",
    "frameWidth": 7,

@@ -5,12 +5,14 @@ import path from 'node:path';
 import { Pix, sheet, hex } from './pix';
 import { maneFrames, manePortraits } from './mane';
 import { humanSheet, shiestyDef, shiestyOutfits, malik, malikDef, uncleT, uncleTDef, og, ogDef,
-  jackalOutfits, jackalDef, jackalCaptain, jackalCaptainDef, nia, niaDef, vendor, vendorDef, king, kingDef, priest, priestDef, glowFrames } from './human';
+  jackalOutfits, jackalDef, jackalCaptain, jackalCaptainDef, nia, niaDef, vendor, vendorDef, king, kingDef, priest, priestDef, glowFrames,
+  crewOutfits, crewDef, musicians, musicianDef, uncleTLostDef } from './human';
 import * as W from './world';
 import * as E from './egypt';
 import * as F from './fight';
 import * as D from './drive';
 import * as PL from './plant';
+import * as B from './beale';
 import { drawFont, FONT_CHARS, CELL_W, CELL_H } from './font';
 import { P } from './palette';
 
@@ -201,6 +203,39 @@ saveImage('capOverlay', PL.capOverlay());
 saveImage('plantExt', PL.plantExterior());
 saveImage('btnSpray', W.touchButton('SPRAY', hex('#2c7ad0'), 24));
 saveImage('btnDolla', W.touchButton('DOLLA', hex('#3a8a3a'), 19));
+
+// ------------------------------------------------------------------ Mission 6: Beale Below
+for (const [k, tool] of [['crewDrill', 'drill'], ['crewWrench', 'wrench'], ['crewCoolant', 'canister']] as const) {
+  const s = humanSheet(crewOutfits[k], crewDef(tool));
+  saveSheet(k, s.frames, s.anims);
+}
+{
+  const figs: Record<string, Pix> = {};
+  for (const who of ['blues', 'soul', 'rock'] as const) {
+    const m = humanSheet(musicians[who], musicianDef(who));
+    figs[who] = m.frames[0];
+    saveSheet('ghost' + who[0].toUpperCase() + who.slice(1), glowFrames(m.frames), m.anims);
+  }
+  saveImage('bgWall6', B.wallLayer6({ blues: figs.blues, soul: figs.soul, rock: figs.rock }));
+  const u = humanSheet(uncleT, uncleTLostDef());
+  saveSheet('uncleTLost', u.frames, u.anims);
+  const d = B.drillerFrames();
+  saveSheet('driller', d.frames, d.anims);
+}
+saveImage('bgSky6', B.skyLayer6());
+saveImage('bgFar6', B.farLayer6());
+saveImage('bgGround6', B.groundLayer6());
+saveImage('breach', B.breachDecal());
+saveImage('pipeStack', B.pipeStack());
+saveSheet('supplyCrate', B.supplyCrate());
+saveSheet('canister', B.canisterProj(), { spin: [0, 3] });
+saveSheet('drillCart', B.drillCartFrames());
+saveImage('rock', B.rockProj());
+saveImage('jarRig', B.jarRig());
+saveSheet('gigazScreen', B.gigazScreen());
+saveSheet('drone', B.droneFrames(), { hover: [0, 1] });
+saveImage('bealeExt', B.bealeExterior());
+saveImage('factPanel', B.factPanel());
 
 drawFont(P.white, P.ink).save(path.join(OUT, 'font.png'));
 manifest.font = { file: 'font.png', frameWidth: CELL_W, frameHeight: CELL_H };

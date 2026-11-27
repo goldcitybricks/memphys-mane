@@ -78,3 +78,23 @@ export const FOREMAN = {
 };
 // the hidden Aquifer Fact card (Protect Our Aquifer, citing USGS)
 export const AQUIFER_FACT = 'MEMPHIS IS ONE OF THE LARGEST\nMETRO AREAS IN THE WORLD THAT\nRUNS 100% ON GROUNDWATER.';
+
+// Mission 6: Beale Below. AetherCorp's drill crews; the Driller's operator is a contractor on a deadline.
+export const CREW_TALK = [
+  'THIS A HARD HAT AREA!',
+  'YOU GOT A BADGE, CAN?',
+  'WE ON THE CLOCK, MANE!',
+  'DIG DEEPER! THAT\'S THE ORDER!',
+  'GET THAT CAN OUTTA HERE!',
+  'CLOUD SAYS YOU AIN\'T AUTHORIZED.',
+];
+export const DRILLER = {
+  hello: 'AETHERCORP DEEP ACCESS. Y\'ALL STANDIN\' ON MY QUOTA.',
+  dig: ['DIG! DIG! DIG!', 'OUTTA THE WAY!', 'BEHIND SCHEDULE!'],
+  slam: 'GROUND\'S COMIN\' DOWN!',
+  hot: 'WHY IT\'S SMOKIN\'?! THAT AIN\'T IN THE MANUAL!',
+  call: 'CREW! I NEED BACKUP DOWN HERE!',
+  down: 'I\'M JUST A CONTRACTOR, MANE! I\'M JUST A CONTRACTOR!',
+};
+// the hidden Aquifer Fact card (Protect Our Aquifer)
+export const AQUIFER_FACT_6 = 'THE MEMPHIS AQUIFER REACHES\nUP TO 3,000 FEET BENEATH\nSHELBY COUNTY.';

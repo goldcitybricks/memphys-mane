@@ -8,7 +8,12 @@ export interface Outfit {
   top: RGBA; topShade: RGBA; trim?: RGBA; sleeve?: RGBA;
   pants: RGBA; pantsShade: RGBA;
   shoes: RGBA; shoesShade: RGBA;
-  head: 'mask' | 'nomask' | 'malik' | 'uncleT' | 'og' | 'jackal' | 'jackalCaptain' | 'nia' | 'vendor' | 'king' | 'priest' | 'ref';
+  head: 'mask' | 'nomask' | 'malik' | 'uncleT' | 'og' | 'jackal' | 'jackalCaptain' | 'nia' | 'vendor' | 'king' | 'priest' | 'ref'
+    | 'hardhat' | 'hazmat' | 'afro';
+  // Beale Below (Mission 6) wardrobe
+  vest?: RGBA; // hi-vis vest with reflective stripes
+  tank?: boolean; // coolant tank on the back
+  hatColor?: RGBA;
   bowtie?: boolean; // Fight Night referee
   backpack?: boolean; apron?: boolean; coat?: boolean; hat?: boolean; big?: boolean;
   // Old Memphis wardrobe
@@ -26,11 +31,12 @@ export interface HPose {
   ff: [number, number]; bf: [number, number];
   fHand?: Hand | 'hatTip';
   bHand?: Hand;
-  face?: 'normal' | 'hurt' | 'ko' | 'sip' | 'angry' | 'scared' | 'smile';
+  face?: 'normal' | 'hurt' | 'ko' | 'sip' | 'angry' | 'scared' | 'smile' | 'blank';
   maskOff?: boolean; hatUp?: number;
 }
 
-export type Hand = 'fist' | 'open' | 'can' | 'bottle' | 'cane' | 'spear' | 'spearThrust' | 'pot' | 'khopesh' | 'khopeshSwing' | 'grill' | 'dates' | 'mic' | 'jug';
+export type Hand = 'fist' | 'open' | 'can' | 'bottle' | 'cane' | 'spear' | 'spearThrust' | 'pot' | 'khopesh' | 'khopeshSwing' | 'grill' | 'dates' | 'mic' | 'jug'
+  | 'wrench' | 'drill' | 'canister' | 'guitar' | 'guitarUp' | 'sax';
 
 const BASE = 61;
 const BRONZE: RGBA = [214, 160, 64, 255], BRONZE_D: RGBA = [150, 100, 36, 255], WOOD: RGBA = [120, 84, 48, 255];
@@ -124,6 +130,35 @@ export function drawHuman(o: Outfit, p: HPose): Pix {
       g.vline(hx - 2, hy - 9, hy - 2, P.white);
       g.hline(hx - 3, hx + 4, hy - 5, P.bottleShade);
     }
+    if (hand === 'wrench') {
+      g.line(hx, hy, hx + 5, hy - 9, P.grey, 2);
+      g.rect(hx + 3, hy - 13, 5, 3, P.grey); g.set(hx + 5, hy - 12, P.ink); g.set(hx + 4, hy - 13, P.white);
+    }
+    if (hand === 'drill') {
+      // a heavy-duty AetherCorp hammer drill, bit pointing forward
+      g.rect(hx - 2, hy - 5, 9, 5, [236, 240, 246, 255]); g.hline(hx - 2, hx + 6, hy - 1, [124, 136, 158, 255]);
+      g.rect(hx - 1, hy, 3, 4, P.inkSoft);
+      g.set(hx + 5, hy - 4, [92, 225, 255, 255]);
+      g.line(hx + 7, hy - 3, hx + 13, hy - 3, P.grey, 1); g.set(hx + 10, hy - 4, P.greyDark); g.set(hx + 12, hy - 2, P.greyDark);
+    }
+    if (hand === 'canister') {
+      g.rect(hx - 2, hy - 8, 5, 8, [92, 200, 255, 255]); g.rect(hx - 2, hy - 9, 5, 1, P.grey);
+      g.vline(hx - 1, hy - 7, hy - 2, P.white); g.hline(hx - 2, hx + 2, hy - 4, [44, 120, 200, 255]);
+    }
+    if (hand === 'guitar' || hand === 'guitarUp') {
+      // body at the hand, neck up and forward
+      const up = hand === 'guitarUp';
+      const nx = hx + (up ? 9 : 14), ny = hy - (up ? 18 : 9);
+      g.line(hx + 2, hy - 2, nx, ny, P.brownDark, 2);
+      g.rect(nx - 1, ny - 2, 3, 3, P.brownDark);
+      g.ellipse(hx - 1, hy, 5, 4, P.red); g.ellipse(hx - 3, hy + 2, 3, 2, P.redDark);
+      g.set(hx, hy - 1, P.ink); g.hline(hx - 3, hx + 1, hy + 1, P.goldHi);
+    }
+    if (hand === 'sax') {
+      g.curve(hx - 2, hy - 8, hx + 4, hy - 2, hx + 2, hy + 6, P.gold, 3);
+      g.ellipse(hx + 4, hy + 6, 3, 2, P.goldMid); g.set(hx + 3, hy + 5, P.goldHi);
+      g.line(hx - 2, hy - 8, hx - 4, hy - 11, P.ink, 1);
+    }
     if (hand === 'can') {
       g.rect(hx - 1, hy - 6, 4, 6, P.can);
       g.set(hx - 1, hy - 6, P.rim); g.set(hx + 2, hy - 3, P.gold); g.set(hx + 1, hy - 3, P.gold);
@@ -143,6 +178,11 @@ export function drawHuman(o: Outfit, p: HPose): Pix {
     g.rect(shX - halfS - 4, shY + 1, 6, 10, P.red);
     g.rect(shX - halfS - 4, shY + 9, 6, 2, P.redDark);
   }
+  if (o.tank) {
+    g.rect(shX - halfS - 5, shY - 1, 6, 14, P.grey);
+    g.rect(shX - halfS - 5, shY - 1, 6, 2, P.greyDark); g.vline(shX - halfS - 4, shY + 1, shY + 11, P.white);
+    g.set(shX - halfS - 2, shY + 6, [92, 225, 255, 255]);
+  }
   leg(3, p.ff, true);
 
   // torso
@@ -160,6 +200,12 @@ export function drawHuman(o: Outfit, p: HPose): Pix {
     g.hline(cx - halfW, cx + halfW, hipY, o.trim);
     const t0 = shX + 1;
     g.vline(t0, shY + 1, hipY - 1, o.trim);
+  }
+  if (o.vest) {
+    // hi-vis vest over the coveralls, two reflective stripes
+    g.poly([[shX - halfS + 1, shY + 1], [shX + halfS - 1, shY + 1], [cx + halfW, hipY - 1], [cx - halfW, hipY - 1]], o.vest);
+    for (let y = shY + 1; y < hipY; y++) { const t = (y - shY) / torsoH; const lx = Math.round((shX - halfS + 1) * (1 - t) + (cx - halfW) * t); g.hline(lx, lx + 1, y, mix(o.vest, P.ink, 0.3)); }
+    for (const yy of [shY + 6, hipY - 4]) { const t = (yy - shY) / torsoH; const lx = Math.round((shX - halfS + 1) * (1 - t) + (cx - halfW) * t); const rx = Math.round((shX + halfS - 1) * (1 - t) + (cx + halfW) * t); g.hline(lx, rx, yy, [220, 226, 236, 255]); }
   }
   if (o.coat) {
     // long coat hangs down to the knees
@@ -246,6 +292,12 @@ export function drawHuman(o: Outfit, p: HPose): Pix {
     g.rect(hx + 1, hy - 1, 5, 6, [14, 10, 22, 255]);
     g.set(hx + 3, hy - 7, P.goldHi); g.set(hx + 3, hy - 8, P.goldHi); // cobra
     if (face === 'angry') { g.set(hx + 2, eyeY, P.red); g.set(hx + 5, eyeY, P.red); }
+  } else if (o.head === 'hazmat') {
+    // hood over the whole head, a blue visor on the face
+    g.circle(hx, hy, 6, o.top); g.set(hx - 4, hy - 4, P.white);
+    g.rect(hx + 1, hy - 3, 5, 5, [44, 120, 200, 255]); g.hline(hx + 1, hx + 5, hy - 3, [130, 220, 255, 255]);
+    if (face === 'ko') { g.set(hx + 2, hy - 1, P.ink); g.set(hx + 4, hy - 1, P.ink); } else { g.set(hx + 3, hy - 1, P.white); g.set(hx + 5, hy - 1, P.white); }
+    g.rect(hx - 1, hy + 4, 3, 2, P.greyDark); // filter
   } else if (masked) {
     g.rect(hx - 1, eyeY - 1, 7, 3, o.skin); // eye slit
     g.set(hx + 1, eyeY, face === 'ko' ? P.ink : P.white); g.set(hx + 4, eyeY, face === 'ko' ? P.ink : P.white);
@@ -257,6 +309,7 @@ export function drawHuman(o: Outfit, p: HPose): Pix {
     g.set(hx - 2, hy, o.skinShade); g.set(hx - 2, hy + 1, o.skinShade);
     if (face === 'ko') { g.set(hx + 2, eyeY, P.ink); g.set(hx + 4, eyeY, P.ink); }
     else if (face === 'sip') { g.hline(hx + 2, hx + 4, eyeY, P.ink); }
+    else if (face === 'blank') { g.set(hx + 2, eyeY, P.grey); g.set(hx + 4, eyeY, P.grey); }
     else {
       g.set(hx + 2, eyeY, P.white); g.set(hx + 3, eyeY, P.ink);
       g.set(hx + 4, eyeY, P.white); g.set(hx + 5, eyeY, P.ink);
@@ -305,6 +358,14 @@ export function drawHuman(o: Outfit, p: HPose): Pix {
       g.ellipse(hx - 1, hy - 4, 5, 2, P.grey);
       g.rect(hx - 5, hy - 4, 2, 4, P.grey);
       g.hline(hx + 2, hx + 5, hy + 1, P.greyDark);
+    } else if (o.head === 'hardhat') {
+      // hard hat with a headlamp, goggles pushed up on the brim
+      const hc = o.hatColor ?? P.yellow;
+      g.ellipse(hx, hy - 6, 6, 3, hc); g.rect(hx - 6, hy - 4, 14, 1, mix(hc, P.ink, 0.35));
+      g.hline(hx - 3, hx + 2, hy - 8, mix(hc, P.white, 0.5));
+      g.rect(hx + 4, hy - 7, 2, 2, P.white); g.set(hx + 6, hy - 6, [255, 246, 200, 255]);
+    } else if (o.head === 'afro') {
+      g.ellipse(hx - 3, hy - 5, 7, 4, P.ink); g.set(hx - 6, hy - 7, P.inkSoft); g.set(hx, hy - 8, P.inkSoft);
     } else if (o.head === 'mask' && p.maskOff) {
       // the surprised face under the mask: short twists
       for (let i = -4; i <= 3; i += 2) g.rect(hx + i, hy - 6, 2, 2, P.ink);
@@ -610,3 +671,91 @@ export function glowFrames(frames: Pix[]): Pix[] {
     return g;
   });
 }
+
+// ------------------------------------------------------------------ Beale Below (Mission 6)
+const COVERALL: RGBA = [74, 82, 100, 255], COVERALL_D: RGBA = [52, 58, 74, 255];
+const HIVIS: RGBA = [232, 112, 34, 255];
+const BOOT: RGBA = [70, 52, 36, 255], BOOT_D: RGBA = [46, 34, 24, 255];
+const HAZMAT: RGBA = [228, 232, 238, 255], HAZMAT_D: RGBA = [176, 184, 198, 255];
+
+// AetherCorp's drill crews. Hard hats with headlamps, hi-vis vests; the Coolant Crew are in hazmat suits with tanks.
+export const crewOutfits: Record<string, Outfit> = {
+  crewDrill: { skin: P.skin2, skinShade: P.skin2Shade, top: COVERALL, topShade: COVERALL_D, pants: COVERALL, pantsShade: COVERALL_D, shoes: BOOT, shoesShade: BOOT_D, head: 'hardhat', vest: HIVIS },
+  crewWrench: { skin: P.skin1, skinShade: P.skin1Shade, top: [96, 70, 52, 255], topShade: [70, 50, 38, 255], pants: P.denim, pantsShade: P.denimShade, shoes: BOOT, shoesShade: BOOT_D, head: 'hardhat', vest: [196, 220, 60, 255], hatColor: P.white },
+  crewCoolant: { skin: P.skin3, skinShade: P.skin3Shade, top: HAZMAT, topShade: HAZMAT_D, pants: HAZMAT, pantsShade: HAZMAT_D, shoes: [44, 120, 200, 255], shoesShade: [30, 84, 150, 255], head: 'hazmat', tank: true },
+};
+export const crewDef = (tool: 'drill' | 'wrench' | 'canister'): Def => {
+  const held: Hand = tool === 'canister' ? 'open' : tool;
+  return {
+    idle: [
+      { fa: [6, 4], fHand: held, ba: [1, 6], ff: [3, 0], bf: [-4, 0], crouch: 1, face: 'angry' },
+      { fa: [6, 5], fHand: held, ba: [1, 7], ff: [3, 0], bf: [-4, 0], crouch: 2, face: 'angry' },
+    ],
+    walk: [0, 1, 2, 3].map((i) => walk4(i, { face: 'angry', fHand: held, fa: [5, 5] })),
+    punch: [
+      { fa: [-2, 3], fHand: held, ba: [2, 5], ff: [3, 0], bf: [-4, 0], lean: -2, face: 'angry' },
+      { fa: [-1, 0], fHand: held, ba: [3, 4], ff: [4, 0], bf: [-5, 0], lean: -3, crouch: 1, face: 'angry' },
+      { fa: [15, 0], fab: 0, fHand: tool === 'canister' ? 'fist' : held, ba: [-2, 6], ff: [5, 0], bf: [-6, 0], lean: 3, face: 'angry' },
+    ],
+    throw: [
+      { fa: [-8, -6], fHand: 'canister', ba: [4, 4], ff: [3, 0], bf: [-4, 0], lean: -3, face: 'angry' },
+      { fa: [-6, -10], fHand: 'canister', ba: [5, 2], ff: [3, 0], bf: [-4, 0], lean: -4, face: 'angry' },
+      { fa: [14, -2], fab: 0, ba: [-3, 6], ff: [5, 0], bf: [-6, 0], lean: 3, face: 'angry' },
+    ],
+    hurt: [
+      { x: -2, fa: [4, -6], ba: [-2, -5], ff: [2, 0], bf: [-3, 0], lean: -4, face: 'hurt' },
+      { x: -1, fa: [5, -2], ba: [-1, -2], ff: [2, 0], bf: [-3, 0], lean: -2, face: 'hurt' },
+    ],
+    knockdown: [
+      { x: -3, y: -3, fa: [6, -8], ba: [-2, -9], ff: [6, -4], bf: [2, -3], lean: -6, face: 'hurt' },
+      { fa: [7, -4], ba: [-4, -4], ff: [3, 0], bf: [-3, 0], face: 'ko', flat: true } as any,
+      { fa: [6, 6], ba: [-2, 8], ff: [5, 0], bf: [-4, 0], crouch: 6, lean: 3, face: 'hurt' },
+    ],
+    dazed: [
+      { fa: [3, 9], ba: [0, 9], ff: [2, 0], bf: [-3, 0], lean: -1, face: 'ko' },
+      { fa: [3, 9], ba: [0, 9], ff: [2, 0], bf: [-3, 0], lean: 1, face: 'ko' },
+    ],
+  };
+};
+
+// The ghost musicians in the murals: generic figures (no real people), turned to light with glowFrames.
+export const musicians: Record<string, Outfit> = {
+  blues: { skin: P.skin3, skinShade: P.skin3Shade, top: [90, 60, 40, 255], topShade: [60, 40, 28, 255], pants: P.inkSoft, pantsShade: P.ink, shoes: P.brown, shoesShade: P.brownDark, head: 'malik', hat: true },
+  soul: { skin: P.skin1, skinShade: P.skin1Shade, top: [200, 60, 90, 255], topShade: [150, 40, 66, 255], pants: [200, 60, 90, 255], pantsShade: [150, 40, 66, 255], shoes: P.gold, shoesShade: P.goldDark, head: 'afro', dress: true },
+  rock: { skin: P.skin2, skinShade: P.skin2Shade, top: P.ink, topShade: P.inkSoft, pants: P.denim, pantsShade: P.denimShade, shoes: P.sneakerW, shoesShade: P.sneakerShade, head: 'malik' },
+};
+export const musicianDef = (who: 'blues' | 'soul' | 'rock'): Def => {
+  if (who === 'blues') return {
+    play: [
+      { fa: [2, 10], fHand: 'guitar', ba: [8, 4], ff: [3, 0], bf: [-4, 0], lean: -1, face: 'sip' },
+      { fa: [2, 11], fHand: 'guitar', ba: [8, 6], ff: [3, 0], bf: [-4, 0], lean: 0, crouch: 1, face: 'normal' },
+    ],
+  };
+  if (who === 'soul') return {
+    play: [
+      { fa: [8, -4], fHand: 'mic', ba: [-4, -6], bHand: 'open', ff: [2, 0], bf: [-2, 0], lean: -2, face: 'sip' },
+      { fa: [8, -6], fHand: 'mic', ba: [-6, -10], bHand: 'open', ff: [2, 0], bf: [-2, 0], lean: -3, face: 'smile' },
+    ],
+  };
+  return {
+    play: [
+      { fa: [3, 9], fHand: 'guitarUp', ba: [8, 2], ff: [6, 0], bf: [-7, 0], lean: -4, crouch: 2, face: 'sip' },
+      { fa: [4, 8], fHand: 'guitarUp', ba: [9, -1], ff: [6, -2], bf: [-7, 0], lean: -5, crouch: 3, face: 'smile' },
+    ],
+  };
+};
+
+// Uncle T at the bottom of the dig: carried off by the drones, then standing there with nothing behind his eyes.
+export const uncleTLostDef = (): Def => ({
+  idle: uncleTDef().idle,
+  talk: uncleTDef().talk,
+  walk: uncleTDef().walk,
+  lifted: [
+    { y: -2, fa: [6, -12], fHand: 'open', ba: [-2, -12], bHand: 'open', ff: [2, 3], bf: [-3, 4], lean: -1, face: 'scared' },
+    { y: -3, fa: [7, -13], fHand: 'open', ba: [-3, -12], bHand: 'open', ff: [3, 4], bf: [-2, 3], lean: -2, face: 'scared' },
+  ],
+  blank: [
+    { fa: [5, 12], fHand: 'cane', ba: [0, 10], ff: [2, 0], bf: [-3, 0], lean: 0, face: 'blank' },
+    { fa: [5, 12], fHand: 'cane', ba: [0, 10], ff: [2, 0], bf: [-3, 0], lean: 0, crouch: 1, face: 'blank' },
+  ],
+});

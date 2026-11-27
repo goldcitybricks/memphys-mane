@@ -19,7 +19,8 @@ export const MISSIONS: MissionDef[] = [
   { id: 'm3-fight-night', number: 3, title: 'FIGHT NIGHT', mode: 'fight', scene: 'Mission3', available: true, enemyLabel: 'KNOCKDOWNS', hazardLabel: 'DODGE COUNTERS' },
   { id: 'm4-bridge-run', number: 4, title: 'BRIDGE RUN', mode: 'driving', scene: 'Mission4', available: true, enemyLabel: 'AETHERCARS SPUN', hazardLabel: 'TANKER RAMS' },
   { id: 'm5-the-plant', number: 5, title: 'THE PLANT', mode: 'shooter', scene: 'Mission5', available: true, enemyLabel: 'DRIFTERS HYDRATED', hazardLabel: 'PIPS RECYCLED' },
-  { id: 'm6-beale-below', number: 6, title: 'BEALE BELOW', mode: 'brawler', scene: 'Mission6', available: false },
+  { id: 'm6-beale-below', number: 6, title: 'BEALE BELOW', mode: 'brawler', scene: 'Mission6', available: true, enemyLabel: 'DRILL CREW KO', hazardLabel: 'DRILL CART KOS' },
+  { id: 'm7-crowe-live', number: 7, title: 'CROWE LIVE', mode: 'fight', scene: 'Mission7', available: false },
 ];
 
 // Hooks for later features (not built yet): leaderboards by neighborhood, Join the Keepers email save, promo codes.
