@@ -1,0 +1,34 @@
+import Phaser from 'phaser';
+import { Boot } from './scenes/Boot';
+import { Title } from './scenes/Title';
+import { Results } from './scenes/Results';
+import { Mission1 } from './missions/Mission1';
+import { UIScene } from './ui/UIScene';
+import { VIEW_H, VIEW_W_MAX, VIEW_W_MIN } from './core/config';
+
+// Width follows the screen shape (384 to 480 wide at 216 tall) so wide phones get more alley instead of black bars.
+function pickWidth() {
+  const aspect = window.innerWidth / Math.max(1, window.innerHeight);
+  return Math.round(Math.min(VIEW_W_MAX, Math.max(VIEW_W_MIN, VIEW_H * aspect)));
+}
+
+const game = new Phaser.Game({
+  type: Phaser.AUTO,
+  parent: 'game',
+  width: pickWidth(),
+  height: VIEW_H,
+  backgroundColor: '#070a1c',
+  pixelArt: true,
+  roundPixels: true,
+  input: { activePointers: 4 },
+  scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
+  audio: { disableWebAudio: false },
+  scene: [Boot, Title, Mission1, UIScene, Results],
+});
+
+window.addEventListener('resize', () => {
+  const w = pickWidth();
+  if (w !== game.scale.width) game.scale.setGameSize(w, VIEW_H);
+});
+
+(window as any).__game = game;

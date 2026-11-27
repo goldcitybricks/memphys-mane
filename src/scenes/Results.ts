@@ -1,0 +1,63 @@
+import Phaser from 'phaser';
+import { Audio } from '../core/audio';
+import { COLORS, MEMPHYS_URL } from '../core/config';
+import { px } from '../core/text';
+import { Save } from '../core/save';
+import type { MissionStats } from '../modes/brawler/BrawlerScene';
+import { Controls } from '../core/controls';
+
+const fmt = (ms: number) => { const s = Math.floor(ms / 1000); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
+
+export class Results extends Phaser.Scene {
+  constructor() { super('Results'); }
+
+  create(data: { stats: MissionStats; missionId: string }) {
+    Controls.clear();
+    const W = this.scale.width;
+    const s = data.stats;
+    // time bonus: under 4 minutes pays
+    const timeBonus = Math.max(0, Math.round((240000 - s.timeMs) / 100));
+    const total = s.score + timeBonus;
+    const { newBest, rec } = Save.record(data.missionId, total, s.timeMs);
+    const rank = total > 6000 ? 'KEEPER' : total > 4200 ? 'ROYAL' : total > 2600 ? 'HUSTLER' : 'THIRSTY';
+
+    this.add.tileSprite(0, 0, W, 216, 'egypt').setOrigin(0).setAlpha(0.35);
+    this.add.rectangle(0, 0, W, 216, 0x070a1c, 0.55).setOrigin(0);
+    px(this, W / 2, 12, 'MISSION 1 COMPLETE', COLORS.goldHi, 2).setOrigin(0.5, 0);
+    px(this, W / 2, 34, "THAT'S ON THE 901.", COLORS.cream).setOrigin(0.5, 0);
+
+    const mane = this.add.sprite(70, 150, 'mane').setScale(2).setOrigin(0.5, 61 / 64);
+    mane.play('mane:victory');
+    mane.once('animationcomplete', () => mane.play('mane:idleShades'));
+
+    const rows: [string, string][] = [
+      ['TIME', fmt(s.timeMs)],
+      ['SHIESTY BOYS KO', String(s.kos)],
+      ['DRIVE-OUT KOS', String(s.drivers)],
+      ['MEMPHYS SIPPED', String(s.sips)],
+      ['SCORE', String(s.score)],
+      ['TIME BONUS', String(timeBonus)],
+      ['TOTAL', String(total)],
+    ];
+    const x0 = W / 2 - 50, x1 = W - 30;
+    rows.forEach(([k, v], i) => {
+      const y = 54 + i * 12;
+      const a = px(this, x0, y, k, i === rows.length - 1 ? COLORS.goldHi : 0xffffff).setAlpha(0);
+      const b = px(this, x1, y, v, i === rows.length - 1 ? COLORS.goldHi : 0xffffff).setOrigin(1, 0).setAlpha(0);
+      this.tweens.add({ targets: [a, b], alpha: 1, delay: 300 + i * 220, duration: 150, onStart: () => Audio.sfx(this, 'blip', { volume: 0.5 }) });
+    });
+    const rk = px(this, (x0 + x1) / 2, 146, `RANK: ${rank}`, COLORS.gold, 2).setOrigin(0.5, 0).setAlpha(0);
+    this.tweens.add({ targets: rk, alpha: 1, delay: 300 + rows.length * 220 + 200, duration: 200, onStart: () => Audio.sfx(this, 'shine', { volume: 0.6 }) });
+    if (newBest) px(this, (x0 + x1) / 2, 166, 'NEW BEST!', COLORS.goldHi).setOrigin(0.5, 0);
+    else px(this, (x0 + x1) / 2, 166, `BEST ${rec.bestScore}`, 0x9aa0c0).setOrigin(0.5, 0);
+
+    const again = px(this, 70, 182, '> RUN IT BACK', COLORS.goldHi).setOrigin(0.5, 0).setInteractive({ useHandCursor: true });
+    const next = px(this, (x0 + x1) / 2, 182, 'NEXT: OLD MEMPHIS (COMING SOON)', 0x9aa0c0).setOrigin(0.5, 0);
+    const buy = px(this, W / 2, 202, '> GET THE REAL THING: MEMPHYSWATER.COM', COLORS.gold).setOrigin(0.5, 0).setInteractive({ useHandCursor: true });
+    void next;
+    again.on('pointerdown', () => this.scene.start('Mission1'));
+    buy.on('pointerdown', () => window.open(MEMPHYS_URL, '_blank', 'noopener'));
+    this.input.keyboard?.on('keydown-ENTER', () => this.scene.start('Mission1'));
+    this.cameras.main.fadeIn(400);
+  }
+}

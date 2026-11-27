@@ -1,0 +1,467 @@
+{
+ "fontChars": " !\"#%&'()*+,-./0123456789:<=>?ABCDEFGHIJKLMNOPQRSTUVWXYZx",
+ "levelWidth": 2560,
+ "sprites": {
+  "mane": {
+   "file": "mane.png",
+   "frameWidth": 64,
+   "frameHeight": 64,
+   "anims": {
+    "idle": [
+     0,
+     3
+    ],
+    "walk": [
+     4,
+     9
+    ],
+    "jump": [
+     10,
+     12
+    ],
+    "punch1": [
+     13,
+     15
+    ],
+    "punch2": [
+     16,
+     18
+    ],
+    "punch3": [
+     19,
+     21
+    ],
+    "kick": [
+     22,
+     24
+    ],
+    "hurt": [
+     25,
+     26
+    ],
+    "knockdown": [
+     27,
+     30
+    ],
+    "taunt": [
+     31,
+     34
+    ],
+    "shine": [
+     35,
+     38
+    ],
+    "sip": [
+     39,
+     44
+    ],
+    "victory": [
+     45,
+     50
+    ],
+    "idleShades": [
+     51,
+     54
+    ]
+   }
+  },
+  "manePortrait": {
+   "file": "manePortrait.png",
+   "frameWidth": 32,
+   "frameHeight": 32
+  },
+  "shiestyRed": {
+   "file": "shiestyRed.png",
+   "frameWidth": 64,
+   "frameHeight": 64,
+   "anims": {
+    "idle": [
+     0,
+     1
+    ],
+    "walk": [
+     2,
+     5
+    ],
+    "punch": [
+     6,
+     8
+    ],
+    "throw": [
+     9,
+     11
+    ],
+    "hurt": [
+     12,
+     13
+    ],
+    "knockdown": [
+     14,
+     16
+    ],
+    "dazed": [
+     17,
+     18
+    ]
+   }
+  },
+  "shiestyGrey": {
+   "file": "shiestyGrey.png",
+   "frameWidth": 64,
+   "frameHeight": 64,
+   "anims": {
+    "idle": [
+     0,
+     1
+    ],
+    "walk": [
+     2,
+     5
+    ],
+    "punch": [
+     6,
+     8
+    ],
+    "throw": [
+     9,
+     11
+    ],
+    "hurt": [
+     12,
+     13
+    ],
+    "knockdown": [
+     14,
+     16
+    ],
+    "dazed": [
+     17,
+     18
+    ]
+   }
+  },
+  "shiestyGreen": {
+   "file": "shiestyGreen.png",
+   "frameWidth": 64,
+   "frameHeight": 64,
+   "anims": {
+    "idle": [
+     0,
+     1
+    ],
+    "walk": [
+     2,
+     5
+    ],
+    "punch": [
+     6,
+     8
+    ],
+    "throw": [
+     9,
+     11
+    ],
+    "hurt": [
+     12,
+     13
+    ],
+    "knockdown": [
+     14,
+     16
+    ],
+    "dazed": [
+     17,
+     18
+    ]
+   }
+  },
+  "shiestyNoMask": {
+   "file": "shiestyNoMask.png",
+   "frameWidth": 64,
+   "frameHeight": 64,
+   "anims": {
+    "idle": [
+     0,
+     1
+    ],
+    "walk": [
+     2,
+     5
+    ],
+    "punch": [
+     6,
+     8
+    ],
+    "throw": [
+     9,
+     11
+    ],
+    "hurt": [
+     12,
+     13
+    ],
+    "knockdown": [
+     14,
+     16
+    ],
+    "dazed": [
+     17,
+     18
+    ]
+   }
+  },
+  "malik": {
+   "file": "malik.png",
+   "frameWidth": 64,
+   "frameHeight": 64,
+   "anims": {
+    "idle": [
+     0,
+     1
+    ],
+    "walk": [
+     2,
+     5
+    ],
+    "sip": [
+     6,
+     9
+    ],
+    "scared": [
+     10,
+     11
+    ]
+   }
+  },
+  "uncleT": {
+   "file": "uncleT.png",
+   "frameWidth": 64,
+   "frameHeight": 64,
+   "anims": {
+    "idle": [
+     0,
+     1
+    ],
+    "talk": [
+     2,
+     3
+    ],
+    "toss": [
+     4,
+     6
+    ],
+    "walk": [
+     7,
+     10
+    ]
+   }
+  },
+  "og": {
+   "file": "og.png",
+   "frameWidth": 64,
+   "frameHeight": 64,
+   "anims": {
+    "idle": [
+     0,
+     1
+    ],
+    "tip": [
+     2,
+     4
+    ],
+    "walk": [
+     5,
+     8
+    ]
+   }
+  },
+  "dog": {
+   "file": "dog.png",
+   "frameWidth": 32,
+   "frameHeight": 32,
+   "anims": {
+    "idle": [
+     0,
+     1
+    ],
+    "run": [
+     2,
+     5
+    ],
+    "bark": [
+     6,
+     7
+    ],
+    "runMask": [
+     8,
+     11
+    ]
+   }
+  },
+  "carMaroon": {
+   "file": "carMaroon.png",
+   "frameWidth": 128,
+   "frameHeight": 48
+  },
+  "carSilver": {
+   "file": "carSilver.png",
+   "frameWidth": 128,
+   "frameHeight": 48
+  },
+  "carBlue": {
+   "file": "carBlue.png",
+   "frameWidth": 128,
+   "frameHeight": 48
+  },
+  "carGold": {
+   "file": "carGold.png",
+   "frameWidth": 128,
+   "frameHeight": 48
+  },
+  "canPickup": {
+   "file": "canPickup.png",
+   "frameWidth": 16,
+   "frameHeight": 16,
+   "anims": {
+    "glow": [
+     0,
+     3
+    ]
+   }
+  },
+  "bbq": {
+   "file": "bbq.png"
+  },
+  "wings": {
+   "file": "wings.png"
+  },
+  "trashCan": {
+   "file": "trashCan.png",
+   "frameWidth": 20,
+   "frameHeight": 28
+  },
+  "bottle": {
+   "file": "bottle.png",
+   "frameWidth": 12,
+   "frameHeight": 12,
+   "anims": {
+    "spin": [
+     0,
+     3
+    ]
+   }
+  },
+  "pothole": {
+   "file": "pothole.png"
+  },
+  "portal": {
+   "file": "portal.png",
+   "frameWidth": 64,
+   "frameHeight": 20,
+   "anims": {
+    "glow": [
+     0,
+     3
+    ]
+   }
+  },
+  "spark": {
+   "file": "spark.png",
+   "frameWidth": 24,
+   "frameHeight": 24,
+   "anims": {
+    "hit": [
+     0,
+     2
+    ]
+   }
+  },
+  "dust": {
+   "file": "dust.png",
+   "frameWidth": 16,
+   "frameHeight": 16,
+   "anims": {
+    "puff": [
+     0,
+     2
+    ]
+   }
+  },
+  "smoke": {
+   "file": "smoke.png",
+   "frameWidth": 24,
+   "frameHeight": 24,
+   "anims": {
+    "rise": [
+     0,
+     3
+    ]
+   }
+  },
+  "shadow": {
+   "file": "shadow.png"
+  },
+  "maskProp": {
+   "file": "maskProp.png"
+  },
+  "sweat": {
+   "file": "sweat.png"
+  },
+  "smoker": {
+   "file": "smoker.png"
+  },
+  "picnic": {
+   "file": "picnic.png"
+  },
+  "hudCan": {
+   "file": "hudCan.png"
+  },
+  "hudCanEmpty": {
+   "file": "hudCanEmpty.png"
+  },
+  "btnPunch": {
+   "file": "btnPunch.png"
+  },
+  "btnJump": {
+   "file": "btnJump.png"
+  },
+  "btnSip": {
+   "file": "btnSip.png"
+  },
+  "btnFlex": {
+   "file": "btnFlex.png"
+  },
+  "btnPause": {
+   "file": "btnPause.png"
+  },
+  "stickBase": {
+   "file": "stickBase.png"
+  },
+  "stickKnob": {
+   "file": "stickKnob.png"
+  },
+  "logo": {
+   "file": "logo.png"
+  },
+  "bgSky": {
+   "file": "bgSky.png"
+  },
+  "bgFar": {
+   "file": "bgFar.png"
+  },
+  "bgWall": {
+   "file": "bgWall.png"
+  },
+  "bgGround": {
+   "file": "bgGround.png"
+  },
+  "egypt": {
+   "file": "egypt.png"
+  },
+  "font": {
+   "file": "font.png",
+   "frameWidth": 7,
+   "frameHeight": 9
+  }
+ }
+}

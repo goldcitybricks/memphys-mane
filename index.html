@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#070a1c" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <title>The Legend of MEMPHYS Mane</title>
+  <style>
+    html, body { margin: 0; padding: 0; height: 100%; background: #070a1c; overflow: hidden; touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+    #game { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; }
+    #game canvas { image-rendering: pixelated; image-rendering: crisp-edges; }
+    #rotate { position: fixed; inset: 0; display: none; flex-direction: column; align-items: center; justify-content: center; gap: 18px; background: #070a1c; color: #f5c542; font: 700 18px/1.4 ui-monospace, Menlo, Consolas, monospace; text-align: center; padding: 24px; z-index: 10; }
+    #rotate .phone { width: 44px; height: 76px; border: 4px solid #f5c542; border-radius: 8px; animation: tilt 1.6s ease-in-out infinite; }
+    @keyframes tilt { 0%, 30% { transform: rotate(0deg); } 60%, 100% { transform: rotate(-90deg); } }
+    @media (orientation: portrait) and (pointer: coarse) { #rotate { display: flex; } }
+  </style>
+</head>
+<body>
+  <div id="game"></div>
+  <div id="rotate"><div class="phone"></div><div>TURN YOUR PHONE SIDEWAYS<br />YOU THIRSTY MANE?</div></div>
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>

@@ -1,0 +1,26 @@
+{
+  "name": "memphys-mane",
+  "private": true,
+  "version": "0.1.0",
+  "description": "The Legend of MEMPHYS Mane: a retro 90s brawler promo game for MEMPHYS Water",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "assets": "tsx tools/build-assets.ts",
+    "art": "tsx tools/art/index.ts",
+    "audio": "tsx tools/audio/index.ts",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "phaser": "3.90.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "@types/pngjs": "^6.0.5",
+    "pngjs": "^7.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "~5.8.3",
+    "vite": "^6.3.5"
+  }
+}
