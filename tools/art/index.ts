@@ -10,6 +10,7 @@ import * as W from './world';
 import * as E from './egypt';
 import * as F from './fight';
 import * as D from './drive';
+import * as PL from './plant';
 import { drawFont, FONT_CHARS, CELL_W, CELL_H } from './font';
 import { P } from './palette';
 
@@ -179,6 +180,27 @@ saveImage('driveSky', D.driveSky());
 saveImage('driveFar', D.driveFar());
 saveImage('btnItem', W.touchButton('ITEM', hex('#c8282e'), 24));
 saveImage('btnDrift', W.touchButton('DRIFT', hex('#2c5aa8'), 22));
+
+// ------------------------------------------------------------------ Mission 5: The Plant (the first-person shooter)
+saveSheet('plantWalls', PL.plantWalls());
+saveSheet('plantFloors', PL.plantFloors());
+for (const k of Object.keys(PL.DRIFTER_LOOKS)) { const d = PL.drifterFrames(k); saveSheet(k, d.frames, d.anims); }
+{ const m = PL.miniPipFrames(); saveSheet('pipMini', m.frames, m.anims); }
+{ const f = PL.foremanFrames(); saveSheet('foreman', f.frames, f.anims); }
+saveSheet('hydrator', PL.hydratorFrames());
+saveSheet('waterShot', PL.waterShot());
+saveSheet('splash', PL.splashFrames(), { puff: [0, 2] });
+saveImage('crate', PL.crateProp());
+saveImage('pallet', PL.palletProp());
+saveImage('pillar', PL.pillarProp());
+saveImage('lamp', PL.lampProp());
+saveSheet('factCard', PL.factCard(), { glow: [0, 3] });
+saveSheet('qmark', PL.questionMark());
+saveImage('bigCap', PL.bigCap());
+saveImage('capOverlay', PL.capOverlay());
+saveImage('plantExt', PL.plantExterior());
+saveImage('btnSpray', W.touchButton('SPRAY', hex('#2c7ad0'), 24));
+saveImage('btnDolla', W.touchButton('DOLLA', hex('#3a8a3a'), 19));
 
 drawFont(P.white, P.ink).save(path.join(OUT, 'font.png'));
 manifest.font = { file: 'font.png', frameWidth: CELL_W, frameHeight: CELL_H };

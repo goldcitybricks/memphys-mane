@@ -59,3 +59,22 @@ export const GAME = {
   gameOver: "YOU GOT A LIL THIRSTY. RUN IT BACK?",
   buy: 'OUT OF SIPS? GET THE REAL THING.',
 };
+
+// Mission 5: the Plant. Drifters loop the same street lines (story bible); the Foreman talks like a machine on a quota.
+export const DRIFTER_TALK = [
+  "AY MANE, YOU GOT A DOLLA FOR THE BUS? I'M JUST TRYNA GET A RIDE DOWNTOWN.",
+  'AYE MANE, WHERE YOU FROM?',
+  'AYE, CAN I ASK YOU A QUESTION?',
+  'AY MANE, YOU GOT A DOLLA?',
+  'ZERO TASTE... ZERO MEMORY...',
+  'WHAT DAY IT IS?',
+];
+export const FOREMAN = {
+  hello: 'NEW UNIT DETECTED. CAN. UNSEALED. CAPPING NOW.',
+  quota: 'QUOTA: MORE PIPS.',
+  capping: 'CAPPING!',
+  capped: 'QUALITY CONTROL: PASSED.',
+  angry: 'PRESSURE CRITICAL. CAPPING... HARDER.',
+};
+// the hidden Aquifer Fact card (Protect Our Aquifer, citing USGS)
+export const AQUIFER_FACT = 'MEMPHIS IS ONE OF THE LARGEST\nMETRO AREAS IN THE WORLD THAT\nRUNS 100% ON GROUNDWATER.';

@@ -477,4 +477,101 @@ const S4: Record<string, Buf> = {
 };
 for (const [k, b] of Object.entries(S4)) writeAudio(b, path.join(OUT, `${k}.mp3`), { kbps: 96 });
 writeAudio(bridgeTrack(), path.join(OUT, 'music_bridge.mp3'), { kbps: 112 });
-console.log(`audio: ${Object.keys(S).length + Object.keys(S2).length + Object.keys(S3).length + Object.keys(S4).length} sfx + 7 music files written to ${OUT}`);
+
+// ------------------------------------------------------------------ Mission 5: The Plant
+// "The Plant" (Hip Hop station): 92 BPM, dark and industrial. Clanking pipe percussion on the off-beats, a
+// conveyor-belt arpeggio in F minor, 808s, a hiss on every fourth beat like a capping press. Original composition.
+const pipeHit = (f: number, g = 0.5) => {
+  const o = new Float32Array(Math.ceil(0.4 * SR));
+  for (const [m, gg] of [[1, 1], [2.71, 0.5], [5.2, 0.25]]) { const t = tone({ wave: 'sine', freq: f * m, dur: 0.3, a: 0.001, d: 0.3, s: 0, gain: g * gg }); for (let i = 0; i < t.length && i < o.length; i++) o[i] += t[i]; }
+  return o;
+};
+const hiss = (g = 0.4) => tone({ wave: 'noise', freq: 1, dur: 0.22, a: 0.02, d: 0.2, s: 0, gain: g, hp: 4000 });
+function plantTrack() {
+  const bpm = 92, beat = 60 / bpm, bar = beat * 4, bars = 16;
+  const len = bar * bars;
+  const m = new Buf(len + 2);
+  // Fm - Db - Bbm - C
+  const roots = [29, 25, 22, 24];
+  const arp = [[65, 68, 72, 75], [61, 65, 68, 72], [58, 61, 65, 70], [60, 64, 67, 72]];
+  const hook = [[0, 77, 0.75], [1, 75, 0.5], [1.5, 72, 0.5], [2, 75, 1], [3, 73, 0.5], [3.5, 72, 0.5]];
+  for (let b = 0; b < bars; b++) {
+    const t0 = b * bar, ch = Math.floor(b / 2) % 4, sec = Math.floor(b / 4);
+    m.mix(kick(), t0); m.mix(kick(0.8), t0 + beat * 1.75); m.mix(kick(0.7), t0 + beat * 2.5);
+    m.mix(snare(0.9), t0 + beat); m.mix(snare(0.9), t0 + beat * 3); m.mix(clap(0.5), t0 + beat * 3);
+    for (let k = 0; k < 8; k++) m.mix(hat(k % 2 ? 0.4 : 0.7), t0 + k * (beat / 2));
+    // the machinery: pipe clanks on the off-beats, a press hiss on beat 4
+    m.mix(pipeHit(420, 0.35), t0 + beat * 0.5); m.mix(pipeHit(311, 0.3), t0 + beat * 2.75);
+    m.mix(hiss(0.35), t0 + beat * 3.5);
+    m.mix(b808(roots[ch], beat * 1.6), t0, 0.9);
+    m.mix(b808(roots[ch] + 12, beat * 0.4, roots[ch]), t0 + beat * 2.5, 0.6);
+    // the conveyor: sixteenth-note arpeggio, comes in after the first 4 bars
+    if (sec > 0) for (let k = 0; k < 16; k++) m.mix(tone({ wave: 'pulse25', freq: mtof(arp[ch][k % 4] - 12), dur: beat * 0.2, a: 0.002, d: 0.05, s: 0.4, r: 0.03, gain: 0.06, lp: 2800 }), t0 + k * (beat / 4));
+    if (sec >= 2 && b % 2 === 0) for (const [st, n, d] of hook) m.mix(lead(n - (ch === 1 ? 4 : ch === 2 ? 7 : ch === 3 ? 5 : 0), beat * d * 0.9, 0.1, 'square'), t0 + st * beat);
+  }
+  m.wrapTo(len);
+  m.softClip(1.3);
+  m.normalize(0.8);
+  return m;
+}
+// "Capping Line" (the Foreman fight): 132 BPM, driving, a stamping-press rhythm and an alarm-like lead. Original.
+function foremanTrack() {
+  const bpm = 132, beat = 60 / bpm, bar = beat * 4, bars = 16;
+  const len = bar * bars;
+  const m = new Buf(len + 2);
+  const roots = [29, 29, 25, 27];
+  for (let b = 0; b < bars; b++) {
+    const t0 = b * bar, ch = b % 4, sec = Math.floor(b / 4);
+    for (let k = 0; k < 4; k++) m.mix(kick(k === 0 ? 1 : 0.8), t0 + k * beat);
+    m.mix(snare(0.8), t0 + beat); m.mix(snare(0.8), t0 + beat * 3);
+    if (b % 2) m.mix(snare(0.5), t0 + beat * 3.75);
+    for (let k = 0; k < 8; k++) m.mix(hat(k % 2 ? 0.8 : 0.4, k === 7), t0 + k * (beat / 2));
+    // the press: clank-clank ... hiss
+    m.mix(pipeHit(520, 0.3), t0 + beat * 0.5); m.mix(pipeHit(520, 0.3), t0 + beat * 0.75); m.mix(hiss(0.3), t0 + beat * 2.5);
+    // driving bass: eighth notes on the root, octave jumps
+    for (let k = 0; k < 8; k++) m.mix(tone({ wave: 'saw', freq: mtof(roots[ch] + 12 + (k % 4 === 3 ? 12 : 0)), dur: beat * 0.4, a: 0.003, d: 0.08, s: 0.6, r: 0.03, gain: 0.22, lp: 900 }), t0 + k * (beat / 2));
+    // the alarm lead: two notes a half step apart, then a run
+    if (sec >= 1) {
+      const r = roots[ch] + 48;
+      m.mix(lead(r + 7, beat * 0.9, 0.09, 'square'), t0); m.mix(lead(r + 8, beat * 0.9, 0.09, 'square'), t0 + beat);
+      if (sec >= 2) [r + 12, r + 10, r + 8, r + 7].forEach((n, i) => m.mix(lead(n, beat * 0.4, 0.08, 'square'), t0 + beat * 2 + i * beat * 0.5));
+    }
+  }
+  m.wrapTo(len);
+  m.softClip(1.3);
+  m.normalize(0.8);
+  return m;
+}
+const S5: Record<string, Buf> = {
+  // the Hydrator: a quick pressurized squirt
+  spray: sfx(0.22, (b) => {
+    b.mix(tone({ wave: 'noise', freq: 1, dur: 0.16, a: 0.003, d: 0.15, s: 0, gain: 0.8, lp: 6000, hp: 1500 }), 0);
+    b.mix(tone({ wave: 'sine', freq: (t) => 900 - t * 2500, dur: 0.06, a: 0.001, d: 0.06, s: 0, gain: 0.4 }), 0);
+  }, 0.55),
+  // a Drifter snapping back: splash, then a little rising "oh!" chime
+  hydrate: sfx(1.0, (b) => {
+    b.mix(tone({ wave: 'noise', freq: 1, dur: 0.3, a: 0.003, d: 0.3, s: 0, gain: 0.7, lp: 3000, hp: 300 }), 0);
+    [72, 76, 79, 84].forEach((n, i) => b.mix(bell(n, 0.3, 0.3), 0.18 + i * 0.07));
+  }, 0.7),
+  // Malik on the walkie: a click and static
+  radio: sfx(0.3, (b) => {
+    b.mix(tone({ wave: 'square', freq: 1800, dur: 0.015, a: 0.001, d: 0.015, s: 0, gain: 0.5 }), 0);
+    b.mix(tone({ wave: 'noise', freq: 1, dur: 0.22, a: 0.01, d: 0.2, s: 0.2, gain: 0.35, lp: 3500, hp: 1200 }), 0.02);
+  }, 0.45),
+  // plant alarm: two-tone whoop
+  alarm: sfx(1.0, (b) => {
+    for (let i = 0; i < 2; i++) b.mix(tone({ wave: 'square', freq: (t) => 600 + Math.min(1, t / 0.35) * 300, dur: 0.38, a: 0.01, d: 0.1, s: 0.8, r: 0.05, gain: 0.3, lp: 2400 }), i * 0.45);
+  }, 0.6),
+  // a hydraulic piston: hiss and a heavy clunk
+  piston: sfx(0.7, (b) => {
+    b.mix(tone({ wave: 'noise', freq: 1, dur: 0.4, a: 0.01, d: 0.4, s: 0, gain: 0.6, hp: 3000 }), 0);
+    b.mix(tone({ wave: 'sine', freq: (t) => 90 - t * 80, dur: 0.25, a: 0.001, d: 0.25, s: 0, gain: 1 }), 0.3);
+    b.mix(pipeHit(180, 0.5), 0.3);
+  }, 0.75),
+  // the giant cap falling: a descending whistle
+  whistle: sfx(1.1, (b) => b.mix(tone({ wave: 'sine', freq: (t) => 1800 - t * 1200, dur: 1.0, a: 0.05, d: 0.2, s: 0.8, r: 0.05, gain: 0.5, vib: 0.01, vibRate: 9 }), 0), 0.5),
+};
+for (const [k, b] of Object.entries(S5)) writeAudio(b, path.join(OUT, `${k}.mp3`), { kbps: 96 });
+writeAudio(plantTrack(), path.join(OUT, 'music_plant.mp3'), { kbps: 112 });
+writeAudio(foremanTrack(), path.join(OUT, 'music_foreman.mp3'), { kbps: 112 });
+console.log(`audio: ${Object.keys(S).length + Object.keys(S2).length + Object.keys(S3).length + Object.keys(S4).length + Object.keys(S5).length} sfx + 9 music files written to ${OUT}`);
