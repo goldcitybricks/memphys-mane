@@ -8,7 +8,8 @@ export interface Outfit {
   top: RGBA; topShade: RGBA; trim?: RGBA; sleeve?: RGBA;
   pants: RGBA; pantsShade: RGBA;
   shoes: RGBA; shoesShade: RGBA;
-  head: 'mask' | 'nomask' | 'malik' | 'uncleT' | 'og' | 'jackal' | 'jackalCaptain' | 'nia' | 'vendor' | 'king' | 'priest';
+  head: 'mask' | 'nomask' | 'malik' | 'uncleT' | 'og' | 'jackal' | 'jackalCaptain' | 'nia' | 'vendor' | 'king' | 'priest' | 'ref';
+  bowtie?: boolean; // Fight Night referee
   backpack?: boolean; apron?: boolean; coat?: boolean; hat?: boolean; big?: boolean;
   // Old Memphis wardrobe
   kilt?: boolean; // bare legs under a pleated kilt (pants color = the kilt)
@@ -29,7 +30,7 @@ export interface HPose {
   maskOff?: boolean; hatUp?: number;
 }
 
-export type Hand = 'fist' | 'open' | 'can' | 'bottle' | 'cane' | 'spear' | 'spearThrust' | 'pot' | 'khopesh' | 'khopeshSwing' | 'grill' | 'dates';
+export type Hand = 'fist' | 'open' | 'can' | 'bottle' | 'cane' | 'spear' | 'spearThrust' | 'pot' | 'khopesh' | 'khopeshSwing' | 'grill' | 'dates' | 'mic' | 'jug';
 
 const BASE = 61;
 const BRONZE: RGBA = [214, 160, 64, 255], BRONZE_D: RGBA = [150, 100, 36, 255], WOOD: RGBA = [120, 84, 48, 255];
@@ -111,6 +112,17 @@ export function drawHuman(o: Outfit, p: HPose): Pix {
     if (hand === 'dates') {
       g.ellipse(hx + 1, hy - 3, 4, 2, [150, 110, 60, 255]);
       for (const dx of [-1, 1, 3]) g.set(hx + dx, hy - 4, [92, 36, 20, 255]);
+    }
+    if (hand === 'mic') {
+      g.line(hx, hy, hx + 3, hy - 5, P.ink, 2);
+      g.circle(hx + 4, hy - 7, 2, P.greyDark); g.set(hx + 3, hy - 8, P.grey);
+    }
+    if (hand === 'jug') {
+      // a big jug of DeNile Water
+      g.rect(hx - 3, hy - 10, 8, 10, P.bottle);
+      g.rect(hx - 1, hy - 12, 4, 2, P.bottleCap);
+      g.vline(hx - 2, hy - 9, hy - 2, P.white);
+      g.hline(hx - 3, hx + 4, hy - 5, P.bottleShade);
     }
     if (hand === 'can') {
       g.rect(hx - 1, hy - 6, 4, 6, P.can);
@@ -288,6 +300,11 @@ export function drawHuman(o: Outfit, p: HPose): Pix {
     } else if (o.head === 'priest') {
       g.ellipse(hx, hy - 3, 5, 3, mix(o.skin, P.white, 0.15)); // shaved head shine
       g.set(hx - 1, hy - 5, mix(o.skin, P.white, 0.4));
+    } else if (o.head === 'ref') {
+      // short grey hair and a mustache
+      g.ellipse(hx - 1, hy - 4, 5, 2, P.grey);
+      g.rect(hx - 5, hy - 4, 2, 4, P.grey);
+      g.hline(hx + 2, hx + 5, hy + 1, P.greyDark);
     } else if (o.head === 'mask' && p.maskOff) {
       // the surprised face under the mask: short twists
       for (let i = -4; i <= 3; i += 2) g.rect(hx + i, hy - 6, 2, 2, P.ink);
@@ -295,6 +312,9 @@ export function drawHuman(o: Outfit, p: HPose): Pix {
     }
   }
 
+  if (o.bowtie) {
+    g.rect(shX - 1, shY, 2, 2, P.ink); g.rect(shX + 3, shY, 2, 2, P.ink); g.set(shX + 2, shY + 1, P.ink);
+  }
   // front arm on top
   arm(shX + halfS - 2, p.fa, p.fab ?? -3, true, p.fHand);
   if (p.fHand === 'hatTip') { /* hat tip uses hatUp */ }

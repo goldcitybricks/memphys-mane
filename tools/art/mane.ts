@@ -1,6 +1,6 @@
 // MEMPHYS Mane: cream-gold can, rubber-hose arms, white gloves, gold grill, gold kicks.
 // Every frame is built from a pose so animation stays bouncy and consistent.
-import { Pix, RGBA } from './pix';
+import { Pix, RGBA, hex } from './pix';
 import { P } from './palette';
 
 export type Face = 'normal' | 'grin' | 'hurt' | 'yell' | 'ko' | 'sip' | 'smug';
@@ -12,6 +12,7 @@ export interface Arm {
   bend?: number; // perpendicular bulge of the hose
   hand?: Hand;
   front?: boolean; // draw on top of the body
+  gloveFront?: boolean; // arm hose behind the body, glove in front of it (boxing guard)
 }
 
 export interface Pose {
@@ -28,6 +29,7 @@ export interface Pose {
   shades?: boolean | number; // number = shades sliding down from above (px)
   sparkle?: number; // 0 none, 1..3 sparkle size
   kickLeg?: boolean; // front leg straight out
+  boxer?: boolean; // Fight Night: red boxing gloves and white trunks
 }
 
 const W0 = 24, H0 = 32, LEG = 9, BASE = 61;
@@ -65,7 +67,7 @@ export function drawMane(p: Pose): Pix {
   const shoulderY = top + Math.round(H * 0.55);
   const backShoulder: [number, number] = [left + 1 + rowOff(shoulderY), shoulderY];
   const frontShoulder: [number, number] = [left + W - 2 + rowOff(shoulderY), shoulderY];
-  if (!p.back.front) drawArm(g, backShoulder, p.back, true);
+  if (!p.back.front) drawArm(g, backShoulder, p.back, true, false, !!p.boxer, p.back.gloveFront ? 'hose' : 'all');
 
   // --- the can
   for (let y = top; y <= bottom; y++) {
@@ -174,6 +176,9 @@ export function drawMane(p: Pose): Pix {
   script.forEach((d, i) => L(cx - 9 + i, sY + d, P.label));
   L(cx - 9, sY - 2, P.label); L(cx - 8, sY - 3, P.label);
 
+  // white boxing trunks over the bottom of the can (Fight Night)
+  if (p.boxer) drawTrunks(g, left, W, bottom, rowOff, cx);
+
   // shades
   if (shadesY !== null) {
     const sy0 = eY - 2 - shadesY;
@@ -189,20 +194,62 @@ export function drawMane(p: Pose): Pix {
   if (p.sparkle) drawSparkle(g, fx + 4 + rowOff(mY), mY - 1, p.sparkle);
 
   // --- front arm, and the back arm if it swings across
-  if (p.back.front) drawArm(g, backShoulder, p.back, true, true);
-  drawArm(g, frontShoulder, p.front, false);
+  if (p.back.front) drawArm(g, backShoulder, p.back, true, true, !!p.boxer);
+  else if (p.back.gloveFront) drawArm(g, backShoulder, p.back, true, true, !!p.boxer, 'glove');
+  drawArm(g, frontShoulder, p.front, false, false, !!p.boxer);
 
   return g;
 }
 
-function drawArm(g: Pix, sh: [number, number], a: Arm, isBack: boolean, overBody = false) {
+function drawArm(g: Pix, sh: [number, number], a: Arm, isBack: boolean, overBody = false, boxer = false, part: 'all' | 'hose' | 'glove' = 'all') {
   const hx = sh[0] + a.hx, hy = sh[1] + a.hy;
   const mx = (sh[0] + hx) / 2, my = (sh[1] + hy) / 2;
   const len = Math.hypot(a.hx, a.hy) || 1;
   const bend = a.bend ?? 3;
   const cx = mx + (-a.hy / len) * bend, cy = my + (a.hx / len) * bend;
-  g.curve(sh[0], sh[1], cx, cy, hx, hy, P.ink, 2);
-  drawGlove(g, hx, hy, a.hand ?? 'fist', isBack && !overBody, a.hx >= 0);
+  if (part !== 'glove') g.curve(sh[0], sh[1], cx, cy, hx, hy, P.ink, 2);
+  if (part === 'hose') return;
+  if (boxer) drawBoxingGlove(g, hx, hy, a.hand ?? 'fist', isBack && !overBody, a.hx >= 0);
+  else drawGlove(g, hx, hy, a.hand ?? 'fist', isBack && !overBody, a.hx >= 0);
+}
+
+// Red boxing glove: bigger than his white cartoon gloves, white cuff, laces
+export function drawBoxingGlove(g: Pix, x: number, y: number, hand: Hand, dim: boolean, right: boolean) {
+  if (hand === 'can') {
+    g.rect(x - 2, y - 8, 5, 8, P.ink);
+    g.rect(x - 1, y - 7, 3, 6, P.can);
+    g.set(x - 1, y - 7, P.white); g.set(x + 1, y - 4, P.gold); g.set(x, y - 4, P.gold);
+  }
+  const base = dim ? P.redDark : P.red;
+  const shade = dim ? hex('#5e1414') : P.redDark;
+  const d = right ? 1 : -1;
+  g.ellipse(x, y, 5, 5, P.ink);
+  g.ellipse(x, y, 4, 4, base);
+  // thumb bump and knuckle shading
+  g.set(x - d * 2, y + 3, shade); g.set(x - d * 1, y + 3, shade); g.set(x + d * 3, y + 1, shade); g.set(x + d * 3, y + 2, shade);
+  g.set(x + d * 2, y - 3, hex('#f08080')); g.set(x + d * 1, y - 3, hex('#f08080')); g.set(x + d * 2, y - 2, hex('#f08080'));
+  // white cuff on the wrist side
+  g.vline(x - d * 4, y - 2, y + 2, dim ? P.gloveShade : P.white);
+  g.set(x - d * 3, y, P.ink);
+}
+
+function drawTrunks(g: Pix, left: number, W: number, bottom: number, rowOff: (y: number) => number, cx: number) {
+  const top = bottom - 4;
+  for (let y = top; y <= bottom + 1; y++) {
+    const o = rowOff(y);
+    for (let x = left - 1; x <= left + W; x++) {
+      const u = (x - left) / W;
+      g.set(x + o, y, u > 0.75 ? P.gloveShade : u < 0.15 ? P.glove : P.white);
+    }
+  }
+  // red waistband with a gold stripe
+  for (let x = left - 1; x <= left + W; x++) { g.set(x + rowOff(top), top, P.red); g.set(x + rowOff(top), top + 1, x % 2 ? P.gold : P.red); }
+  // two short legs of the trunks over the tops of his legs
+  for (const lx of [cx - 5, cx + 4]) {
+    g.rect(lx - 3, bottom + 2, 7, 2, P.white);
+    g.set(lx + 3, bottom + 2, P.gloveShade); g.set(lx + 3, bottom + 3, P.gloveShade);
+  }
+  g.vline(cx, bottom, bottom + 3, P.gloveShade);
 }
 
 function drawGlove(g: Pix, x: number, y: number, hand: Hand, dim: boolean, right: boolean) {

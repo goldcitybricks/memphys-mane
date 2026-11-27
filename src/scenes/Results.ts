@@ -25,20 +25,20 @@ export class Results extends Phaser.Scene {
     const k = m.number >= 2 ? 1.4 : 1; // longer missions pay more
     const rank = total > 6000 * k ? 'KEEPER' : total > 4200 * k ? 'ROYAL' : total > 2600 * k ? 'HUSTLER' : 'THIRSTY';
 
-    this.add.tileSprite(0, 0, W, 216, 'egypt').setOrigin(0).setAlpha(0.35);
+    this.add.tileSprite(0, 0, W, 216, m.mode === 'fight' ? 'arena' : 'egypt').setOrigin(0).setAlpha(0.35);
     this.add.rectangle(0, 0, W, 216, 0x070a1c, 0.55).setOrigin(0);
     px(this, W / 2, 12, `MISSION ${m.number} COMPLETE`, COLORS.goldHi, 2).setOrigin(0.5, 0);
     px(this, W / 2, 34, 'ROYAL BY NATURE.', COLORS.cream).setOrigin(0.5, 0);
 
-    const mane = this.add.sprite(70, 150, 'mane').setScale(2).setOrigin(0.5, 61 / 64);
-    mane.play('mane:victory');
-    mane.once('animationcomplete', () => mane.play('mane:idleShades'));
+    const mane = this.add.sprite(70, 150, m.mode === 'fight' ? 'maneBox' : 'mane').setScale(2).setOrigin(0.5, 61 / 64);
+    mane.play(`${mane.texture.key}:victory`);
+    mane.once('animationcomplete', () => mane.play(m.mode === 'fight' ? 'maneBox:idle' : 'mane:idleShades'));
 
     const rows: [string, string][] = [
       ['TIME', fmt(s.timeMs)],
       [m.enemyLabel ?? 'KOS', String(s.kos)],
       [m.hazardLabel ?? 'HAZARD KOS', String(s.drivers)],
-      ['MEMPHYS SIPPED', String(s.sips)],
+      [m.mode === 'fight' ? 'CORNER SIPS' : 'MEMPHYS SIPPED', String(s.sips)],
       ['SCORE', String(s.score)],
       ['TIME BONUS', String(timeBonus)],
       ['TOTAL', String(total)],

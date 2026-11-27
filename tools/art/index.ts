@@ -8,6 +8,7 @@ import { humanSheet, shiestyDef, shiestyOutfits, malik, malikDef, uncleT, uncleT
   jackalOutfits, jackalDef, jackalCaptain, jackalCaptainDef, nia, niaDef, vendor, vendorDef, king, kingDef, priest, priestDef, glowFrames } from './human';
 import * as W from './world';
 import * as E from './egypt';
+import * as F from './fight';
 import { drawFont, FONT_CHARS, CELL_W, CELL_H } from './font';
 import { P } from './palette';
 
@@ -115,6 +116,29 @@ saveSheet('chariot', E.chariotFrames());
 saveImage('memoryHall', E.memoryHall());
 saveImage('panOld', E.panOld());
 saveImage('panNew', E.panNew());
+
+// ------------------------------------------------------------------ Mission 3: Fight Night
+{
+  const mb = F.maneBoxFrames();
+  saveSheet('maneBox', mb.frames, mb.anims);
+  const pip = F.pipFrames();
+  saveSheet('pip', pip.frames, pip.anims);
+  saveSheet('pipPortrait', F.pipPortrait());
+  const r = humanSheet(F.ref, F.refDef());
+  saveSheet('ref', r.frames, r.anims);
+  const og2 = humanSheet(og, { ...ogDef(), mic: [{ fa: [6, -6], fHand: 'mic', ba: [0, 10], ff: [2, 0], bf: [-3, 0] }, { fa: [7, -8], fHand: 'mic', ba: [8, -4], bHand: 'open', ff: [2, 0], bf: [-3, 0], face: 'smile' }], pour: [{ fa: [10, -10], fHand: 'jug', ba: [0, 10], ff: [2, 0], bf: [-3, 0] }] });
+  saveSheet('ogFight', og2.frames, og2.anims);
+}
+saveImage('arena', F.arena());
+saveImage('spotlight', F.spotlight());
+saveSheet('capShot', F.capProj(), { spin: [0, 3] });
+saveImage('recycleBin', F.recycleBin());
+saveImage('cash', F.cashProp());
+saveImage('btnJab', W.touchButton('JAB', hex('#c8282e'), 24));
+saveImage('btnHook', W.touchButton('HOOK', hex('#d8641e'), 22));
+saveImage('btnBlock', W.touchButton('BLOCK', hex('#2c5aa8'), 24));
+saveImage('btnDodge', W.touchButton('DODGE', hex('#1f8a8a'), 22));
+saveImage('btnSuper', W.touchButton('SUPER', hex('#e0a82e'), 20));
 
 drawFont(P.white, P.ink).save(path.join(OUT, 'font.png'));
 manifest.font = { file: 'font.png', frameWidth: CELL_W, frameHeight: CELL_H };

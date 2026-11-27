@@ -40,14 +40,17 @@ export class Title extends Phaser.Scene {
     this.tweens.add({ targets: start, alpha: 0.25, duration: 500, yoyo: true, repeat: -1 });
     this.picked = picker ? open[open.length - 1].scene : 'Mission1';
     if (picker) {
-      // one card each side of Mane; the newest mission is the default for ENTER
-      open.slice(-2).forEach((m, i) => {
-        const x = i === 0 ? W / 2 - 92 : W / 2 + 92;
-        const card = this.add.rectangle(x, 146, 120, 34, 0x0b0f26, 0.85).setStrokeStyle(1, i === 1 ? COLORS.goldHi : COLORS.gold).setInteractive({ useHandCursor: true });
-        px(this, x, 136, `MISSION ${m.number}`, i === 1 ? COLORS.goldHi : COLORS.gold).setOrigin(0.5, 0);
-        px(this, x, 148, m.title, 0xffffff).setOrigin(0.5, 0);
-        card.on('pointerdown', (_p: unknown, _x: unknown, _y: unknown, e: Phaser.Types.Input.EventData) => { e.stopPropagation(); this.go(m.scene); });
-      });
+      // the newest mission gets the big card on the right (and ENTER); the earlier ones stack on the left
+      const card = (m: (typeof open)[number], x: number, y: number, w: number, h: number, newest: boolean) => {
+        const c = this.add.rectangle(x, y, w, h, 0x0b0f26, 0.85).setStrokeStyle(1, newest ? COLORS.goldHi : COLORS.gold).setInteractive({ useHandCursor: true });
+        px(this, x, y - (h > 30 ? 10 : 8), `MISSION ${m.number}`, newest ? COLORS.goldHi : COLORS.gold).setOrigin(0.5, 0);
+        px(this, x, y + (h > 30 ? 2 : 1), m.title, 0xffffff).setOrigin(0.5, 0);
+        c.on('pointerdown', (_p: unknown, _x: unknown, _y: unknown, e: Phaser.Types.Input.EventData) => { e.stopPropagation(); this.go(m.scene); });
+      };
+      const older = open.slice(0, -1).slice(-3);
+      const rowH = older.length > 2 ? 24 : 30;
+      older.forEach((m, i) => card(m, W / 2 - 92, 146 - ((older.length - 1) * rowH) / 2 + i * rowH, 120, rowH - 3, false));
+      card(open[open.length - 1], W / 2 + 92, 146, 120, 34, true);
     }
 
     const best = Save.get('m1-the-sip');

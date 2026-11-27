@@ -11,6 +11,14 @@ export const MANE = {
   getUp: "GET UP. GET YOURS. GET HYDRATED.",
   complete: "ROYAL BY NATURE.",
   flaugin: "QUIT FLAUGIN'.",
+  vsPip: "PIP, YOU LOOKIN' AHH PLASTIC.",
+  victory: "THAT'S ON THE 901.",
+};
+
+// Mission 3: Pip, the DeNile Water mascot (more of his trash talk lives in modes/fight/Pip.ts)
+export const PIP = {
+  entrance: "I'M SINGLE-USE, BABY. ONE USE IS ALL I NEED.",
+  refill: 'ZERO TASTE. ZERO MEMORY. FULL TANK!',
 };
 
 // Mission 2: the king's jackal guards
