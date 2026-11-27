@@ -30,12 +30,12 @@ export class Mission1 extends BrawlerScene {
     this.missionTitle = 'THE SIP';
     this.maskGag = false;
     // set dressing
-    this.add.image(250, 150, 'smoker').setOrigin(0.5, 1).setDepth(150);
-    const smoke = this.add.sprite(268, 104, 'smoke').play('smoke:rise').setDepth(149).setAlpha(0.8);
-    this.time.addEvent({ loop: true, delay: 1600, callback: () => { const s = this.add.sprite(268 + Phaser.Math.Between(-2, 2), 104, 'smoke').play('smoke:rise').setDepth(149).setAlpha(0.7); this.tweens.add({ targets: s, y: 60, alpha: 0, duration: 2400, onComplete: () => s.destroy() }); } });
+    this.add.image(545, 150, 'smoker').setOrigin(0.5, 1).setDepth(150);
+    const smoke = this.add.sprite(563, 104, 'smoke').play('smoke:rise').setDepth(149).setAlpha(0.8);
+    this.time.addEvent({ loop: true, delay: 1600, callback: () => { const s = this.add.sprite(563 + Phaser.Math.Between(-2, 2), 104, 'smoke').play('smoke:rise').setDepth(149).setAlpha(0.7); this.tweens.add({ targets: s, y: 60, alpha: 0, duration: 2400, onComplete: () => s.destroy() }); } });
     void smoke;
-    this.add.image(330, 158, 'picnic').setOrigin(0.5, 1).setDepth(158);
-    this.add.image(1420, 157, 'picnic').setOrigin(0.5, 1).setDepth(157);
+    this.addTable(336, 178);
+    this.addTable(1420, 184);
 
     // potholes (jump them)
     for (const [x, y] of [[430, 192], [540, 170], [760, 200], [1050, 176], [1330, 190], [1560, 168], [1620, 200], [2000, 184]]) this.addPothole(x, y);

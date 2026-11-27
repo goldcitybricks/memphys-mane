@@ -146,6 +146,13 @@ export class Shiesty extends Actor {
     if (d < 2) { this.vx = this.vy = 0; this.play('idle'); return true; }
     this.vx = (dx / d) * this.speed * mul;
     this.vy = (dy / d) * this.speed * 0.7 * mul;
+    // step around picnic tables instead of pushing into them
+    const t = this.scene.tableAt(this.x + Math.sign(dx) * 10, this.y);
+    if (t && Math.abs(dx) > 4) {
+      const goUp = ty < t.y || (ty === t.y && this.y < t.y);
+      this.vy = (goUp ? -1 : 1) * this.speed * 0.8 * mul;
+      this.vx *= 0.3;
+    }
     this.play('walk');
     void dt;
     return false;
@@ -258,7 +265,7 @@ export class Shiesty extends Actor {
   onLand(impact: number) {
     if (this.state === 'down') {
       this.scene.dust(this.x, this.y);
-      if (impact < -160) { this.vz = 80; this.z = 0.01; this.scene.sfx('land', 0.5); this.scene.shake(60, 0.002); }
+      if (impact < -160) { this.vz = 80; this.z += 0.01; this.scene.sfx('land', 0.5); this.scene.shake(60, 0.002); }
     }
   }
 }

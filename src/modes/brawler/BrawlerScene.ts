@@ -29,6 +29,7 @@ export abstract class BrawlerScene extends Phaser.Scene {
   bottles: Bottle[] = [];
   cans: TrashCan[] = [];
   potholes: Pothole[] = [];
+  tables: { x: number; y: number; hw: number; hd: number; h: number }[] = [];
   extras: Actor[] = []; // cutscene characters
   private tokens = new Set<Shiesty>();
   private bubbles: Bubble[] = [];
@@ -58,7 +59,7 @@ export abstract class BrawlerScene extends Phaser.Scene {
   viewBounds() { return { left: this.camX, right: this.camX + this.viewW }; }
 
   create() {
-    this.enemies = []; this.pickups = []; this.cars = []; this.bottles = []; this.cans = []; this.potholes = []; this.extras = [];
+    this.enemies = []; this.pickups = []; this.cars = []; this.bottles = []; this.cans = []; this.potholes = []; this.extras = []; this.tables = [];
     this.tokens.clear(); this.bubbles = []; this.waiters = [];
     this.lockX = null; this.camX = 0; this.score = 0; this.kos = 0; this.pickupsTaken = 0; this.driveOutKOs = 0;
     this.elapsed = 0; this.inCutscene = false; this.skipping = false; this.paused = false; this.continuing = false; this.hitstopMs = 0;
@@ -265,6 +266,27 @@ export abstract class BrawlerScene extends Phaser.Scene {
   addPothole(x: number, y: number) {
     const img = this.add.image(x, y, 'pothole').setDepth(-990);
     this.potholes.push({ x, y, w: 17, h: 5, img });
+  }
+
+  // Picnic tables are solid: walk in front of or behind them, or jump up and stand on top.
+  addTable(x: number, y: number) {
+    this.add.image(x, y + 4, 'picnic').setOrigin(0.5, 1).setDepth(y);
+    this.add.ellipse(x, y + 3, 50, 8, 0x000000, 0.3).setDepth(-980);
+    this.tables.push({ x, y, hw: 22, hd: 5, h: 18 });
+  }
+
+  solidAt(x: number, y: number, z: number) {
+    for (const t of this.tables) if (Math.abs(x - t.x) < t.hw && Math.abs(y - t.y) < t.hd && z < t.h - 2) return true;
+    return false;
+  }
+
+  tableAt(x: number, y: number) {
+    return this.tables.find((t) => Math.abs(x - t.x) < t.hw && Math.abs(y - t.y) < t.hd);
+  }
+
+  floorAt(x: number, y: number) {
+    for (const t of this.tables) if (Math.abs(x - t.x) < t.hw && Math.abs(y - t.y) < t.hd) return t.h;
+    return 0;
   }
 
   inPothole(a: Actor) {

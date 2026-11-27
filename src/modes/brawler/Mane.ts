@@ -220,11 +220,17 @@ export class Mane extends Actor {
     if (this.state !== 'cutscene') this.x = Phaser.Math.Clamp(this.x, this.bounds.left + 12, this.bounds.right - 12);
 
     // potholes trip you up (jump them)
-    if (this.z === 0 && this.potholeCd <= 0 && (this.state === 'walk' || this.state === 'idle') && this.scene.inPothole(this)) {
+    if (this.z <= 0 && this.potholeCd <= 0 && (this.state === 'walk' || this.state === 'idle') && this.scene.inPothole(this)) {
       this.potholeCd = 1.2;
       this.scene.sfx('splash', 0.7);
       this.scene.splash(this.x, this.y);
       this.takeHit({ damage: 4, dir: (-this.facing) as 1 | -1, kind: 'pothole', knockback: 30 });
+    }
+
+    if ((this.state === 'idle' || this.state === 'walk') && this.z > this.floor + 1) {
+      this.setState('jump');
+      this.kicked = false;
+      this.sprite.anims.stop();
     }
 
     const scale = this.inManeMode ? 1.2 : 1;
@@ -284,7 +290,7 @@ export class Mane extends Actor {
   startJump() {
     this.setState('jump');
     this.vz = JUMP_V * (this.inManeMode ? 1.1 : 1);
-    this.z = 0.01;
+    this.z += 0.01;
     this.kicked = false;
     this.play('jump', false);
     this.sprite.anims.stop();
@@ -301,7 +307,7 @@ export class Mane extends Actor {
       // squash on landing
       this.scene.tweens.add({ targets: this.sprite, scaleY: { from: this.sprite.scaleY * 0.8, to: this.sprite.scaleY }, duration: 120 });
     } else if (this.state === 'down') {
-      if (impact < -150) { this.vz = 90; this.z = 0.01; this.scene.sfx('land', 0.6); this.scene.dust(this.x, this.y); }
+      if (impact < -150) { this.vz = 90; this.z += 0.01; this.scene.sfx('land', 0.6); this.scene.dust(this.x, this.y); }
     }
   }
 
@@ -358,7 +364,7 @@ export class Mane extends Actor {
       this.sprite.setFrame(27);
       this.vx = h.dir * (h.knockback ?? 120);
       this.vz = h.launch ?? 200;
-      this.z = 0.01;
+      this.z += 0.01;
       this.scene.time.delayedCall(260, () => { if (this.state === 'down') this.sprite.setFrame(28); });
       this.scene.shake(160, 0.006);
       if (this.hp > 0) this.say(MANE.hitHard, 0.8);

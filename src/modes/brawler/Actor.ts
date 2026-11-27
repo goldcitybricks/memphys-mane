@@ -41,16 +41,26 @@ export abstract class Actor {
     if (anim) this.play(anim, false);
   }
 
-  get onGround() { return this.z <= 0 && this.vz <= 0; }
+  floor = 0; // height of whatever is under the feet (a picnic table top, or the street)
+
+  get onGround() { return this.z <= this.floor + 0.01 && this.vz <= 0; }
 
   physics(dt: number) {
+    const px = this.x, py = this.y;
     this.x += this.vx * dt;
     this.y += this.vy * dt;
-    if (this.z > 0 || this.vz > 0) {
+    // solid props (picnic tables): slide along them instead of walking through
+    if (this.scene.solidAt(this.x, this.y, this.z)) {
+      if (!this.scene.solidAt(this.x, py, this.z)) this.y = py;
+      else if (!this.scene.solidAt(px, this.y, this.z)) this.x = px;
+      else { this.x = px; this.y = py; }
+    }
+    this.floor = this.scene.floorAt(this.x, this.y);
+    if (this.z > this.floor || this.vz > 0) {
       this.vz -= GRAVITY * dt;
       this.z += this.vz * dt;
-      if (this.z <= 0) { this.z = 0; const v = this.vz; this.vz = 0; this.onLand(v); }
-    }
+      if (this.z <= this.floor) { this.z = this.floor; const v = this.vz; this.vz = 0; this.onLand(v); }
+    } else if (this.z < this.floor) this.z = this.floor;
   }
 
   onLand(_impact: number) { /* override */ }
@@ -59,10 +69,10 @@ export abstract class Actor {
     const s = this.sprite;
     s.setPosition(Math.round(this.x), Math.round(this.y - this.z));
     s.setFlipX(this.facing < 0);
-    s.setDepth(this.y + 0.01 * (this.z > 0 ? 1 : 0));
-    this.shadow.setPosition(Math.round(this.x), Math.round(this.y));
-    const k = Math.max(0.45, 1 - this.z / 90);
-    this.shadow.setScale(k * (this.radius / 10) * s.scaleX, k).setDepth(this.y - 0.5);
+    s.setDepth(this.y + (this.z > 0.5 ? 7 : 0));
+    this.shadow.setPosition(Math.round(this.x), Math.round(this.y - this.floor));
+    const k = Math.max(0.45, 1 - (this.z - this.floor) / 90);
+    this.shadow.setScale(k * (this.radius / 10) * s.scaleX, k).setDepth(this.floor > 0 ? this.y + 6.5 : this.y - 0.5);
     this.shadow.setVisible(s.visible);
     if (this.invuln > 0 && this.alive) s.setAlpha(Math.floor(this.invuln * 20) % 2 ? 0.45 : 1);
     else s.setAlpha(1);

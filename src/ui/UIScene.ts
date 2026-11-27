@@ -55,7 +55,7 @@ export class UIScene extends Phaser.Scene {
     // --- HUD, top-left: portrait, health, cans, score
     const frame = this.add.rectangle(4, 4, 36, 36, 0x0b0f26, 0.85).setOrigin(0).setStrokeStyle(1, COLORS.gold);
     this.portrait = this.add.image(6, 6, 'manePortrait', 0).setOrigin(0);
-    const name = px(this, 44, 4, 'MANE', COLORS.goldHi);
+    const name = px(this, 44, 4, 'MEMPHYS MANE', COLORS.goldHi);
     this.hpBack = this.add.rectangle(44, 15, 82, 7, 0x0b0f26).setOrigin(0).setStrokeStyle(1, COLORS.ink);
     this.hpBar = this.add.rectangle(45, 16, 80, 5, COLORS.gold).setOrigin(0);
     this.mmBack = this.add.rectangle(44, 24, 82, 4, 0x0b0f26).setOrigin(0).setVisible(false);
@@ -71,7 +71,7 @@ export class UIScene extends Phaser.Scene {
 
     this.toastText = px(this, W / 2, 46, '', COLORS.goldHi).setOrigin(0.5, 0).setAlpha(0);
     this.go = px(this, W - 10, 92, 'GO >', COLORS.goldHi, 2).setOrigin(1, 0.5).setVisible(false);
-    this.tutorial = px(this, W / 2, 60, '', 0xffffff).setOrigin(0.5, 0).setCenterAlign().setAlpha(0);
+    this.tutorial = px(this, W / 2, 100, '', 0xffffff).setOrigin(0.5, 0).setCenterAlign().setAlpha(0);
     this.skipBtn = px(this, W - 6, 6, 'SKIP >', 0xffffff).setOrigin(1, 0).setVisible(false).setInteractive({ useHandCursor: true });
     this.skipBtn.on('pointerdown', () => (this.world as any).skipCutscene?.());
 

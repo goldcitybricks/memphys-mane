@@ -435,59 +435,75 @@ export function wallLayer(): Pix {
   const r = rng(31);
   const groundY = 146;
 
-  // --- Uncle T's Pit (based on the Wing Factory: white walls, blue stripe, red sign)
-  const utX = 0, utW = 520, utTop = 46;
-  g.rect(utX, utTop, utW, groundY - utTop, hex('#c9ccd6'));
-  // cinder blocks
-  for (let y = utTop + 4; y < groundY; y += 6) {
-    g.hline(utX, utX + utW, y, hex('#b2b6c4'));
-    for (let x = utX + ((y / 6) % 2 ? 0 : 8); x < utX + utW; x += 16) g.vline(x, y - 5, y, hex('#b2b6c4'));
+  // --- Uncle T's Pit, in a strip like the Wing Factory's: long flat stucco building,
+  // stepped parapet in the middle over Uncle T's sign, storefront glass, white bollards.
+  const utX = 0, utW = 520, utTop = 70;
+  const stucco = hex('#d6d2c6');
+  g.rect(utX, utTop, utW, groundY - utTop, stucco);
+  const steps: [number, number, number][] = [[107, 268, 62], [119, 256, 54], [131, 244, 46]];
+  for (const [x0, x1, top] of steps) g.rect(x0, top, x1 - x0, utTop - top + 1, stucco);
+  // stucco grain
+  for (let i = 0; i < 1400; i++) { const x = Math.floor(r() * utW), y = 46 + Math.floor(r() * 100); if (g.alpha(x, y)) g.set(x, y, hex('#c4c0b4')); }
+  // cornice lines on the roof edge and each step
+  g.hline(utX, utX + utW - 1, utTop, hex('#a8a498')); g.hline(utX, utX + utW - 1, utTop + 1, hex('#efebe0'));
+  for (const [x0, x1, top] of steps) { g.hline(x0, x1 - 1, top, hex('#a8a498')); g.hline(x0, x1 - 1, top + 1, hex('#efebe0')); g.vline(x0, top, utTop, hex('#b8b4a8')); g.vline(x1 - 1, top, utTop, hex('#b8b4a8')); }
+  // storefront sign band
+  g.rect(utX, 82, utW, 10, hex('#c8c4b8'));
+  // storefronts: [x0, x1, name, color, lit]
+  const stores: [number, number, string, string, boolean][] = [
+    [8, 100, 'BEAUTY SUPPLY', '#d0508a', false],
+    [284, 396, 'PHONE REPAIR', '#2a9a8a', false],
+    [404, 512, 'TAX PREP', '#2c5aa8', false],
+  ];
+  const glass = (x0: number, x1: number, lit: boolean) => {
+    g.rect(x0, 94, x1 - x0, 44, hex('#3a3a44'));
+    g.rect(x0 + 1, 95, x1 - x0 - 2, 42, lit ? hex('#e8c878') : hex('#1c2238'));
+    if (lit) for (let y = 95; y < 137; y++) g.hline(x0 + 1, x1 - 2, y, mix(hex('#f0d890'), hex('#c89a50'), (y - 95) / 42));
+    else { g.line(x0 + 4, 97, x0 + 14, 107, hex('#3a4466')); g.line(x0 + 4, 102, x0 + 9, 107, hex('#3a4466')); }
+    for (let x = x0; x < x1; x += 22) g.vline(x, 94, 137, hex('#3a3a44'));
+    g.hline(x0, x1 - 1, 112, hex('#3a3a44'));
+  };
+  for (const [x0, x1, name, col, lit] of stores) {
+    glass(x0, x1, lit);
+    const w = textWidth(name);
+    text(g, name, Math.round((x0 + x1) / 2 - w / 2), 84, hex(col));
   }
-  // night shading: wall darker at the top, lit from the back door
-  for (let y = utTop; y < groundY; y++) for (let x = utX; x < utX + utW; x++) {
-    const c = g.get(x, y)!;
-    const d = Math.hypot(x - 190, (y - 96) * 1.4);
-    const light = Math.max(0, 1 - d / 170);
-    const dark = 0.55 - light * 0.5;
-    g.set(x, y, mix(c, hex('#20264a'), dark) as RGBA);
-  }
-  // blue stripe along the base
-  g.rect(utX, groundY - 16, utW, 10, hex('#2c5aa8'));
-  g.hline(utX, utX + utW, groundY - 16, hex('#4a7ad0'));
-  // roof parapet
-  g.rect(utX, utTop - 4, utW, 5, hex('#8a8ea0'));
-  g.hline(utX, utX + utW, utTop - 4, hex('#b8bccc'));
-  // rooftop sign: UNCLE T'S PIT, red with neon outline
-  const sx = 120, sy = 14;
-  g.rect(sx - 4, sy - 4, 188, 26, hex('#9a1c24'));
-  g.rect(sx - 2, sy - 2, 184, 22, hex('#c8282e'));
+  // Uncle T's: sign on the stepped parapet, lit windows, glass door
+  g.rect(110, 58, 156, 22, hex('#9a1c24'));
+  g.rect(112, 60, 152, 18, hex('#fbf6ea'));
   const label = "UNCLE T'S PIT";
   const tw = textWidth(label, 2);
-  text(g, label, sx + 90 - tw / 2 + 1, sy + 4, hex('#5a0a10'), 2);
-  text(g, label, sx + 90 - tw / 2, sy + 3, hex('#fff4e0'), 2);
-  g.vline(sx + 20, sy + 22, utTop - 4, hex('#3a3a46')); g.vline(sx + 160, sy + 22, utTop - 4, hex('#3a3a46'));
-  // back door with a bulb
-  g.rect(170, 82, 34, groundY - 82, hex('#3a4466'));
-  g.rect(172, 84, 30, groundY - 84, hex('#56628c'));
-  g.rect(196, 112, 3, 6, hex('#c8c8d8'));
-  g.rect(176, 88, 22, 10, hex('#f0d890')); // little window, lit
-  g.rect(181, 72, 12, 4, hex('#555')); g.rect(185, 76, 4, 3, hex('#fff6c0'));
-  // boarded window
-  g.rect(70, 70, 46, 34, hex('#8a6a45'));
-  for (let y = 72; y < 104; y += 6) g.hline(70, 115, y, hex('#6b4e30'));
-  g.line(70, 70, 115, 103, hex('#5a4026'), 2);
-  // menu board of the week, hand painted (fictional)
-  g.rect(300, 66, 80, 46, hex('#1a1a22'));
-  g.rect(302, 68, 76, 42, hex('#2a2a36'));
-  text(g, 'RIBS', 308, 72, hex('#f5c542'));
-  text(g, 'WINGS', 308, 82, hex('#f5c542'));
-  text(g, 'TIPS', 308, 92, hex('#f5c542'));
-  text(g, 'SLAW', 346, 72, hex('#e0e0e0'));
-  text(g, 'BEANS', 342, 82, hex('#e0e0e0'));
-  text(g, 'TEA', 350, 92, hex('#e0e0e0'));
-  // AC unit and pipes
-  g.rect(420, 60, 36, 22, hex('#9096a8')); for (let x = 422; x < 454; x += 3) g.vline(x, 62, 80, hex('#6a7084'));
-  g.vline(470, utTop, groundY - 16, hex('#6a7084')); g.vline(471, utTop, groundY - 16, hex('#8a90a4'));
+  text(g, label, Math.round(188 - tw / 2) + 1, 63, hex('#f08a2a'), 2);
+  text(g, label, Math.round(188 - tw / 2), 62, hex('#c8282e'), 2);
+  text(g, 'BAR-B-Q  WINGS  OPEN LATE', 112, 84, hex('#c8282e'));
+  glass(108, 168, true);
+  glass(206, 270, true);
+  // menu painted on the glass (fictional)
+  text(g, 'RIBS', 213, 97, hex('#8a2020')); text(g, 'WINGS', 213, 114, hex('#8a2020')); text(g, 'TIPS', 213, 124, hex('#8a2020')); text(g, 'TEA', 246, 97, hex('#8a2020'));
+  g.rect(170, 92, 34, 54, hex('#3a3a44'));
+  g.rect(172, 94, 30, 52, hex('#f0d890'));
+  g.vline(187, 94, 145, hex('#3a3a44')); g.rect(183, 116, 2, 6, hex('#c8c8d8')); g.rect(190, 116, 2, 6, hex('#c8c8d8'));
+  // blue stripe along Uncle T's base (the Wing Factory look)
+  g.rect(104, groundY - 8, 170, 6, hex('#2c5aa8')); g.hline(104, 273, groundY - 8, hex('#4a7ad0'));
+  // base band
+  g.rect(utX, 138, utW, 6, hex('#a8a498'));
+  g.rect(104, 138, 66, 6, hex('#2c5aa8')); g.rect(204, 138, 70, 6, hex('#2c5aa8'));
+  // night: darken everything, warm light spilling around Uncle T's door
+  for (let y = 46; y < groundY; y++) for (let x = utX; x < utX + utW; x++) {
+    const c = g.get(x, y)!;
+    if (!c[3]) continue;
+    const d = Math.hypot(x - 188, (y - 110) * 1.3);
+    const light = Math.max(0, 1 - d / 150);
+    const bright = c[0] + c[1] > 380 && c[2] < 160; // lit glass stays bright
+    g.set(x, y, mix(c, hex('#1a2048'), bright ? 0.1 : 0.5 - light * 0.38) as RGBA);
+  }
+  // white bollards along the walk
+  for (let x = 14; x < utW; x += 26) {
+    if (x > 160 && x < 214) continue;
+    g.rect(x, groundY - 13, 3, 13, hex('#c8c8d0')); g.vline(x, groundY - 13, groundY - 1, hex('#ececf4')); g.hline(x, x + 2, groundY - 13, hex('#ffffff'));
+  }
+  // rooftop AC units
+  g.rect(410, 60, 30, 10, hex('#5a6074')); g.rect(30, 62, 24, 8, hex('#5a6074'));
 
   // --- chain-link fence lot
   const fX = 520, fW = 300;
@@ -529,28 +545,52 @@ export function wallLayer(): Pix {
   g.rect(bX + 360, 112, 20, 30, hex('#2a1a1c')); // side door
 
   // --- tire shop back: iron fence + stacks of tires
-  const tX = 1280, tW = 420;
+  const tX = 1280, tW = 250;
   g.rect(tX, 60, tW, groundY - 60, hex('#3c3a52'));
   g.rect(tX, 56, tW, 6, hex('#55536e'));
-  g.rect(tX + 40, 80, 120, groundY - 80, hex('#2a2a3a')); // roll-up door
-  for (let y = 82; y < groundY; y += 4) g.hline(tX + 42, tX + 158, y, hex('#383848'));
-  text(g, 'TIRES', tX + 210, 74, hex('#e8e0c0'), 2);
-  // BLUES CLUB: blue neon sign up on the roof
-  const bcX = tX + 236, bcY = 18;
-  g.rect(bcX - 6, bcY - 5, 132, 28, hex('#0c1430'));
-  g.rect(bcX - 4, bcY - 3, 128, 24, hex('#121c44'));
-  for (let x = bcX - 4; x < bcX + 124; x++) { g.set(x, bcY - 3, hex('#4a8aff')); g.set(x, bcY + 20, hex('#4a8aff')); }
-  for (let y = bcY - 3; y <= bcY + 20; y++) { g.set(bcX - 4, y, hex('#4a8aff')); g.set(bcX + 123, y, hex('#4a8aff')); }
-  text(g, 'BLUES CLUB', bcX + 1 + 1, bcY + 2 + 1, hex('#1a3a9a'), 2);
-  text(g, 'BLUES CLUB', bcX + 1, bcY + 2, hex('#9fd0ff'), 2);
-  for (let y = bcY + 21; y < 56; y++) { g.set(bcX + 20, y, hex('#3a3a46')); g.set(bcX + 100, y, hex('#3a3a46')); }
-  for (let y = bcY - 8; y < bcY + 26; y++) for (let x = bcX - 10; x < bcX + 130; x++) if (!g.alpha(x, y)) g.set(x, y, [74, 138, 255, 22]);
-  text(g, 'USED + NEW', tX + 212, 94, hex('#c8c0a0'));
-  for (const [x, n] of [[tX + 190, 4], [tX + 222, 3], [tX + 300, 5], [tX + 330, 2]]) {
+  g.rect(tX + 20, 80, 90, groundY - 80, hex('#2a2a3a')); // roll-up door
+  for (let y = 82; y < groundY; y += 4) g.hline(tX + 22, tX + 108, y, hex('#383848'));
+  text(g, 'TIRES', tX + 140, 72, hex('#e8e0c0'), 2);
+  text(g, 'USED + NEW', tX + 142, 92, hex('#c8c0a0'));
+  for (const [x, n] of [[tX + 130, 3], [tX + 160, 4], [tX + 200, 2]]) {
     for (let k = 0; k < n; k++) { g.rect(x, groundY - 8 - k * 8, 26, 8, hex('#16161c')); g.hline(x + 3, x + 22, groundY - 5 - k * 8, hex('#3a3a44')); }
   }
-  for (let x = tX + 170; x < tX + tW; x += 6) { g.vline(x, 104, groundY, hex('#111118')); g.set(x, 103, hex('#2a2a34')); }
-  g.hline(tX + 170, tX + tW, 106, hex('#111118')); g.hline(tX + 170, tX + tW, 130, hex('#111118'));
+  for (let x = tX + 120; x < tX + tW; x += 6) { g.vline(x, 104, groundY, hex('#111118')); g.set(x, 103, hex('#2a2a34')); }
+  g.hline(tX + 120, tX + tW, 106, hex('#111118')); g.hline(tX + 120, tX + tW, 130, hex('#111118'));
+
+  // --- the Blues Club: its own little white club, painted guitar and notes, blue lettering
+  const cX = 1542, cW = 152, cTop = 76;
+  g.rect(cX, cTop, cW, groundY - cTop, hex('#e8e6e0'));
+  g.rect(cX - 4, cTop - 6, cW + 8, 7, hex('#f4f2ee')); g.hline(cX - 4, cX + cW + 3, cTop, hex('#9a98a0')); // flat roof edge
+  const navy = hex('#1c2a6a');
+  text(g, 'THE', cX + 6, cTop + 6, navy);
+  text(g, 'BLUES CLUB', cX + 8 + 1, cTop + 16 + 1, hex('#7a88c0'), 2);
+  text(g, 'BLUES CLUB', cX + 8, cTop + 16, navy, 2);
+  // painted guitar
+  const gx = cX + 22, gy = cTop + 50;
+  g.circle(gx, gy + 6, 8, navy); g.circle(gx, gy + 6, 6, hex('#e8e6e0')); g.circle(gx, gy + 6, 2, navy);
+  g.circle(gx + 4, gy - 4, 6, navy); g.circle(gx + 4, gy - 4, 4, hex('#e8e6e0'));
+  g.line(gx + 6, gy - 8, gx + 18, gy - 30, navy, 2);
+  g.rect(gx + 17, gy - 35, 4, 6, navy);
+  // music notes + a treble clef
+  const note = (x: number, y: number) => { g.ellipse(x, y, 2, 1, navy); g.vline(x + 2, y - 7, y, navy); g.line(x + 2, y - 7, x + 5, y - 5, navy); };
+  note(cX + 48, cTop + 52); note(cX + 58, cTop + 46); note(cX + 46, cTop + 66);
+  g.circle(cX + 64, cTop + 62, 3, navy); g.circle(cX + 64, cTop + 62, 1, hex('#e8e6e0')); g.line(cX + 66, cTop + 70, cX + 66, cTop + 50, navy); g.line(cX + 66, cTop + 50, cX + 62, cTop + 56, navy);
+  // barred door with a light above
+  g.rect(cX + 96, cTop + 38, 22, groundY - cTop - 38, hex('#2a2a34'));
+  for (let x = cX + 98; x < cX + 118; x += 4) g.vline(x, cTop + 40, groundY - 1, hex('#5a5a66'));
+  g.rect(cX + 102, cTop + 32, 10, 3, hex('#555')); g.rect(cX + 105, cTop + 35, 4, 2, hex('#fff6c0'));
+  // little canopy on posts at the side
+  g.rect(cX + 124, cTop + 32, 32, 4, hex('#f4f2ee')); g.hline(cX + 124, cX + 155, cTop + 36, hex('#9a98a0'));
+  for (const x of [cX + 130, cX + 146]) g.rect(x, cTop + 36, 2, groundY - cTop - 36, hex('#d8d6d0'));
+  // night shading with the door light
+  for (let y = cTop - 6; y < groundY; y++) for (let x = cX - 4; x < cX + cW + 4; x++) {
+    const c = g.get(x, y)!; if (!c[3]) continue;
+    const d = Math.hypot(x - (cX + 107), (y - (cTop + 40)) * 1.2);
+    g.set(x, y, mix(c, hex('#1a2048'), 0.55 - Math.max(0, 1 - d / 90) * 0.35) as RGBA);
+  }
+  // planter out front
+  g.rect(cX + 60, groundY - 10, 18, 10, hex('#3a3030')); g.circle(cX + 69, groundY - 13, 7, hex('#2a4a30')); g.circle(cX + 66, groundY - 16, 3, hex('#c04060'));
 
   // --- strip mall back: green metal roof, loading doors, dryer vents
   const sX = 1700, sW = 520;
@@ -586,7 +626,7 @@ export function wallLayer(): Pix {
   // curb + base shadow along the whole wall
   g.rect(0, groundY - 4, W, 4, hex('#22263c'));
   // utility poles along the alley (front of walls)
-  for (const px of [490, 1100, 1660, 2180]) {
+  for (const px of [490, 1100, 1532, 2180]) {
     g.rect(px, 8, 5, groundY - 8, hex('#3a2a22')); g.vline(px + 1, 8, groundY, hex('#54402e'));
     g.rect(px - 14, 18, 33, 3, hex('#3a2a22'));
     g.rect(px + 6, 26, 8, 10, hex('#5a5a66'));
