@@ -1152,6 +1152,219 @@
   "btnDrift": {
    "file": "btnDrift.png"
   },
+  "plantWalls": {
+   "file": "plantWalls.png",
+   "frameWidth": 64,
+   "frameHeight": 64
+  },
+  "plantFloors": {
+   "file": "plantFloors.png",
+   "frameWidth": 64,
+   "frameHeight": 64
+  },
+  "drifterA": {
+   "file": "drifterA.png",
+   "frameWidth": 48,
+   "frameHeight": 64,
+   "anims": {
+    "walk": [
+     0,
+     3
+    ],
+    "grab": [
+     4,
+     5
+    ],
+    "splash": [
+     6,
+     6
+    ],
+    "back": [
+     7,
+     8
+    ],
+    "idle": [
+     9,
+     9
+    ]
+   }
+  },
+  "drifterB": {
+   "file": "drifterB.png",
+   "frameWidth": 48,
+   "frameHeight": 64,
+   "anims": {
+    "walk": [
+     0,
+     3
+    ],
+    "grab": [
+     4,
+     5
+    ],
+    "splash": [
+     6,
+     6
+    ],
+    "back": [
+     7,
+     8
+    ],
+    "idle": [
+     9,
+     9
+    ]
+   }
+  },
+  "drifterC": {
+   "file": "drifterC.png",
+   "frameWidth": 48,
+   "frameHeight": 64,
+   "anims": {
+    "walk": [
+     0,
+     3
+    ],
+    "grab": [
+     4,
+     5
+    ],
+    "splash": [
+     6,
+     6
+    ],
+    "back": [
+     7,
+     8
+    ],
+    "idle": [
+     9,
+     9
+    ]
+   }
+  },
+  "pipMini": {
+   "file": "pipMini.png",
+   "frameWidth": 40,
+   "frameHeight": 56,
+   "anims": {
+    "off": [
+     0,
+     0
+    ],
+    "hop": [
+     1,
+     2
+    ],
+    "shoot": [
+     3,
+     4
+    ],
+    "hurt": [
+     5,
+     5
+    ],
+    "crush": [
+     6,
+     7
+    ]
+   }
+  },
+  "foreman": {
+   "file": "foreman.png",
+   "frameWidth": 160,
+   "frameHeight": 176,
+   "anims": {
+    "idle": [
+     0,
+     1
+    ],
+    "windup": [
+     2,
+     2
+    ],
+    "slam": [
+     3,
+     3
+    ],
+    "open": [
+     4,
+     4
+    ],
+    "hurt": [
+     5,
+     5
+    ],
+    "broken": [
+     6,
+     6
+    ]
+   }
+  },
+  "hydrator": {
+   "file": "hydrator.png",
+   "frameWidth": 144,
+   "frameHeight": 88
+  },
+  "waterShot": {
+   "file": "waterShot.png",
+   "frameWidth": 16,
+   "frameHeight": 16
+  },
+  "splash": {
+   "file": "splash.png",
+   "frameWidth": 32,
+   "frameHeight": 32,
+   "anims": {
+    "puff": [
+     0,
+     2
+    ]
+   }
+  },
+  "crate": {
+   "file": "crate.png"
+  },
+  "pallet": {
+   "file": "pallet.png"
+  },
+  "pillar": {
+   "file": "pillar.png"
+  },
+  "lamp": {
+   "file": "lamp.png"
+  },
+  "factCard": {
+   "file": "factCard.png",
+   "frameWidth": 24,
+   "frameHeight": 28,
+   "anims": {
+    "glow": [
+     0,
+     3
+    ]
+   }
+  },
+  "qmark": {
+   "file": "qmark.png",
+   "frameWidth": 12,
+   "frameHeight": 16
+  },
+  "bigCap": {
+   "file": "bigCap.png"
+  },
+  "capOverlay": {
+   "file": "capOverlay.png"
+  },
+  "plantExt": {
+   "file": "plantExt.png"
+  },
+  "btnSpray": {
+   "file": "btnSpray.png"
+  },
+  "btnDolla": {
+   "file": "btnDolla.png"
+  },
   "font": {
    "file": "font.png",
    "frameWidth": 7,

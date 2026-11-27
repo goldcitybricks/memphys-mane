@@ -13,9 +13,10 @@ export const SFX = [
   'howl', 'clang', 'hooves', 'potBreak', 'seal',
   'ding', 'crowd', 'ooh', 'crinkle', 'capPop', 'flash', 'block',
   'boost', 'skid', 'spin', 'recalc', 'geyser',
+  'spray', 'hydrate', 'radio', 'alarm', 'piston', 'whistle',
 ] as const;
 export type SfxKey = (typeof SFX)[number];
-export const MUSIC = ['music_pitstop', 'music_backdoor', 'music_victory', 'music_river', 'music_jackal', 'music_fight', 'music_bridge'] as const;
+export const MUSIC = ['music_pitstop', 'music_backdoor', 'music_victory', 'music_river', 'music_jackal', 'music_fight', 'music_bridge', 'music_plant', 'music_foreman'] as const;
 
 const FPS: Record<string, number> = {
   idle: 5, walk: 11, run: 12, jump: 8, punch1: 16, punch2: 15, punch3: 11, kick: 12, hurt: 10, knockdown: 8, taunt: 8,
