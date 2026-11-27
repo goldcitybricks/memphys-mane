@@ -1243,6 +1243,87 @@
     ]
    }
   },
+  "techA": {
+   "file": "techA.png",
+   "frameWidth": 48,
+   "frameHeight": 64,
+   "anims": {
+    "walk": [
+     0,
+     3
+    ],
+    "grab": [
+     4,
+     5
+    ],
+    "splash": [
+     6,
+     6
+    ],
+    "back": [
+     7,
+     8
+    ],
+    "idle": [
+     9,
+     9
+    ]
+   }
+  },
+  "techB": {
+   "file": "techB.png",
+   "frameWidth": 48,
+   "frameHeight": 64,
+   "anims": {
+    "walk": [
+     0,
+     3
+    ],
+    "grab": [
+     4,
+     5
+    ],
+    "splash": [
+     6,
+     6
+    ],
+    "back": [
+     7,
+     8
+    ],
+    "idle": [
+     9,
+     9
+    ]
+   }
+  },
+  "techC": {
+   "file": "techC.png",
+   "frameWidth": 48,
+   "frameHeight": 64,
+   "anims": {
+    "walk": [
+     0,
+     3
+    ],
+    "grab": [
+     4,
+     5
+    ],
+    "splash": [
+     6,
+     6
+    ],
+    "back": [
+     7,
+     8
+    ],
+    "idle": [
+     9,
+     9
+    ]
+   }
+  },
   "pipMini": {
    "file": "pipMini.png",
    "frameWidth": 40,
@@ -1845,6 +1926,97 @@
   },
   "rampStrip": {
    "file": "rampStrip.png"
+  },
+  "gigWalls": {
+   "file": "gigWalls.png",
+   "frameWidth": 64,
+   "frameHeight": 64
+  },
+  "gigFloors": {
+   "file": "gigFloors.png",
+   "frameWidth": 64,
+   "frameHeight": 64
+  },
+  "gigaCore": {
+   "file": "gigaCore.png",
+   "frameWidth": 176,
+   "frameHeight": 176,
+   "anims": {
+    "frozen": [
+     0,
+     3
+    ],
+    "glow": [
+     4,
+     7
+    ],
+    "idle": [
+     8,
+     9
+    ],
+    "inhale": [
+     10,
+     10
+    ],
+    "wince": [
+     11,
+     11
+    ],
+    "melt": [
+     12,
+     12
+    ]
+   }
+  },
+  "memBank": {
+   "file": "memBank.png",
+   "frameWidth": 48,
+   "frameHeight": 80
+  },
+  "chiller": {
+   "file": "chiller.png",
+   "frameWidth": 64,
+   "frameHeight": 72
+  },
+  "iceShard": {
+   "file": "iceShard.png",
+   "frameWidth": 16,
+   "frameHeight": 16,
+   "anims": {
+    "spin": [
+     0,
+     3
+    ]
+   }
+  },
+  "laserShot": {
+   "file": "laserShot.png",
+   "frameWidth": 16,
+   "frameHeight": 16,
+   "anims": {
+    "spin": [
+     0,
+     3
+    ]
+   }
+  },
+  "iceSlab": {
+   "file": "iceSlab.png"
+  },
+  "iceOverlay": {
+   "file": "iceOverlay.png"
+  },
+  "coolPipe": {
+   "file": "coolPipe.png"
+  },
+  "rackProp": {
+   "file": "rackProp.png"
+  },
+  "aetherCrate": {
+   "file": "aetherCrate.png"
+  },
+  "lampCold": {
+   "file": "lampCold.png"
   },
   "font": {
    "file": "font.png",

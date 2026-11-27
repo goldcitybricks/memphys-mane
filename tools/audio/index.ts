@@ -870,3 +870,89 @@ const S8: Record<string, Buf> = {
 for (const [k, b] of Object.entries(S8)) writeAudio(b, path.join(OUT, `${k}.mp3`), { kbps: 96 });
 writeAudio(loopTrack(false), path.join(OUT, 'music_loop.mp3'), { kbps: 112 });
 writeAudio(loopTrack(true), path.join(OUT, 'music_convoy.mp3'), { kbps: 112 });
+
+// ------------------------------------------------------------------ Mission 9: The Gigantum
+// "The Gigantum" (Hip Hop station): 86 BPM in E minor, cold and glassy. A low server hum under everything,
+// a music-box bell arpeggio like blinking rack lights, data blips in sixteenths, 808s, and a vocal-ish
+// pad that swells every 8 bars like the building breathing. Original composition.
+const hum = (dur: number, g = 0.08) => {
+  const o = new Float32Array(Math.ceil(dur * SR));
+  for (const [f, gg] of [[60, 1], [120, 0.5], [180, 0.25]] as const) { const t = tone({ wave: 'sine', freq: f, dur, a: 0.2, d: 0.1, s: 1, r: 0.2, gain: g * gg }); for (let i = 0; i < t.length && i < o.length; i++) o[i] += t[i]; }
+  return o;
+};
+const blip = (note: number, g = 0.05) => tone({ wave: 'square', freq: mtof(note), dur: 0.03, a: 0.001, d: 0.03, s: 0, gain: g, lp: 6000 });
+function gigantumTrack() {
+  const bpm = 86, beat = 60 / bpm, bar = beat * 4, bars = 16;
+  const len = bar * bars;
+  const m = new Buf(len + 2);
+  // Em - Cmaj7 - Am - B
+  const prog = [[64, 67, 71], [60, 64, 67, 71], [57, 60, 64], [59, 63, 66]];
+  const roots = [28, 24, 33, 23];
+  const arp = [[76, 79, 83, 79], [72, 76, 79, 83], [69, 72, 76, 72], [71, 75, 78, 75]];
+  let r = 7;
+  const rnd = () => { r = (r * 16807) % 2147483647; return r / 2147483647; };
+  for (let b = 0; b < bars; b++) {
+    const t0 = b * bar, ch = Math.floor(b / 2) % 4, sec = Math.floor(b / 4);
+    m.mix(hum(bar), t0, 0.8);
+    if (b >= 2) {
+      m.mix(kick(), t0); m.mix(kick(0.75), t0 + beat * 2.25); if (b % 2) m.mix(kick(0.6), t0 + beat * 3.5);
+      m.mix(snare(0.8), t0 + beat); m.mix(snare(0.8), t0 + beat * 3); m.mix(clap(0.4), t0 + beat * 3);
+      for (let k = 0; k < 8; k++) m.mix(hat(k % 2 ? 0.35 : 0.6), t0 + k * (beat / 2));
+      m.mix(b808(roots[ch], beat * 1.8), t0, 0.85);
+      m.mix(b808(roots[ch] + 12, beat * 0.5, roots[ch]), t0 + beat * 2.25, 0.55);
+    }
+    // the rack lights: a bell arpeggio in eighths
+    for (let k = 0; k < 8; k++) m.mix(bell(arp[ch][k % 4], beat * 0.6, 0.12), t0 + k * (beat / 2));
+    // data blips, scattered sixteenths
+    if (sec >= 1) for (let k = 0; k < 16; k++) if (rnd() < 0.35) m.mix(blip(84 + Math.floor(rnd() * 12)), t0 + k * (beat / 4));
+    // the building breathing
+    if (b % 8 === 0) m.mix(pad(prog[ch].map((n) => n - 12), bar * 3.8, 0.05), t0);
+    if (sec >= 2 && b % 2 === 0) for (const [st, n, d] of [[0, 83, 1], [1, 81, 0.5], [1.5, 79, 0.5], [2, 78, 1.5]] as const) m.mix(lead(n - (ch === 1 ? 4 : ch === 2 ? 7 : ch === 3 ? 5 : 0), beat * d * 0.9, 0.08), t0 + st * beat);
+  }
+  m.wrapTo(len);
+  m.softClip(1.25);
+  m.normalize(0.8);
+  return m;
+}
+// "Cold Storage" (the cooling core fight): 144 BPM, four on the floor, icy bells stabbing on the off-beats, a
+// detuned saw bass and a two-note siren that climbs every 4 bars. Original composition.
+function coreTrack() {
+  const bpm = 144, beat = 60 / bpm, bar = beat * 4, bars = 16;
+  const len = bar * bars;
+  const m = new Buf(len + 2);
+  const roots = [28, 28, 24, 26];
+  const chords = [[64, 67, 71], [64, 67, 71], [60, 64, 67], [62, 66, 69]];
+  for (let b = 0; b < bars; b++) {
+    const t0 = b * bar, ch = b % 4, sec = Math.floor(b / 4);
+    for (let k = 0; k < 4; k++) m.mix(kick(k === 0 ? 1 : 0.85), t0 + k * beat);
+    m.mix(snare(0.85), t0 + beat); m.mix(snare(0.85), t0 + beat * 3); if (b % 2) m.mix(snare(0.5), t0 + beat * 3.75);
+    for (let k = 0; k < 8; k++) m.mix(hat(k % 2 ? 0.8 : 0.35, k % 4 === 3), t0 + k * (beat / 2));
+    for (let k = 0; k < 8; k++) m.mix(tone({ wave: 'saw', freq: mtof(roots[ch] + 12 + (k % 2 ? 12 : 0)) * (k % 3 ? 1 : 1.004), dur: beat * 0.42, a: 0.003, d: 0.08, s: 0.6, r: 0.03, gain: 0.2, lp: 1000 }), t0 + k * (beat / 2));
+    for (let k = 0; k < 4; k++) for (const n of chords[ch]) m.mix(bell(n + 12, beat * 0.4, 0.07), t0 + k * beat + beat / 2);
+    if (sec >= 1) { const r0 = roots[ch] + 48 + sec; m.mix(lead(r0 + 7, beat * 0.9, 0.08, 'square'), t0); m.mix(lead(r0 + 8, beat * 0.9, 0.08, 'square'), t0 + beat * 2); }
+    if (sec >= 2 && ch === 3) [83, 81, 79, 78, 76, 74, 71, 69].forEach((n, i) => m.mix(blip(n + 12, 0.08), t0 + i * (beat / 2)));
+  }
+  m.wrapTo(len);
+  m.softClip(1.3);
+  m.normalize(0.8);
+  return m;
+}
+const S9: Record<string, Buf> = {
+  // a drone's laser: a short descending chirp
+  zap: sfx(0.25, (b) => b.mix(tone({ wave: 'square', freq: (t) => 2200 - t * 9000, dur: 0.16, a: 0.001, d: 0.15, s: 0, gain: 0.35, lp: 5000 }), 0), 0.45),
+  // flash frozen: an icy crackle with a cold chime on top
+  freeze: sfx(1.0, (b) => {
+    for (let i = 0; i < 10; i++) b.mix(tone({ wave: 'noise', freq: 1, dur: 0.02, a: 0.001, d: 0.02, s: 0, gain: 0.6, hp: 5000 }), i * 0.035);
+    [91, 86, 95].forEach((n, i) => b.mix(bell(n, 0.5, 0.3), 0.12 + i * 0.05));
+  }, 0.6),
+  // the ice breaking: a crash of glass and falling bells
+  shatter: sfx(1.4, (b) => {
+    b.mix(tone({ wave: 'noise', freq: 1, dur: 0.5, a: 0.001, d: 0.5, s: 0, gain: 0.9, hp: 2500 }), 0);
+    [96, 93, 91, 88, 86, 84, 81, 79].forEach((n, i) => b.mix(bell(n, 0.4, 0.22), 0.04 + i * 0.06));
+  }, 0.75),
+  // a memory bank moving data: a quick rising chirp chain
+  upload: sfx(0.5, (b) => [72, 79, 84, 91].forEach((n, i) => b.mix(blip(n, 0.3), i * 0.06)), 0.45),
+};
+for (const [k, b] of Object.entries(S9)) writeAudio(b, path.join(OUT, `${k}.mp3`), { kbps: 96 });
+writeAudio(gigantumTrack(), path.join(OUT, 'music_gigantum.mp3'), { kbps: 112 });
+writeAudio(coreTrack(), path.join(OUT, 'music_core.mp3'), { kbps: 112 });

@@ -15,6 +15,7 @@ import * as PL from './plant';
 import * as B from './beale';
 import * as C from './crowe';
 import * as LP from './loop';
+import * as GG from './gigantum';
 import { drawFont, FONT_CHARS, CELL_W, CELL_H } from './font';
 import { P } from './palette';
 
@@ -271,6 +272,21 @@ saveImage('loopSky', LP.loopSky());
 saveImage('loopFar', LP.loopFar());
 saveImage('gigantumExt', LP.gigantumExt());
 saveImage('rampStrip', LP.rampStrip());
+
+// ------------------------------------------------------------------ Mission 9: The Gigantum (the shooter again, a new skin)
+saveSheet('gigWalls', GG.gigWalls());
+saveSheet('gigFloors', GG.gigFloors());
+{ const c = GG.coreFrames(); saveSheet('gigaCore', c.frames, c.anims); }
+saveSheet('memBank', GG.memBank());
+saveSheet('chiller', GG.chiller());
+saveSheet('iceShard', GG.iceShard(), { spin: [0, 3] });
+saveSheet('laserShot', GG.laserShot(), { spin: [0, 3] });
+saveImage('iceSlab', GG.iceSlab());
+saveImage('iceOverlay', GG.iceOverlay());
+saveImage('coolPipe', GG.coolPipe());
+saveImage('rackProp', GG.rackProp());
+saveImage('aetherCrate', GG.aetherCrate());
+saveImage('lampCold', GG.lampCold());
 
 drawFont(P.white, P.ink).save(path.join(OUT, 'font.png'));
 manifest.font = { file: 'font.png', frameWidth: CELL_W, frameHeight: CELL_H };

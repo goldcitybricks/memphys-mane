@@ -22,7 +22,8 @@ export const MISSIONS: MissionDef[] = [
   { id: 'm6-beale-below', number: 6, title: 'BEALE BELOW', mode: 'brawler', scene: 'Mission6', available: true, enemyLabel: 'DRILL CREW KO', hazardLabel: 'DRILL CART KOS' },
   { id: 'm7-crowe-live', number: 7, title: 'CROWE LIVE', mode: 'fight', scene: 'Mission7', available: true, enemyLabel: 'KNOCKDOWNS', hazardLabel: 'DODGE COUNTERS' },
   { id: 'm8-the-loop', number: 8, title: 'THE LOOP', mode: 'driving', scene: 'Mission8', available: true, enemyLabel: 'AETHERCARS SPUN', hazardLabel: 'GOLD LIGHTS' },
-  { id: 'm9-the-gigantum', number: 9, title: 'THE GIGANTUM', mode: 'shooter', scene: 'Mission9', available: false },
+  { id: 'm9-the-gigantum', number: 9, title: 'THE GIGANTUM', mode: 'shooter', scene: 'Mission9', available: true, enemyLabel: 'TECHS HYDRATED', hazardLabel: 'DRONES DOWN' },
+  { id: 'm10-the-source', number: 10, title: 'THE SOURCE', mode: 'brawler', scene: 'Mission10', available: false },
 ];
 
 // Hooks for later features (not built yet): leaderboards by neighborhood, Join the Keepers email save, promo codes.

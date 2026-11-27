@@ -19,6 +19,12 @@ const TIPS_TOUCH: Record<string, string> = {
   shadow: 'A SHADOW OVER YOU? MOVE!',
   spill: 'DENILE SPILL. IT SLOWS YOU DOWN.',
   conveyor: 'CONVEYOR BELT. IT CARRIES YOU.',
+  drone: 'SECURITY DRONE. IT SHOOTS BACK.\nTWO SPLASHES KNOCK IT OUT THE AIR.',
+  bank: 'MEMORY BANK. SPRAY IT TO SET\nTHE MEMORIES FREE.',
+  ice: 'FROZEN SOLID. SPRAY THE CHILLERS\nKEEPIN\' IT COLD.',
+  frost: 'FROST FORMIN\' UNDER YOU? MOVE!',
+  thaw: 'THE ICE IS GONE. FLOOD THE CLOUD!',
+  frostSpill: 'COOLANT FROST. IT SLOWS YOU DOWN.',
 };
 const TIPS_KEYS: Record<string, string> = {
   ...TIPS_TOUCH,
@@ -44,6 +50,8 @@ export class ShooterUI extends Phaser.Scene {
   private cross!: Phaser.GameObjects.Graphics;
   private shadow!: Phaser.GameObjects.Graphics;
   private toastText!: Phaser.GameObjects.BitmapText;
+  private meterG!: Phaser.GameObjects.Graphics;
+  private meterText!: Phaser.GameObjects.BitmapText;
   private toastUntil = 0;
   private tutorial!: Phaser.GameObjects.BitmapText;
   private tutBack?: Phaser.GameObjects.Rectangle;
@@ -82,14 +90,16 @@ export class ShooterUI extends Phaser.Scene {
     this.goal = px(this, W / 2, 4, '', 0xffffff).setOrigin(0.5, 0);
     // the boss, top-right
     this.barW = Math.max(60, Math.floor(W / 2 - 110));
-    this.bossName = px(this, W - 6, 4, 'FOREMAN', 0xff9a8a).setOrigin(1, 0);
+    this.bossName = px(this, W - 6, 4, this.world.bossLabel, 0xff9a8a).setOrigin(1, 0);
     const bb = this.add.rectangle(W - 6, 15, this.barW + 2, 7, 0x0b0f26).setOrigin(1, 0).setStrokeStyle(1, COLORS.ink);
     this.bossBar = this.add.rectangle(W - 7, 16, this.barW, 5, COLORS.red).setOrigin(1, 0);
     this.boss.push(this.bossName, bb, this.bossBar);
     this.cross = this.add.graphics();
     this.cross.fillStyle(0xffffff, 0.75).fillRect(W / 2 - 4, 108, 3, 1).fillRect(W / 2 + 2, 108, 3, 1).fillRect(W / 2, 104, 1, 3).fillRect(W / 2, 110, 1, 3);
     this.shadow = this.add.graphics().setDepth(-1);
-    this.hud.push(strip, mf, this.portrait, name, ...this.hpPips, ...this.canIcons, this.mmBack, this.mmBar, this.scoreText, this.goal, ...this.boss, this.cross);
+    this.meterG = this.add.graphics();
+    this.meterText = px(this, W / 2, 15, '', 0xffffff).setOrigin(0.5, 0);
+    this.hud.push(strip, mf, this.portrait, name, ...this.hpPips, ...this.canIcons, this.mmBack, this.mmBar, this.scoreText, this.goal, ...this.boss, this.cross, this.meterG, this.meterText);
 
     this.toastText = px(this, W / 2, 46, '', COLORS.goldHi).setOrigin(0.5, 0).setAlpha(0);
     this.tutorial = px(this, W / 2, 62, '', 0xffffff).setOrigin(0.5, 0).setCenterAlign().setAlpha(0);
@@ -137,7 +147,7 @@ export class ShooterUI extends Phaser.Scene {
   update() {
     const w = this.world;
     if (this.time.now > this.toastUntil) this.toastText.setAlpha(Math.max(0, this.toastText.alpha - 0.05));
-    if (w.inCutscene || !w.map.length) return;
+    if (w.inCutscene || !w.map.length) { this.shadow.clear(); this.meterG.clear(); return; }
     this.portrait.setFrame(w.maneT > 0 ? 2 : w.invuln > 0.4 ? 1 : 0);
     const mm = w.maneT > 0;
     this.mmBack.setVisible(mm); this.mmBar.setVisible(mm);
@@ -152,12 +162,25 @@ export class ShooterUI extends Phaser.Scene {
       if (b.b === 'flex') b.img.setAlpha(w.dollaCd > 0 ? 0.35 : 0.9);
     }
     // the Foreman's cap coming down: a shadow on the floor in front of you that grows
+    // (Mission 9: frost spreading under you, pale blue instead of black)
     const s = (w as any).capShadow as number | undefined;
+    const ice = w.trapTex === 'iceOverlay';
     this.shadow.clear();
     if (s !== undefined && s > 0) {
       const W = this.scale.width;
-      this.shadow.fillStyle(0x000000, 0.25 + s * 0.4).fillEllipse(W / 2, 200, 120 + s * 260, 30 + s * 60);
-      this.shadow.fillStyle(0xd43a3a, 0.5 + 0.5 * Math.sin(this.time.now / 60)).fillRect(W / 2 - 40, 46, 80, 2);
+      this.shadow.fillStyle(ice ? 0xbfe8ff : 0x000000, ice ? 0.2 + s * 0.45 : 0.25 + s * 0.4).fillEllipse(W / 2, 200, 120 + s * 260, 30 + s * 60);
+      if (ice) this.shadow.lineStyle(2, 0xffffff, 0.4 + s * 0.5).strokeEllipse(W / 2, 200, 120 + s * 260, 30 + s * 60);
+      this.shadow.fillStyle(ice ? 0x5ce1ff : 0xd43a3a, 0.5 + 0.5 * Math.sin(this.time.now / 60)).fillRect(W / 2 - 40, 46, 80, 2);
+    }
+    // an extra meter under the goal (Uncle T's upload)
+    this.meterG.clear();
+    const m = w.meter;
+    this.meterText.setVisible(!!m);
+    if (m) {
+      const W = this.scale.width, bw = 110, x = W / 2 - bw / 2, y = 14;
+      this.meterG.fillStyle(0x0b0f26, 0.9).fillRect(x - 1, y - 1, bw + 2, 13).lineStyle(1, COLORS.gold, 1).strokeRect(x - 1, y - 1, bw + 2, 13);
+      this.meterG.fillStyle(m.v > 0.5 ? 0x2a7ad8 : m.v > 0.2 ? 0x3c9ad8 : COLORS.goldDark, 1).fillRect(x, y, Math.round(bw * Math.max(0, Math.min(1, m.v))), 11);
+      this.meterText.setText(m.label);
     }
   }
 
@@ -202,8 +225,9 @@ export class ShooterUI extends Phaser.Scene {
   // ---------------------------------------------------------------- capped: the inside of a bottle cap, mash to pop it off
   private buildCap() {
     const W = this.scale.width;
-    const img = this.add.image(W / 2, 108, 'capOverlay').setDisplaySize(W + 40, 236);
-    const t = px(this, W / 2, 140, 'CAPPED!', COLORS.red, 3).setOrigin(0.5);
+    const ice = this.world.trapTex === 'iceOverlay';
+    const img = this.add.image(W / 2, 108, this.world.trapTex).setDisplaySize(W + 40, 236);
+    const t = px(this, W / 2, 140, this.world.trapTitle, ice ? 0x2a7ad8 : COLORS.red, 3).setOrigin(0.5);
     const m = px(this, W / 2, 168, isTouch() ? 'MASH SPRAY!' : 'MASH Z / SPACE!', 0xffffff, 2).setOrigin(0.5).setName('m');
     this.capLayer = this.add.container(0, 0, [img, t, m]).setDepth(30).setVisible(false);
     this.tweens.add({ targets: m, alpha: 0.4, duration: 200, yoyo: true, repeat: -1 });
