@@ -1,6 +1,6 @@
 // One input model for keyboard and touch. Game code only reads this.
-// 'attack' is the brawler's punch and the fight's jab; hook/block/dodge/super are the fight mode's
-export type Button = 'attack' | 'jump' | 'sip' | 'flex' | 'pause' | 'hook' | 'block' | 'dodge' | 'super';
+// 'attack' is the brawler's punch and the fight's jab; hook/block/dodge/super are the fight mode's; item/drift are the driving mode's
+export type Button = 'attack' | 'jump' | 'sip' | 'flex' | 'pause' | 'hook' | 'block' | 'dodge' | 'super' | 'item' | 'drift';
 
 class ControlsImpl {
   // analog move, -1..1

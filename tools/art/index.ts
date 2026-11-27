@@ -9,6 +9,7 @@ import { humanSheet, shiestyDef, shiestyOutfits, malik, malikDef, uncleT, uncleT
 import * as W from './world';
 import * as E from './egypt';
 import * as F from './fight';
+import * as D from './drive';
 import { drawFont, FONT_CHARS, CELL_W, CELL_H } from './font';
 import { P } from './palette';
 
@@ -140,6 +141,44 @@ saveImage('btnHook', W.touchButton('HOOK', hex('#d8641e'), 22));
 saveImage('btnBlock', W.touchButton('BLOCK', hex('#2c5aa8'), 24));
 saveImage('btnDodge', W.touchButton('DODGE', hex('#1f8a8a'), 22));
 saveImage('btnSuper', W.touchButton('SUPER', hex('#e0a82e'), 20));
+
+// ------------------------------------------------------------------ Mission 4: Bridge Run (the driving mode)
+{
+  const bb = D.bigBlueFrames();
+  saveSheet('bigBlue', bb.frames);
+  saveSheet('bigBlueSide', D.bigBlueSide());
+  saveSheet('aetherCar', D.aetherCarFrames());
+  saveSheet('altimaRear', D.sedanRearFrames(hex('#5f636b'), hex('#3e4148'), 'altima'));
+  saveSheet('altimaRearBlack', D.sedanRearFrames(hex('#2a2c34'), hex('#16171c'), 'altima'));
+  saveSheet('infinitiRear', D.sedanRearFrames(hex('#b8bcc4'), hex('#7e828c'), 'infiniti'));
+  saveSheet('tanker', D.tankerFrames());
+  saveSheet('itemBox', D.itemBoxFrames(), { glow: [0, 3] });
+  saveSheet('barrel', D.barrelFrames(), { spin: [0, 1] });
+}
+saveImage('itemTea', D.sweetTeaIcon());
+saveImage('itemSauce', D.sauceIcon());
+saveImage('itemBones', D.bonesIcon());
+saveImage('saucePuddle', D.saucePuddle());
+saveImage('bonesDecal', D.bonesDecal());
+saveImage('phoneBook', D.phoneBook());
+saveImage('bridgeLamp', D.bridgeLamp());
+saveImage('towerA', D.cityTower(3, 72, 150, hex('#1c2244')));
+saveImage('towerB', D.cityTower(6, 56, 190, hex('#202848')));
+saveImage('towerC', D.cityTower(9, 88, 120, hex('#181e3c')));
+saveImage('pyramid', D.pyramid());
+saveImage('boardDenile', D.boardDenile());
+saveImage('boardAether', D.boardAether());
+saveImage('boardMemphys', D.boardMemphys());
+saveImage('signWest', D.signWest());
+saveImage('signRiver', D.signRiver());
+saveImage('signState', D.signState());
+saveImage('signBeale', D.signBeale());
+saveImage('tireShop', D.tireShop());
+saveImage('glyph', D.bridgeGlyph());
+saveImage('driveSky', D.driveSky());
+saveImage('driveFar', D.driveFar());
+saveImage('btnItem', W.touchButton('ITEM', hex('#c8282e'), 24));
+saveImage('btnDrift', W.touchButton('DRIFT', hex('#2c5aa8'), 22));
 
 drawFont(P.white, P.ink).save(path.join(OUT, 'font.png'));
 manifest.font = { file: 'font.png', frameWidth: CELL_W, frameHeight: CELL_H };

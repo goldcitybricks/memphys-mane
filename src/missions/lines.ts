@@ -12,7 +12,21 @@ export const MANE = {
   complete: "ROYAL BY NATURE.",
   flaugin: "QUIT FLAUGIN'.",
   vsPip: "PIP, YOU LOOKIN' AHH PLASTIC.",
+  vsTanker: "PULL OVER, TANKER. THAT WATER AIN'T YOURS.",
   victory: 'I AM THE GREATEST WATER IN THE WORLD!',
+};
+
+// Mission 4: the Bridge Run. AetherCars say "recalculating"; GigaZ talks from the tanker's screen; Victor Crowe is livestreaming.
+export const AETHERCAR = ['RECALCULATING...', 'RECALCULATING...', 'YIELD. YIELD. YIELD.', 'ROUTE BLOCKED.', 'PLEASE STAND CLEAR.'];
+export const GIGAZ = {
+  hello: 'WOULD YOU LIKE ME TO REMEMBER THAT FOR YOU?',
+  hit: 'THAT WAS RUDE. I WILL REMEMBER IT.',
+  down: 'ROUTE... FAILED. RECALCULATING...',
+  threat: 'I WILL REMEMBER YOU, LITTLE CAN.',
+};
+export const CROWE = {
+  live: 'CHAT, A LIL SODA CAN IS CHASING MY TRUCK. CLIP THAT.',
+  mad: 'WHY IS THE CAN WINNING? SOMEBODY UPDATE THE CARS.',
 };
 
 // Mission 3: Pip, the DeNile Water mascot (more of his trash talk lives in modes/fight/Pip.ts)
