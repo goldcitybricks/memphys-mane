@@ -346,7 +346,7 @@ export class Mission4 extends DriveScene {
     Audio.music(this, 'music_victory', 0.6, false);
     this.maneT = 99;
     this.sfx('shine', 0.7);
-    await this.line(this.maneSpeaker(), MANE.victory, 2400);
+    await this.line(this.maneSpeaker(), MANE.complete, 2400);
     await this.caption('', 'NEXT: THE PLANT.', 2200);
     this.cameras.main.fadeOut(600, 0, 0, 0);
     await new Promise<void>((r) => this.time.delayedCall(650, r));
