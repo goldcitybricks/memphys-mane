@@ -82,7 +82,7 @@ export class FightUI extends Phaser.Scene {
     const fn = px(this, W - 44, 4, this.world.foeF.name, 0xa8dcff).setOrigin(1, 0);
     const fb = this.add.rectangle(W - 44, 15, this.barW + 2, 7, 0x0b0f26).setOrigin(1, 0).setStrokeStyle(1, COLORS.ink);
     this.foeBar = this.add.rectangle(W - 45, 16, this.barW, 5, COLORS.red).setOrigin(1, 0);
-    for (let i = 0; i < 3; i++) this.stars.push(this.add.image(W - 50 - i * 12, 30, 'hudCanEmpty').setOrigin(0.5, 0).setScale(0.7).setTint(0x7fc4ff).setAlpha(0.35));
+    for (let i = 0; i < this.world.kdSlots; i++) this.stars.push(this.add.image(W - 50 - i * 12, 30, 'hudCanEmpty').setOrigin(0.5, 0).setScale(0.7).setTint(0x7fc4ff).setAlpha(0.35));
     // round + clock in the middle
     this.roundText = px(this, W / 2, 6, '', COLORS.goldHi).setOrigin(0.5, 0);
     this.clockText = px(this, W / 2, 17, '', 0xffffff, 2).setOrigin(0.5, 0);

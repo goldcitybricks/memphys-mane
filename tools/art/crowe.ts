@@ -305,7 +305,7 @@ export function croweFrames() {
   ]);
   add('knockdown', [
     { x: -4, lean: -6, crouch: 2, fa: [4, -12], ba: [-8, -12], ff: [5, -3], bf: [2, -1], face: 'hurt' },
-    layFlat(drawCrowe({ fa: [10, -8], ba: [-8, -9], ff: [3, 0], bf: [-3, 0], face: 'ko', sparks: true }), 61),
+    layFlat(drawCrowe({ fa: [11, -4], ba: [7, -13], ff: [3, 0], bf: [-3, 0], face: 'ko', sparks: true }), 61),
   ]);
   add('getup', [
     { crouch: 8, lean: 3, fa: [8, 8], ba: [-6, 8], ff: [6, 0], bf: [-6, 0], face: 'hurt' },
@@ -641,7 +641,7 @@ export function victorFrames() {
   ]);
   add('knockdown', [
     { x: -4, lean: -6, crouch: 2, fa: [4, -12], ba: [-8, -12], ff: [5, -3], bf: [2, -1], face: 'hurt' },
-    layFlat(drawCrowe({ human: true, fa: [10, -8], ba: [-8, -9], ff: [3, 0], bf: [-3, 0], face: 'ko' }), 61),
+    layFlat(drawCrowe({ human: true, fa: [11, -4], ba: [7, -13], ff: [3, 0], bf: [-3, 0], face: 'ko' }), 61),
   ]);
   add('getup', [
     { crouch: 8, lean: 3, fa: [8, 8], ba: [-6, 8], ff: [6, 0], bf: [-6, 0], face: 'hurt' },
