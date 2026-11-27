@@ -132,6 +132,7 @@ saveImage('panNew', E.panNew());
 }
 saveImage('arena', F.arena());
 saveImage('spotlight', F.spotlight());
+saveImage('coliseumExt', F.coliseumExterior());
 saveSheet('capShot', F.capProj(), { spin: [0, 3] });
 saveImage('recycleBin', F.recycleBin());
 saveImage('cash', F.cashProp());
