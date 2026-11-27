@@ -1303,8 +1303,8 @@
   },
   "hydrator": {
    "file": "hydrator.png",
-   "frameWidth": 144,
-   "frameHeight": 88
+   "frameWidth": 200,
+   "frameHeight": 120
   },
   "waterShot": {
    "file": "waterShot.png",
