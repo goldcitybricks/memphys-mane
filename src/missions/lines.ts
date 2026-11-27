@@ -13,6 +13,7 @@ export const MANE = {
   flaugin: "QUIT FLAUGIN'.",
   vsPip: "PIP, YOU LOOKIN' AHH PLASTIC.",
   vsTanker: "PULL OVER, TANKER. THAT WATER AIN'T YOURS.",
+  vsCrowe: "YOU FLAUGIN', CROWE. EVERYBODY CAN SEE IT.",
   victory: 'I AM THE GREATEST WATER IN THE WORLD!', // Mission 3 only: the Ali nod for the fight
 };
 
@@ -98,3 +99,47 @@ export const DRILLER = {
 };
 // the hidden Aquifer Fact card (Protect Our Aquifer)
 export const AQUIFER_FACT_6 = 'THE MEMPHIS AQUIFER REACHES\nUP TO 3,000 FEET BENEATH\nSHELBY COUNTY.';
+
+// Mission 7: Crowe Live. Crowe Prime is Victor's robot body double (GigaZ is underneath); Victor streams from his yacht.
+export const CROWE_PRIME = {
+  hello: 'GOOD EVENING, MEMPHIS. I AM CROWE PRIME. I WAS TRAINED ON YOUR POSTS.',
+  scan: 'SCANNING... SODA. CORRECTION: CAN. THREAT LEVEL: LOW.',
+  talk: [
+    'I WAS TRAINED ON YOUR POSTS.',
+    'CHAT, CLIP THAT.',
+    'SMILE FOR THE STREAM.',
+    'YOUR DATA LOOKS DELICIOUS.',
+    'LIKE AND SUBSCRIBE.',
+    'UPDATING... STILL BETTER.',
+  ],
+  boots: 'ROCKET BOOTS: ENABLED.',
+};
+export const VICTOR = {
+  hello: "WHAT'S GOOD, MEMPHIS! LIVE FROM MY YACHT, BECAUSE I DON'T DO CROWDS.",
+  // fact 5 (Protect Our Aquifer), in the villain's mouth
+  brag: 'TONIGHT THE GIGANTUM GOES LIVE. ONE SERVER FARM, COOLED BY AN AQUIFER OVER 7,000 SQUARE MILES WIDE. EIGHT STATES OF FREE WATER.',
+  host: "AND YOUR HOST... MY BODY DOUBLE. I DON'T DO STAGES EITHER.",
+  mane: "OH, IT'S THE SODA. CHAT, THIS IS CONTENT. PRIME, DISRUPT HIM.",
+  poll: 'CHAT, POLL: SHOULD PRIME USE THE ROCKET BOOTS? ...99% YES. BOOTS ON.',
+  driving: "WAIT, WHO'S DRIVING? I'M DRIVING. CHAT, I'M DRIVING.",
+  clip: 'CHAT, CLIP THAT!',
+  unclip: '...WAIT. NO. DO NOT CLIP THAT.',
+  bit: 'UH... THAT WAS A BIT, CHAT. A PLANNED BIT. WE\'RE GOOD.',
+};
+// the livestream chat (fictional handles, Memphis neighborhoods; the blue ones are Crowe's fans)
+export const CHAT_USERS = ['ORANGEMOUND4L', '901NATIVE', 'BLUFFCITYB', 'LAMARAVE', 'WHVNWAVE', 'FRAYSERFRESH', 'MIDTOWNMAMA', 'HICKORYHILL', 'SOMEMPHIS', 'BINGHAMPTON'];
+export const CHAT_FANS = ['DISRUPTOR99', 'CLOUDBRO', 'SEEDROUND', 'SERVERFARMER'];
+export const CHAT = {
+  idle: ['WHO THE CAN?', 'FREE CONCERT W', 'IS THAT A ROBOT?', 'WHERE THE MUSIC', 'MEMPHIS IN DA BLDG', 'HI MOM'],
+  maneHit: ["AIN'T IT MANE", 'CAN GOT HANDS', 'W CAN', 'HE COOKIN', 'OOOH', 'RUN IT', 'SHEESH', 'FOLD HIM'],
+  croweHit: ['RATIO', 'DISRUPTED', 'L CAN', 'PRIME IS HIM', 'CLIP IT'],
+  maneHurt: ['GET UP MANE', 'NAH THAT HURT', 'CAN DENTED', 'MANE U GOOD?'],
+  dodge: ['HE MISSED LOL', 'TOO SLOW', 'ANKLES', 'DODGED!'],
+  predict: ['IT READ HIM', 'MIX IT UP MANE', 'STOP SPAMMIN', 'IT KNOWS'],
+  crash: ['HE CRASHED LOL', 'BOOTS L', 'REBOOTING LOL', 'CLIP THAT INSTEAD'],
+  shine: ['THE GRILL!!', 'BLINDED', 'SHINE HIM AGAIN', 'GOLD TEETH W'],
+  superHit: ['SHADES ON', 'WATCH THIS JUNT', 'IT\'S OVER', 'CINEMA'],
+  down: ['OOOOOOH', 'HE DOWN', 'COUNT IT', 'FLATLINED'],
+};
+// the hidden Aquifer Fact card (CAESER)
+export const AQUIFER_FACT_7 = 'THE MEMPHIS AQUIFER FORMED\nIN THE MISSISSIPPI\nEMBAYMENT, A BASIN ABOUT\n70 MILLION YEARS OLD.';

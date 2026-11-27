@@ -725,3 +725,94 @@ writeAudio(bealeTrack(), path.join(OUT, 'music_beale.mp3'), { kbps: 112 });
 writeAudio(soulTrack(), path.join(OUT, 'music_soul.mp3'), { kbps: 112 });
 writeAudio(drillerTrack(), path.join(OUT, 'music_driller.mp3'), { kbps: 112 });
 writeAudio(lostTrack(), path.join(OUT, 'music_lost.mp3'), { kbps: 112 });
+
+// ------------------------------------------------------------------ Mission 7: "Crowe Live" (Hip Hop station)
+// a sidechained synth chord that "ducks" on every kick, the livestream sound
+const supersaw = (notes: number[], dur: number, g = 0.05) => {
+  const o = new Float32Array(Math.ceil((dur + 0.1) * SR));
+  for (const n of notes) for (const det of [0.993, 1, 1.007]) {
+    const t = tone({ wave: 'saw', freq: mtof(n) * det, dur, a: 0.01, d: 0.1, s: 0.8, r: 0.08, gain: g, lp: 2600 });
+    for (let i = 0; i < t.length && i < o.length; i++) o[i] += t[i];
+  }
+  return o;
+};
+// "Crowe Live" (rounds 1 and 2): 146 BPM half-time trap in F minor, a bright arp like a phone notification,
+// pumping saw chords, 808 slides. Original.
+function croweTrack() {
+  const bpm = 146, beat = 60 / bpm, bar = beat * 4, bars = 16;
+  const len = bar * bars;
+  const m = new Buf(len + 2);
+  // Fm - Db - Bbm - C
+  const prog = [[53, 56, 60], [49, 53, 56], [46, 49, 53], [48, 52, 55]];
+  const roots = [29, 25, 34, 24];
+  const arp = [0, 2, 1, 2, 0, 2, 1, 2];
+  for (let b = 0; b < bars; b++) {
+    const t0 = b * bar, ch = b % 4, sec = Math.floor(b / 4);
+    m.mix(kick(), t0); m.mix(kick(0.8), t0 + beat * 2.5); if (b % 2) m.mix(kick(0.7), t0 + beat * 3.25);
+    m.mix(snare(0.8), t0 + beat * 2); m.mix(clap(0.7), t0 + beat * 2);
+    for (let k = 0; k < 16; k++) {
+      const roll = b % 4 === 3 && k >= 12;
+      if (roll) for (let j = 0; j < 2; j++) m.mix(hat(0.7), t0 + k * (beat / 4) + j * (beat / 8));
+      else if (k % 2 === 0 || sec >= 2) m.mix(hat(k % 4 === 0 ? 0.9 : 0.5), t0 + k * (beat / 4));
+    }
+    m.mix(b808(roots[ch], beat * 1.8), t0, 0.95);
+    m.mix(b808(roots[ch] + 12, beat * 0.6, roots[ch]), t0 + beat * 2.5, 0.8);
+    // pumping chords: four hits per bar that duck under the kick
+    if (sec >= 1) for (let k = 0; k < 4; k++) m.mix(supersaw(prog[ch], beat * 0.7, k === 0 ? 0.03 : 0.045), t0 + k * beat + beat * 0.25);
+    // the notification arp
+    for (let k = 0; k < 8; k++) m.mix(bell(prog[ch][arp[k]] + 24, beat * 0.35, k === 0 ? 0.22 : 0.14), t0 + k * (beat / 2));
+    // the hook in the back half
+    if (sec >= 2 && b % 2 === 0) for (const [st, n, d] of [[0, 77, 0.5], [0.5, 80, 0.5], [1, 84, 1], [2.5, 82, 0.5], [3, 80, 1]]) m.mix(lead(n - (ch === 1 ? 4 : ch === 2 ? 7 : 0), beat * d * 0.9, 0.1), t0 + st * beat);
+  }
+  m.wrapTo(len);
+  m.softClip(1.3);
+  m.normalize(0.8);
+  return m;
+}
+// "Signal Lost" (the encore, GigaZ driving): the same key, darker and stuttering, the beat chopping like a bad stream. Original.
+function glitchTrack() {
+  const bpm = 152, beat = 60 / bpm, bar = beat * 4, bars = 16;
+  const len = bar * bars;
+  const m = new Buf(len + 2);
+  const roots = [29, 28, 25, 24];
+  for (let b = 0; b < bars; b++) {
+    const t0 = b * bar, ch = Math.floor(b / 2) % 4;
+    m.mix(kick(), t0); m.mix(kick(0.9), t0 + beat * 0.75); m.mix(kick(0.8), t0 + beat * 2.5);
+    m.mix(snare(0.9), t0 + beat * 2);
+    if (b % 2) for (let j = 0; j < 6; j++) m.mix(snare(0.35 + j * 0.08), t0 + beat * 3 + j * (beat / 6));
+    for (let k = 0; k < 16; k++) m.mix(hat(k % 4 === 2 ? 0.9 : 0.4, k === 14), t0 + k * (beat / 4));
+    m.mix(b808(roots[ch], beat * 2.2), t0, 1);
+    m.mix(b808(roots[ch] + 1, beat * 0.5, roots[ch]), t0 + beat * 3, 0.8);
+    // a stuttering square stab: the signal dropping in and out
+    for (let k = 0; k < 8; k++) if ((k * 5 + b) % 3 !== 0) m.mix(tone({ wave: 'square', freq: mtof(roots[ch] + 36 + (k % 3 === 0 ? 3 : 0)), dur: beat * 0.12, a: 0.001, d: 0.05, s: 0.5, r: 0.02, gain: 0.07, lp: 3000 }), t0 + k * (beat / 2));
+    m.mix(pad([roots[ch] + 24, roots[ch] + 27, roots[ch] + 31], bar * 0.95, 0.05), t0);
+    // GigaZ's polite little bell, out of tune
+    if (b % 4 === 0) [84, 81, 77].forEach((n, i) => m.mix(bell(n + 0.3, beat, 0.15), t0 + beat * (1 + i)));
+  }
+  m.wrapTo(len);
+  m.softClip(1.4);
+  m.normalize(0.8);
+  return m;
+}
+const S7: Record<string, Buf> = {
+  // rocket boots lighting up: a rising roar
+  rocket: sfx(0.9, (b) => {
+    b.mix(tone({ wave: 'noise', freq: 1, dur: 0.8, a: 0.15, d: 0.4, s: 0.6, r: 0.1, gain: 0.8, lp: 2200, hp: 200 }), 0);
+    b.mix(tone({ wave: 'saw', freq: (t) => 90 + t * 260, dur: 0.7, a: 0.1, d: 0.3, s: 0.6, r: 0.1, gain: 0.3, lp: 1200 }), 0);
+  }, 0.7),
+  // a digital stutter
+  glitch: sfx(0.5, (b) => {
+    for (let i = 0; i < 9; i++) b.mix(tone({ wave: i % 2 ? 'square' : 'noise', freq: 300 + ((i * 337) % 900), dur: 0.03, a: 0.001, d: 0.03, s: 0.6, gain: 0.5, lp: 6000 }), i * 0.045);
+  }, 0.55),
+  // a phone notification
+  notify: sfx(0.4, (b) => { b.mix(bell(88, 0.25, 0.4), 0); b.mix(bell(93, 0.3, 0.4), 0.09); }, 0.55),
+  // the face plate tearing off: a metallic rip
+  peel: sfx(0.9, (b) => {
+    b.mix(tone({ wave: 'noise', freq: 1, dur: 0.6, a: 0.02, d: 0.5, s: 0.3, r: 0.1, gain: 0.8, lp: 5000, hp: 1500 }), 0);
+    b.mix(tone({ wave: 'saw', freq: (t) => 900 - t * 1200, dur: 0.5, a: 0.01, d: 0.4, s: 0.2, r: 0.1, gain: 0.35, lp: 4000 }), 0.05);
+    b.mix(tone({ wave: 'sine', freq: 2200, dur: 0.3, a: 0.001, d: 0.3, s: 0, gain: 0.2 }), 0.5);
+  }, 0.7),
+};
+for (const [k, b] of Object.entries(S7)) writeAudio(b, path.join(OUT, `${k}.mp3`), { kbps: 96 });
+writeAudio(croweTrack(), path.join(OUT, 'music_crowe.mp3'), { kbps: 112 });
+writeAudio(glitchTrack(), path.join(OUT, 'music_glitch.mp3'), { kbps: 112 });

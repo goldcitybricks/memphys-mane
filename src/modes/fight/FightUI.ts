@@ -78,7 +78,7 @@ export class FightUI extends Phaser.Scene {
     this.scoreText = px(this, 44 + this.barW + 2, 31, '000000', 0xffffff).setOrigin(1, 0);
     // Pip, top-right
     const ff = this.add.rectangle(W - 40, 4, 36, 36, 0x0b0f26, 0.85).setOrigin(0).setStrokeStyle(1, 0x7fc4ff);
-    this.foePort = this.add.image(W - 6, 6, 'pipPortrait', 0).setOrigin(1, 0).setFlipX(true);
+    this.foePort = this.add.image(W - 6, 6, this.world.foePortrait, 0).setOrigin(1, 0).setFlipX(true);
     const fn = px(this, W - 44, 4, this.world.foeF.name, 0xa8dcff).setOrigin(1, 0);
     const fb = this.add.rectangle(W - 44, 15, this.barW + 2, 7, 0x0b0f26).setOrigin(1, 0).setStrokeStyle(1, COLORS.ink);
     this.foeBar = this.add.rectangle(W - 45, 16, this.barW, 5, COLORS.red).setOrigin(1, 0);
@@ -88,7 +88,7 @@ export class FightUI extends Phaser.Scene {
     this.clockText = px(this, W / 2, 17, '', 0xffffff, 2).setOrigin(0.5, 0);
     this.hud.push(strip, mf, this.manePort, mn, mb, this.maneBar, sb, this.meterBar, this.meterLabel, this.scoreText, ff, this.foePort, fn, fb, this.foeBar, ...this.stars, this.roundText, this.clockText);
 
-    this.toastText = px(this, W / 2, 46, '', COLORS.goldHi).setOrigin(0.5, 0).setAlpha(0);
+    this.toastText = px(this, W / 2, this.world.toastY, '', COLORS.goldHi).setOrigin(0.5, 0).setAlpha(0);
     this.tutorial = px(this, W / 2, 70, '', 0xffffff).setOrigin(0.5, 0).setCenterAlign().setAlpha(0);
     this.countText = px(this, W / 2, 84, '', 0xffffff, 4).setOrigin(0.5).setVisible(false).setDepth(50);
     this.mashText = px(this, W / 2, 112, isTouch() ? 'TAP ANY BUTTON! GET UP!' : 'MASH Z! GET UP!', COLORS.goldHi).setOrigin(0.5).setVisible(false);
@@ -132,7 +132,7 @@ export class FightUI extends Phaser.Scene {
     this.manePort.setFrame(p.meter >= SUPER_COST ? 2 : pk < 0.3 ? 1 : 0);
     this.foePort.setFrame(f.state === 'down' || f.state === 'out' ? 2 : f.hp / f.maxHp < 0.3 ? 1 : 0);
     this.scoreText.setText(String(w.score).padStart(6, '0'));
-    this.roundText.setText(w.round ? (w.round === 3 ? 'FINAL ROUND' : `ROUND ${w.round}`) : '');
+    this.roundText.setText(w.round ? w.roundName(w.round) : '');
     this.stars.forEach((s, i) => s.setAlpha(i < f.knockdowns ? 1 : 0.3).setTint(i < f.knockdowns ? 0xffffff : 0x7fc4ff).setTexture(i < f.knockdowns ? 'hudCan' : 'hudCanEmpty'));
   }
 
@@ -174,7 +174,8 @@ export class FightUI extends Phaser.Scene {
   }
 
   showTip(k: string) {
-    const t = (isTouch() ? TIPS_TOUCH : TIPS_KEYS)[k];
+    const x = this.world.extraTips;
+    const t = (isTouch() ? { ...TIPS_TOUCH, ...x.touch } : { ...TIPS_KEYS, ...x.touch, ...x.keys })[k];
     if (!t) return;
     this.tutorial.setText(t).setAlpha(1);
     const b = this.tutorial.getTextBounds().global;

@@ -29,6 +29,7 @@ export interface Move {
   tell?: 'white' | 'red' | 'gold' | null; // glow during the windup (red = can't block it)
   say?: string; // speech bubble at the start of the windup
   projectile?: { tex: string; flight: number }; // resolves when it arrives
+  strands?: boolean; // dodging it leaves the attacker stuck (Pip's bottle flip, Crowe Prime's rocket dash)
 }
 
 export type Outcome = 'hit' | 'blocked' | 'dodged' | 'whiff';
