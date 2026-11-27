@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { fullscreenButton } from '../core/fullscreen';
+import { canFullscreen, fullscreenButton } from '../core/fullscreen';
 import type { BrawlerScene } from '../modes/brawler/BrawlerScene';
 import { MANE_MODE_SECONDS, MAX_CANS } from '../modes/brawler/Mane';
 import { Controls, Button } from '../core/controls';
@@ -277,12 +277,12 @@ export class UIScene extends Phaser.Scene {
     const t = px(this, W / 2, 60, 'PAUSED', COLORS.goldHi, 2).setOrigin(0.5);
     const resume = px(this, W / 2, 100, '> RESUME', 0xffffff).setOrigin(0.5).setInteractive({ useHandCursor: true });
     const mute = px(this, W / 2, 120, Audio.muted ? '> SOUND: OFF' : '> SOUND: ON', 0xffffff).setOrigin(0.5).setInteractive({ useHandCursor: true });
-    const fs = fullscreenButton(this, W / 2, 140, 0xffffff, '> ').setOrigin(0.5);
-    const quit = px(this, W / 2, 160, '> QUIT TO TITLE', 0xffffff).setOrigin(0.5).setInteractive({ useHandCursor: true });
+    const fs = canFullscreen(this) ? fullscreenButton(this, W / 2, 140, 0xffffff, '> ').setOrigin(0.5) : null;
+    const quit = px(this, W / 2, fs ? 160 : 140, '> QUIT TO TITLE', 0xffffff).setOrigin(0.5).setInteractive({ useHandCursor: true });
     resume.on('pointerdown', () => this.world.togglePause());
     mute.on('pointerdown', () => { const m = Audio.toggleMute(this.world); mute.setText(m ? '> SOUND: OFF' : '> SOUND: ON'); });
     quit.on('pointerdown', () => { this.world.togglePause(); Audio.stopMusic(); this.world.scene.start('Title'); });
-    this.pauseLayer = this.add.container(0, 0, [bg, t, resume, mute, fs, quit]).setDepth(100).setVisible(false);
+    this.pauseLayer = this.add.container(0, 0, [bg, t, resume, mute, quit, ...(fs ? [fs] : [])]).setDepth(100).setVisible(false);
   }
 
   private buildContinue() {

@@ -6,7 +6,7 @@ import { Controls } from '../core/controls';
 import { isTouch } from '../ui/UIScene';
 import { Save } from '../core/save';
 import { CREDITS } from './credits';
-import { fullscreenButton, toggleFullscreen } from '../core/fullscreen';
+import { canFullscreen, fullscreenButton, toggleFullscreen } from '../core/fullscreen';
 
 export class Title extends Phaser.Scene {
   private started = false;
@@ -44,14 +44,14 @@ export class Title extends Phaser.Scene {
 
 
     // full screen: bottom-left on phones, under BEST on desktop (F key too)
-    if (isTouch()) fullscreenButton(this, 6, 206, COLORS.goldHi);
+    if (isTouch()) { if (canFullscreen(this)) fullscreenButton(this, 6, 206, COLORS.goldHi); }
     else {
       fullscreenButton(this, 6, 15, 0x9aa0c0, '', ' (F)');
       px(this, 6, 206, 'ARROWS MOVE  Z PUNCH  X JUMP  C SIP  V FLEX', 0x9aa0c0);
       this.input.keyboard?.on('keydown-F', () => toggleFullscreen(this));
     }
     // the screen shape changes going in or out of full screen: rebuild the title at the new width
-    const relayout = () => { if (!this.started) this.scene.restart(); };
+    const relayout = () => { if (!this.started && this.scale.width !== W) this.scene.restart(); };
     this.scale.on('resize', relayout);
     this.events.once('shutdown', () => this.scale.off('resize', relayout));
 
