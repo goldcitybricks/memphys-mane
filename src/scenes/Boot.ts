@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { preloadAll, createAnims, registerFont } from '../core/assets';
 import { COLORS } from '../core/config';
+import { MISSIONS } from '../core/modes';
 
 export class Boot extends Phaser.Scene {
   constructor() { super('Boot'); }
@@ -18,7 +19,9 @@ export class Boot extends Phaser.Scene {
     createAnims(this);
     registerFont(this);
     const params = new URLSearchParams(location.search);
-    // ?play skips the title (handy for testing and for "challenge a friend" links later)
-    this.scene.start(params.has('play') ? 'Mission1' : 'Title');
+    // ?play skips the title, ?play=2 jumps to Mission 2 (handy for testing and "challenge a friend" links later)
+    const n = Number(params.get('play')) || 1;
+    const m = MISSIONS.find((x) => x.number === n && x.available) ?? MISSIONS[0];
+    this.scene.start(params.has('play') ? m.scene : 'Title');
   }
 }

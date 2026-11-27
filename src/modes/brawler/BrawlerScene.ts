@@ -8,7 +8,24 @@ import { Audio } from '../../core/audio';
 import { LEVEL_W, SfxKey } from '../../core/assets';
 import { COLORS, FLOOR_BOTTOM, FLOOR_TOP, VIEW_W_MAX } from '../../core/config';
 import { px, wrap } from '../../core/text';
-import { MANE } from '../../missions/lines';
+import { MANE, SHIESTY_TALK } from '../../missions/lines';
+
+// What a mission dresses the shared brawler with: backgrounds, enemy looks, props, the car-style hazard.
+export interface BrawlerLook {
+  bg: { sky: string; far: string; ground: string; wall: string };
+  enemies: { rusher: string[]; thrower: string[]; name: string; talk: string[] };
+  projectile: { tex: string; sfx: SfxKey; tint: number };
+  hazard: { lights: boolean; label: string; sfx: SfxKey; warnSfx: SfxKey };
+  pothole: string; table: string; breakable: string; breakSfx: SfxKey;
+}
+
+export const ALLEY_LOOK: BrawlerLook = {
+  bg: { sky: 'bgSky', far: 'bgFar', ground: 'bgGround', wall: 'bgWall' },
+  enemies: { rusher: ['shiestyRed', 'shiestyGreen'], thrower: ['shiestyGrey'], name: 'SHIESTY BOY', talk: SHIESTY_TALK },
+  projectile: { tex: 'bottle', sfx: 'bottle', tint: 0x7fc4ff },
+  hazard: { lights: true, label: 'DRIVE-OUT! +200', sfx: 'carBy', warnSfx: 'horn' },
+  pothole: 'pothole', table: 'picnic', breakable: 'trashCan', breakSfx: 'crash',
+};
 
 export interface Hittable {
   x: number; y: number; z: number; radius: number; alive: boolean;
@@ -17,6 +34,13 @@ export interface Hittable {
 
 interface Bubble { box: Phaser.GameObjects.Container; actor: Actor; until: number }
 interface Waiter { pred: () => boolean; resolve: () => void }
+
+const FOOD: Record<Exclude<PickupKind, 'can'>, { heal: number; toast: string }> = {
+  bbq: { heal: 40, toast: 'RIBS! +HEALTH' },
+  wings: { heal: 22, toast: 'WINGS! +HEALTH' },
+  bread: { heal: 40, toast: 'FRESH BREAD! +HEALTH' },
+  dates: { heal: 22, toast: 'DATES! +HEALTH' },
+};
 
 export interface MissionStats { score: number; timeMs: number; kos: number; sips: number; cans: number; drivers: number }
 
@@ -49,6 +73,9 @@ export abstract class BrawlerScene extends Phaser.Scene {
   continuing = false;
   missionId = '';
   missionTitle = '';
+  look: BrawlerLook = ALLEY_LOOK;
+  levelW = LEVEL_W;
+  boss: Shiesty | null = null; // shows the big health bar
   private sky!: Phaser.GameObjects.TileSprite;
   private far!: Phaser.GameObjects.TileSprite;
   private keys!: Record<string, Phaser.Input.Keyboard.Key>;
@@ -67,11 +94,13 @@ export abstract class BrawlerScene extends Phaser.Scene {
     Audio.apply(this);
 
     // parallax: sky + far rooftops are fixed to the camera and scroll their texture
-    this.sky = this.add.tileSprite(0, 0, VIEW_W_MAX, 216, 'bgSky').setOrigin(0).setScrollFactor(0).setDepth(-1000);
-    this.far = this.add.tileSprite(0, 0, VIEW_W_MAX, 216, 'bgFar').setOrigin(0).setScrollFactor(0).setDepth(-999);
-    this.add.image(0, 0, 'bgGround').setOrigin(0).setDepth(-998);
-    this.add.image(0, 0, 'bgWall').setOrigin(0).setDepth(-997);
-    this.cameras.main.setBounds(0, 0, LEVEL_W, 216);
+    this.boss = null;
+    const bg = this.look.bg;
+    this.sky = this.add.tileSprite(0, 0, VIEW_W_MAX, 216, bg.sky).setOrigin(0).setScrollFactor(0).setDepth(-1000);
+    this.far = this.add.tileSprite(0, 0, VIEW_W_MAX, 216, bg.far).setOrigin(0).setScrollFactor(0).setDepth(-999);
+    this.add.image(0, 0, bg.ground).setOrigin(0).setDepth(-998);
+    this.add.image(0, 0, bg.wall).setOrigin(0).setDepth(-997);
+    this.cameras.main.setBounds(0, 0, this.levelW, 216);
     this.cameras.main.setRoundPixels(true);
 
     this.player = new Mane(this, 120, 182);
@@ -155,7 +184,7 @@ export abstract class BrawlerScene extends Phaser.Scene {
     let target: number;
     if (this.lockX !== null) target = this.lockX;
     else target = Math.max(this.camX, this.player.x - W * 0.42);
-    target = Phaser.Math.Clamp(target, 0, LEVEL_W - W);
+    target = Phaser.Math.Clamp(target, 0, this.levelW - W);
     this.camX += (target - this.camX) * Math.min(1, dt * 5);
     if (Math.abs(target - this.camX) < 0.5) this.camX = target;
     this.cameras.main.scrollX = Math.round(this.camX);
@@ -202,6 +231,7 @@ export abstract class BrawlerScene extends Phaser.Scene {
   onEnemyStruck(_e: Shiesty, _info: HitInfo) { /* override */ }
 
   requestToken(e: Shiesty) {
+    if (e === this.boss) return true; // the boss never waits his turn
     if (this.tokens.size >= 2) return false;
     this.tokens.add(e);
     return true;
@@ -261,16 +291,16 @@ export abstract class BrawlerScene extends Phaser.Scene {
     this.pickups.push(new Pickup(this, kind, x, y, pop));
   }
 
-  addTrashCan(x: number, y: number, drop: PickupKind | null) { this.cans.push(new TrashCan(this, x, y, drop)); }
+  addTrashCan(x: number, y: number, drop: PickupKind | null) { this.cans.push(new TrashCan(this, x, y, drop, this.look.breakable, this.look.breakSfx)); }
 
   addPothole(x: number, y: number) {
-    const img = this.add.image(x, y, 'pothole').setDepth(-990);
+    const img = this.add.image(x, y, this.look.pothole).setDepth(-990);
     this.potholes.push({ x, y, w: 17, h: 5, img });
   }
 
   // Picnic tables are solid: walk in front of or behind them, or jump up and stand on top.
   addTable(x: number, y: number) {
-    this.add.image(x, y + 4, 'picnic').setOrigin(0.5, 1).setDepth(y);
+    this.add.image(x, y + 4, this.look.table).setOrigin(0.5, 1).setDepth(y);
     this.add.ellipse(x, y + 3, 50, 8, 0x000000, 0.3).setDepth(-980);
     this.tables.push({ x, y, hw: 22, hd: 5, h: 18 });
   }
@@ -299,7 +329,7 @@ export abstract class BrawlerScene extends Phaser.Scene {
 
   throwBottle(e: Shiesty) {
     this.sfx('throw', 0.5);
-    this.bottles.push(new Bottle(this, e.x + e.facing * 12, e.y, e.facing * 150));
+    this.bottles.push(new Bottle(this, e.x + e.facing * 12, e.y, e.facing * 150, this.look.projectile.tex));
   }
 
   private updateProjectiles(dt: number) {
@@ -309,8 +339,8 @@ export abstract class BrawlerScene extends Phaser.Scene {
       b.update(dt);
       if (Math.abs(b.x - p.x) < 10 && Math.abs(b.y - p.y) < 8 && p.z < 20) {
         if (p.takeHit({ damage: 6, dir: Math.sign(b.vx) as 1 | -1, knockback: 50, kind: 'bottle' })) {
-          this.sfx('bottle', 0.6);
-          this.spark(b.x, b.y - b.z, 0x7fc4ff);
+          this.sfx(this.look.projectile.sfx, 0.6);
+          this.spark(b.x, b.y - b.z, this.look.projectile.tint);
           b.destroy();
         }
       }
@@ -323,16 +353,16 @@ export abstract class BrawlerScene extends Phaser.Scene {
   // A drive-out car whips through a lane. Warns first: horn + flashing arrow.
   async driveBy(laneY: number, dir: 1 | -1, tex = 'carAltimaGrey', warnMs = 1100) {
     this.events.emit('carWarn', { y: laneY, dir, ms: warnMs });
-    this.sfx('horn', 0.6);
+    this.sfx(this.look.hazard.warnSfx, 0.6);
     const lane = this.add.rectangle(0, laneY, VIEW_W_MAX, 14, 0xfff6c8, 0.08).setOrigin(0, 0.5).setScrollFactor(0).setDepth(-900);
     this.tweens.add({ targets: lane, alpha: { from: 0.04, to: 0.16 }, yoyo: true, repeat: -1, duration: 160 });
     await this.wait(warnMs);
     lane.destroy();
     const v = this.viewBounds();
     const x = dir > 0 ? v.left - 80 : v.right + 80;
-    const car = new Car(this, tex, x, laneY, dir * 370);
+    const car = new Car(this, tex, x, laneY, dir * 370, this.look.hazard.lights);
     this.cars.push(car);
-    this.sfx('carBy', 0.7);
+    this.sfx(this.look.hazard.sfx, 0.7);
     await this.waitUntil(() => !car.alive);
   }
 
@@ -351,7 +381,7 @@ export abstract class BrawlerScene extends Phaser.Scene {
             this.sfx('punchHeavy', 0.9);
             this.spark(a.x, a.y - 24, COLORS.white);
             this.shake(140, 0.006);
-            if (a !== this.player) { this.driveOutKOs++; this.addScore(200); this.toast('DRIVE-OUT! +200'); }
+            if (a !== this.player) { this.driveOutKOs++; this.addScore(200); this.toast(this.look.hazard.label); }
           }
         }
       }
@@ -379,10 +409,10 @@ export abstract class BrawlerScene extends Phaser.Scene {
       else { this.addScore(300); this.toast('CANS FULL +300'); }
       this.sfx('pickup', 0.7);
     } else {
-      const heal = k.kind === 'bbq' ? 40 : 22;
-      p.hp = Math.min(p.maxHp, p.hp + heal);
+      const food = FOOD[k.kind];
+      p.hp = Math.min(p.maxHp, p.hp + food.heal);
       this.sfx('eat', 0.7);
-      this.toast(k.kind === 'bbq' ? 'RIBS! +HEALTH' : 'WINGS! +HEALTH');
+      this.toast(food.toast);
     }
     this.addScore(50);
     this.spark(k.x, k.y - 8, COLORS.goldHi);
@@ -478,7 +508,7 @@ export abstract class BrawlerScene extends Phaser.Scene {
     await this.waitUntil(() => mine.every((e) => !e.alive));
   }
 
-  lock(x: number) { this.lockX = Phaser.Math.Clamp(x, 0, LEVEL_W - this.viewW); }
+  lock(x: number) { this.lockX = Phaser.Math.Clamp(x, 0, this.levelW - this.viewW); }
   unlock() { this.lockX = null; this.events.emit('go', true); }
 
   async advanceTo(x: number) {

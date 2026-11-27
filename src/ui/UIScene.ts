@@ -26,6 +26,9 @@ export class UIScene extends Phaser.Scene {
   private enemyBack!: Phaser.GameObjects.Rectangle;
   private enemyTarget: Shiesty | null = null;
   private enemyHideAt = 0;
+  private bossName!: Phaser.GameObjects.BitmapText;
+  private bossBar!: Phaser.GameObjects.Rectangle;
+  private bossBack!: Phaser.GameObjects.Rectangle;
   private toastText!: Phaser.GameObjects.BitmapText;
   private toastUntil = 0;
   private go!: Phaser.GameObjects.BitmapText;
@@ -70,6 +73,11 @@ export class UIScene extends Phaser.Scene {
     this.enemyBack = this.add.rectangle(W - 6, 15, 62, 6, 0x0b0f26).setOrigin(1, 0).setStrokeStyle(1, COLORS.ink).setVisible(false);
     this.enemyBar = this.add.rectangle(W - 7, 16, 60, 4, COLORS.red).setOrigin(1, 0).setVisible(false);
 
+    // boss health: a long bar across the top right
+    this.bossName = px(this, W - 6, 4, '', COLORS.goldHi).setOrigin(1, 0).setVisible(false);
+    this.bossBack = this.add.rectangle(W - 6, 15, W - 138, 8, 0x0b0f26).setOrigin(1, 0).setStrokeStyle(1, COLORS.gold).setVisible(false);
+    this.bossBar = this.add.rectangle(W - 7, 16, W - 140, 6, COLORS.red).setOrigin(1, 0).setVisible(false);
+
     this.toastText = px(this, W / 2, 46, '', COLORS.goldHi).setOrigin(0.5, 0).setAlpha(0);
     this.go = px(this, W - 10, 92, 'GO >', COLORS.goldHi, 2).setOrigin(1, 0.5).setVisible(false);
     this.tutorial = px(this, W / 2, 100, '', 0xffffff).setOrigin(0.5, 0).setCenterAlign().setAlpha(0);
@@ -90,7 +98,11 @@ export class UIScene extends Phaser.Scene {
     on('banner', (b: { top: string; bottom: string }) => this.banner(b.top, b.bottom));
     on('tutorial', (k: string) => this.showTutorial(k));
     on('carWarn', (w: { y: number; dir: number; ms: number }) => this.carWarn(w.y, w.dir, w.ms));
-    on('cutscene', (v: boolean) => { this.skipBtn.setVisible(v); this.setHudVisible(!v); });
+    on('cutscene', (v: boolean) => {
+      this.skipBtn.setVisible(v); this.setHudVisible(!v);
+      // tips never sit on top of a cutscene's dialogue
+      if (v) { this.tweens.killTweensOf([this.tutorial, this.tutBack]); this.tutorial.setAlpha(0); this.tutBack?.setAlpha(0); }
+    });
     on('paused', (v: boolean) => this.pauseLayer.setVisible(v));
     on('continue', (v: boolean) => this.showContinue(v));
     this.scale.on('resize', this.layout, this);
@@ -108,6 +120,7 @@ export class UIScene extends Phaser.Scene {
   private layout() {
     const W = this.scale.width;
     this.enemyName.setX(W - 6); this.enemyBack.setX(W - 6); this.enemyBar.setX(W - 7);
+    this.bossName.setX(W - 6); this.bossBack.setX(W - 6).setSize(W - 138, 8); this.bossBar.setX(W - 7);
     this.toastText.setX(W / 2); this.go.setX(W - 10); this.tutorial.setX(W / 2); this.skipBtn.setX(W - 6);
     this.placeButtons();
     // pause + continue menus are centered; shift them with the width
@@ -137,8 +150,18 @@ export class UIScene extends Phaser.Scene {
     const k = Math.max(0, p.hp / p.maxHp);
     this.hpBar.width += (Math.round(80 * k) - this.hpBar.width) * 0.3;
     // enemy bar
+    const boss = this.world.boss;
+    const showB = !!boss && boss.alive && !this.world.inCutscene;
+    this.bossName.setVisible(showB); this.bossBack.setVisible(showB); this.bossBar.setVisible(showB);
+    if (showB && boss) {
+      this.bossName.setText(boss.name);
+      const full = this.scale.width - 140;
+      const target = Math.max(0, Math.round(full * (boss.hp / boss.maxHp)));
+      this.bossBar.width += (target - this.bossBar.width) * 0.2;
+      this.bossBar.fillColor = Math.floor(this.time.now / 120) % 2 && boss.hp / boss.maxHp < 0.3 ? COLORS.goldHi : COLORS.red;
+    }
     const e = this.enemyTarget;
-    const showE = !!e && this.time.now < this.enemyHideAt;
+    const showE = !!e && this.time.now < this.enemyHideAt && !showB;
     this.enemyName.setVisible(showE); this.enemyBack.setVisible(showE); this.enemyBar.setVisible(showE);
     if (showE && e) {
       this.enemyName.setText(e.name);
@@ -170,8 +193,8 @@ export class UIScene extends Phaser.Scene {
   showTutorial(k: string) {
     const touch = isTouch();
     const t: Record<string, string> = touch
-      ? { move: 'LEFT THUMB: MOVE\nHIT: PUNCH. TAP FAST FOR A COMBO', jump: 'JUMP OVER POTHOLES\nJUMP + HIT: FLYING KICK', sip: 'TAP SIP: CHUG A MEMPHYS\n10 SECONDS OF MANE MODE', car: 'DRIVE-OUT!\nJUMP OR GET OUT THE LANE' }
-      : { move: 'ARROWS/WASD: MOVE   Z/J: PUNCH\nTAP FAST FOR A COMBO', jump: 'X/K/SPACE: JUMP OVER POTHOLES\nJUMP + PUNCH: FLYING KICK', sip: 'C/L: SIP A MEMPHYS\n10 SECONDS OF MANE MODE. V: FLEX', car: 'DRIVE-OUT!\nJUMP OR GET OUT THE LANE' };
+      ? { move: 'LEFT THUMB: MOVE\nHIT: PUNCH. TAP FAST FOR A COMBO', jump: 'JUMP OVER POTHOLES\nJUMP + HIT: FLYING KICK', sip: 'TAP SIP: CHUG A MEMPHYS\n10 SECONDS OF MANE MODE', car: 'DRIVE-OUT!\nJUMP OR GET OUT THE LANE', chariot: 'CHARIOT!\nJUMP OR GET OUT THE LANE', mud: 'JUMP THE MUD HOLES\nHIT THE JARS FOR FOOD + CANS' }
+      : { move: 'ARROWS/WASD: MOVE   Z/J: PUNCH\nTAP FAST FOR A COMBO', jump: 'X/K/SPACE: JUMP OVER POTHOLES\nJUMP + PUNCH: FLYING KICK', sip: 'C/L: SIP A MEMPHYS\n10 SECONDS OF MANE MODE. V: FLEX', car: 'DRIVE-OUT!\nJUMP OR GET OUT THE LANE', chariot: 'CHARIOT!\nJUMP OR GET OUT THE LANE', mud: 'X/K/SPACE: JUMP THE MUD HOLES\nHIT THE JARS FOR FOOD + CANS' };
     this.tutorial.setText(t[k] ?? '').setAlpha(1);
     const b = this.tutorial.getTextBounds().global;
     this.tutBack?.destroy();

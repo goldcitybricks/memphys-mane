@@ -7,9 +7,11 @@ import { isTouch } from '../ui/UIScene';
 import { Save } from '../core/save';
 import { CREDITS } from './credits';
 import { canFullscreen, fullscreenButton, toggleFullscreen } from '../core/fullscreen';
+import { MISSIONS } from '../core/modes';
 
 export class Title extends Phaser.Scene {
   private started = false;
+  private picked = 'Mission1';
   constructor() { super('Title'); }
 
   create() {
@@ -31,8 +33,22 @@ export class Title extends Phaser.Scene {
     this.time.addEvent({ loop: true, delay: 4200, callback: () => { mane.play('mane:shine'); Audio.sfx(this, 'shine', { volume: 0.25 }); mane.once('animationcomplete', () => mane.play('mane:idle')); } });
 
     px(this, W / 2, 86, 'ROYAL BY NATURE. KEEPER BY CHOICE.', COLORS.cream).setOrigin(0.5);
-    const start = px(this, W / 2, 194, isTouch() ? 'TAP TO START' : 'PRESS ENTER OR CLICK', COLORS.goldHi).setOrigin(0.5);
+    // missions unlock as you clear the one before (?play=2 style links open any of them)
+    const open = MISSIONS.filter((m, i) => m.available && (i === 0 || !!Save.get(MISSIONS[i - 1].id)));
+    const picker = open.length > 1;
+    const start = px(this, W / 2, 194, picker ? 'PICK A MISSION' : isTouch() ? 'TAP TO START' : 'PRESS ENTER OR CLICK', COLORS.goldHi).setOrigin(0.5);
     this.tweens.add({ targets: start, alpha: 0.25, duration: 500, yoyo: true, repeat: -1 });
+    this.picked = picker ? open[open.length - 1].scene : 'Mission1';
+    if (picker) {
+      // one card each side of Mane; the newest mission is the default for ENTER
+      open.slice(-2).forEach((m, i) => {
+        const x = i === 0 ? W / 2 - 92 : W / 2 + 92;
+        const card = this.add.rectangle(x, 146, 120, 34, 0x0b0f26, 0.85).setStrokeStyle(1, i === 1 ? COLORS.goldHi : COLORS.gold).setInteractive({ useHandCursor: true });
+        px(this, x, 136, `MISSION ${m.number}`, i === 1 ? COLORS.goldHi : COLORS.gold).setOrigin(0.5, 0);
+        px(this, x, 148, m.title, 0xffffff).setOrigin(0.5, 0);
+        card.on('pointerdown', (_p: unknown, _x: unknown, _y: unknown, e: Phaser.Types.Input.EventData) => { e.stopPropagation(); this.go(m.scene); });
+      });
+    }
 
     const best = Save.get('m1-the-sip');
     if (best) px(this, 6, 4, `BEST ${String(best.bestScore).padStart(6, '0')}`, 0x9aa0c0);
@@ -55,7 +71,7 @@ export class Title extends Phaser.Scene {
     this.scale.on('resize', relayout);
     this.events.once('shutdown', () => this.scale.off('resize', relayout));
 
-    this.input.on('pointerdown', () => this.go());
+    this.input.on('pointerdown', () => { if (!picker) this.go(); });
     this.input.keyboard?.on('keydown-ENTER', () => this.go());
     this.input.keyboard?.on('keydown-SPACE', () => this.go());
     this.input.keyboard?.on('keydown-Z', () => this.go());
@@ -74,13 +90,13 @@ export class Title extends Phaser.Scene {
     close.on('pointerdown', (_p: unknown, _x: unknown, _y: unknown, e: Phaser.Types.Input.EventData) => { e.stopPropagation(); layer.destroy(); });
   }
 
-  private go() {
+  private go(scene = this.picked) {
     if (this.started) return;
     this.started = true;
     Audio.sfx(this, 'select', { volume: 0.7 });
     // go fullscreen on phones that allow it (Android); iPhone Safari ignores this
     if (isTouch() && this.scale.fullscreen.available && !this.scale.isFullscreen) { try { this.scale.startFullscreen(); } catch { /* ignore */ } }
     this.cameras.main.fadeOut(300, 0, 0, 0);
-    this.time.delayedCall(320, () => this.scene.start('Mission1'));
+    this.time.delayedCall(320, () => this.scene.start(scene));
   }
 }

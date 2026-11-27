@@ -10,7 +10,18 @@ export const MANE = {
   super: "WATCH THIS JUNT.",
   getUp: "GET UP. GET YOURS. GET HYDRATED.",
   complete: "ROYAL BY NATURE.",
+  flaugin: "QUIT FLAUGIN'.",
 };
+
+// Mission 2: the king's jackal guards
+export const JACKAL_TALK = [
+  'FOR THE KING!',
+  'SEIZE THE JAR SPIRIT!',
+  'BACK IN THE JAR!',
+  'HALT, LITTLE JAR!',
+  'NO ONE PASSES!',
+  'THE RIVER IS THE KING\'S!',
+];
 
 export const SHIESTY_TALK = [
   'THIS OUR ALLEY.',

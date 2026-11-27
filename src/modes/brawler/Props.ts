@@ -1,8 +1,9 @@
 import Phaser from 'phaser';
 import type { BrawlerScene } from './BrawlerScene';
 import type { HitInfo } from './Actor';
+import type { SfxKey } from '../../core/assets';
 
-export type PickupKind = 'can' | 'bbq' | 'wings';
+export type PickupKind = 'can' | 'bbq' | 'wings' | 'bread' | 'dates';
 
 export class Pickup {
   sprite: Phaser.GameObjects.Sprite;
@@ -35,12 +36,12 @@ export class Car {
   alive = true;
   hit = new Set<object>();
   radius = 56;
-  constructor(public scene: BrawlerScene, tex: string, public x: number, public y: number, public vx: number) {
+  constructor(public scene: BrawlerScene, tex: string, public x: number, public y: number, public vx: number, headlights = true) {
     this.shadow = scene.add.rectangle(x, y, 116, 8, 0x000000, 0.4);
     this.sprite = scene.add.sprite(x, y, tex).setOrigin(0.5, 1).setFlipX(vx < 0);
     this.sprite.play(tex + ':roll');
     // headlight beam
-    this.lights = scene.add.triangle(0, 0, 0, 0, 90, -14, 90, 14, 0xfff6c8, 0.18).setOrigin(0, 0.5);
+    this.lights = scene.add.triangle(0, 0, 0, 0, 90, -14, 90, 14, 0xfff6c8, 0.18).setOrigin(0, 0.5).setVisible(headlights);
   }
   update(dt: number) {
     this.x += this.vx * dt;
@@ -62,14 +63,14 @@ export class TrashCan {
   radius = 9;
   height = 26;
   broken = false;
-  constructor(public scene: BrawlerScene, public x: number, public y: number, public drop: PickupKind | null) {
+  constructor(public scene: BrawlerScene, public x: number, public y: number, public drop: PickupKind | null, tex = 'trashCan', private breakSfx: SfxKey = 'crash') {
     this.shadow = scene.add.image(x, y, 'shadow').setScale(0.8, 0.8).setDepth(y - 1);
-    this.sprite = scene.add.sprite(x, y + 1, 'trashCan', 0).setOrigin(0.5, 1).setDepth(y);
+    this.sprite = scene.add.sprite(x, y + 1, tex, 0).setOrigin(0.5, 1).setDepth(y);
   }
   takeHit(h: HitInfo): boolean {
     if (this.broken) return false;
     this.hp--;
-    this.scene.sfx('crash', 0.6);
+    this.scene.sfx(this.breakSfx, 0.6);
     this.scene.tweens.add({ targets: this.sprite, x: this.x + h.dir * 3, duration: 50, yoyo: true });
     if (this.hp <= 0 || h.knockdown) {
       this.broken = true;
@@ -94,9 +95,9 @@ export class Bottle {
   radius = 5;
   height = 8;
   t = 0;
-  constructor(public scene: BrawlerScene, public x: number, public y: number, public vx: number) {
+  constructor(public scene: BrawlerScene, public x: number, public y: number, public vx: number, tex = 'bottle') {
     this.shadow = scene.add.image(x, y, 'shadow').setScale(0.3, 0.5).setAlpha(0.6);
-    this.sprite = scene.add.sprite(x, y - this.z, 'bottle').play('bottle:spin');
+    this.sprite = scene.add.sprite(x, y - this.z, tex).play(tex + ':spin');
   }
   update(dt: number) {
     this.t += dt;
@@ -106,8 +107,8 @@ export class Bottle {
     this.shadow.setPosition(this.x, this.y).setDepth(this.y - 1);
   }
   takeHit(_h: HitInfo): boolean {
-    this.scene.sfx('bottle', 0.6);
-    this.scene.spark(this.x, this.y - this.z, 0x7fc4ff);
+    this.scene.sfx(this.scene.look.projectile.sfx, 0.6);
+    this.scene.spark(this.x, this.y - this.z, this.scene.look.projectile.tint);
     this.scene.addScore(10);
     this.destroy();
     return true;

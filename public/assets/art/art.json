@@ -458,6 +458,321 @@
   "egypt": {
    "file": "egypt.png"
   },
+  "jackalSpear": {
+   "file": "jackalSpear.png",
+   "frameWidth": 64,
+   "frameHeight": 64,
+   "anims": {
+    "idle": [
+     0,
+     1
+    ],
+    "walk": [
+     2,
+     5
+    ],
+    "punch": [
+     6,
+     8
+    ],
+    "throw": [
+     9,
+     11
+    ],
+    "hurt": [
+     12,
+     13
+    ],
+    "knockdown": [
+     14,
+     16
+    ],
+    "dazed": [
+     17,
+     18
+    ]
+   }
+  },
+  "jackalBlade": {
+   "file": "jackalBlade.png",
+   "frameWidth": 64,
+   "frameHeight": 64,
+   "anims": {
+    "idle": [
+     0,
+     1
+    ],
+    "walk": [
+     2,
+     5
+    ],
+    "punch": [
+     6,
+     8
+    ],
+    "throw": [
+     9,
+     11
+    ],
+    "hurt": [
+     12,
+     13
+    ],
+    "knockdown": [
+     14,
+     16
+    ],
+    "dazed": [
+     17,
+     18
+    ]
+   }
+  },
+  "jackalPot": {
+   "file": "jackalPot.png",
+   "frameWidth": 64,
+   "frameHeight": 64,
+   "anims": {
+    "idle": [
+     0,
+     1
+    ],
+    "walk": [
+     2,
+     5
+    ],
+    "punch": [
+     6,
+     8
+    ],
+    "throw": [
+     9,
+     11
+    ],
+    "hurt": [
+     12,
+     13
+    ],
+    "knockdown": [
+     14,
+     16
+    ],
+    "dazed": [
+     17,
+     18
+    ]
+   }
+  },
+  "jackalCaptain": {
+   "file": "jackalCaptain.png",
+   "frameWidth": 64,
+   "frameHeight": 64,
+   "anims": {
+    "idle": [
+     0,
+     1
+    ],
+    "walk": [
+     2,
+     5
+    ],
+    "punch": [
+     6,
+     8
+    ],
+    "throw": [
+     9,
+     11
+    ],
+    "hurt": [
+     12,
+     13
+    ],
+    "knockdown": [
+     14,
+     16
+    ],
+    "dazed": [
+     17,
+     18
+    ],
+    "dash": [
+     19,
+     20
+    ],
+    "howl": [
+     21,
+     22
+    ],
+    "bow": [
+     23,
+     24
+    ]
+   }
+  },
+  "nia": {
+   "file": "nia.png",
+   "frameWidth": 64,
+   "frameHeight": 64,
+   "anims": {
+    "idle": [
+     0,
+     1
+    ],
+    "talk": [
+     2,
+     3
+    ]
+   }
+  },
+  "vendor": {
+   "file": "vendor.png",
+   "frameWidth": 64,
+   "frameHeight": 64,
+   "anims": {
+    "idle": [
+     0,
+     1
+    ],
+    "talk": [
+     2,
+     3
+    ],
+    "bite": [
+     4,
+     5
+    ],
+    "give": [
+     6,
+     6
+    ]
+   }
+  },
+  "king": {
+   "file": "king.png",
+   "frameWidth": 64,
+   "frameHeight": 64,
+   "anims": {
+    "idle": [
+     0,
+     1
+    ],
+    "laugh": [
+     2,
+     3
+    ],
+    "point": [
+     4,
+     4
+    ]
+   }
+  },
+  "priest": {
+   "file": "priest.png",
+   "frameWidth": 64,
+   "frameHeight": 64,
+   "anims": {
+    "idle": [
+     0,
+     1
+    ],
+    "carry": [
+     2,
+     3
+    ],
+    "walk": [
+     4,
+     7
+    ]
+   }
+  },
+  "bgSky2": {
+   "file": "bgSky2.png"
+  },
+  "bgFar2": {
+   "file": "bgFar2.png"
+  },
+  "bgWall2": {
+   "file": "bgWall2.png"
+  },
+  "bgGround2": {
+   "file": "bgGround2.png"
+  },
+  "pool": {
+   "file": "pool.png",
+   "frameWidth": 96,
+   "frameHeight": 26,
+   "anims": {
+    "glow": [
+     0,
+     3
+    ]
+   }
+  },
+  "mudPit": {
+   "file": "mudPit.png"
+  },
+  "urn": {
+   "file": "urn.png",
+   "frameWidth": 20,
+   "frameHeight": 28
+  },
+  "bench": {
+   "file": "bench.png"
+  },
+  "stall": {
+   "file": "stall.png"
+  },
+  "torch": {
+   "file": "torch.png",
+   "frameWidth": 16,
+   "frameHeight": 24,
+   "anims": {
+    "flicker": [
+     0,
+     3
+    ]
+   }
+  },
+  "pot": {
+   "file": "pot.png",
+   "frameWidth": 12,
+   "frameHeight": 12,
+   "anims": {
+    "spin": [
+     0,
+     3
+    ]
+   }
+  },
+  "bread": {
+   "file": "bread.png"
+  },
+  "dates": {
+   "file": "dates.png"
+  },
+  "grillProp": {
+   "file": "grillProp.png"
+  },
+  "jar": {
+   "file": "jar.png",
+   "frameWidth": 32,
+   "frameHeight": 40
+  },
+  "chariot": {
+   "file": "chariot.png",
+   "frameWidth": 128,
+   "frameHeight": 48
+  },
+  "memoryHall": {
+   "file": "memoryHall.png"
+  },
+  "panOld": {
+   "file": "panOld.png"
+  },
+  "panNew": {
+   "file": "panNew.png"
+  },
   "font": {
    "file": "font.png",
    "frameWidth": 7,
