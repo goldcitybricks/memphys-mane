@@ -1902,8 +1902,8 @@
   },
   "pitSign": {
    "file": "pitSign.png",
-   "frameWidth": 104,
-   "frameHeight": 20
+   "frameWidth": 156,
+   "frameHeight": 22
   },
   "streetSign": {
    "file": "streetSign.png",

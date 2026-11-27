@@ -711,7 +711,7 @@ export class Mission10B extends BrawlerScene {
     };
     await panel('streetSign', 2, 'THE STREET SIGNS REMEMBER THEIR NAMES.');
     await panel('bbqBoard', 1.4, 'THE RIB SPOT REMEMBERS EVERY RECIPE.');
-    await panel('pitSign', 2.4, 'AND UNCLE T\'S PIT REMEMBERS ITS NAME.');
+    await panel('pitSign', 1.6, 'AND UNCLE T\'S PIT REMEMBERS ITS NAME.');
     montage.destroy();
 
     // ----- the next morning, at the counter

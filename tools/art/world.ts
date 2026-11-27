@@ -541,11 +541,10 @@ export function farLayer(): Pix {
 }
 
 // The playfield wall: back of Uncle T's Pit and the alley behind Park & Airways.
-export function wallLayer(): Pix {
-  const W = LEVEL_W, g = new Pix(W, 216);
-  const r = rng(31);
-  const groundY = 146;
-
+// ------------------------------------------------------------------ Uncle T's Pit (the strip-mall front, x 0..520, ground at groundY)
+// Shared by the Mission 1 alley (wallLayer) and every later scene that shows the Pit, so it always looks the same.
+// label/labelCol let the sign be redrawn (Mission 8's sign forgets its name).
+export function drawPit(g: Pix, r: () => number, groundY = 146, label = "UNCLE T'S PIT", labelCol: RGBA = hex('#c8282e')) {
   // --- Uncle T's Pit, in a strip like the Wing Factory's: long flat stucco building,
   // stepped parapet in the middle over Uncle T's sign, storefront glass, white bollards.
   const utX = 0, utW = 520, utTop = 70;
@@ -582,10 +581,9 @@ export function wallLayer(): Pix {
   // Uncle T's: sign on the stepped parapet, lit windows, glass door
   g.rect(110, 58, 156, 22, hex('#9a1c24'));
   g.rect(112, 60, 152, 18, hex('#fbf6ea'));
-  const label = "UNCLE T'S PIT";
   const tw = textWidth(label, 2);
   text(g, label, Math.round(188 - tw / 2) + 1, 63, hex('#f08a2a'), 2);
-  text(g, label, Math.round(188 - tw / 2), 62, hex('#c8282e'), 2);
+  text(g, label, Math.round(188 - tw / 2), 62, labelCol, 2);
   text(g, 'BAR-B-Q  WINGS  OPEN LATE', 112, 84, hex('#c8282e'));
   glass(108, 168, true);
   glass(206, 270, true);
@@ -615,6 +613,14 @@ export function wallLayer(): Pix {
   }
   // rooftop AC units
   g.rect(410, 60, 30, 10, hex('#5a6074')); g.rect(30, 62, 24, 8, hex('#5a6074'));
+}
+
+export function wallLayer(): Pix {
+  const W = LEVEL_W, g = new Pix(W, 216);
+  const r = rng(31);
+  const groundY = 146;
+
+  drawPit(g, r, groundY);
 
   // --- chain-link fence lot
   const fX = 520, fW = 300;
