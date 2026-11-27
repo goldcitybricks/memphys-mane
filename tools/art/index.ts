@@ -13,6 +13,7 @@ import * as F from './fight';
 import * as D from './drive';
 import * as PL from './plant';
 import * as B from './beale';
+import * as C from './crowe';
 import { drawFont, FONT_CHARS, CELL_W, CELL_H } from './font';
 import { P } from './palette';
 
@@ -236,6 +237,18 @@ saveSheet('gigazScreen', B.gigazScreen());
 saveSheet('drone', B.droneFrames(), { hover: [0, 1] });
 saveImage('bealeExt', B.bealeExterior());
 saveImage('factPanel', B.factPanel());
+
+// ------------------------------------------------------------------ Mission 7: Crowe Live
+{
+  const c = C.croweFrames();
+  saveSheet('crowe', c.frames, c.anims);
+  saveSheet('crowePortrait', C.crowePortrait());
+  saveSheet('croweCam', C.croweCam());
+}
+saveSheet('pingShot', C.pingShot(), { spin: [0, 3] });
+saveImage('facePlate', C.facePlate());
+saveImage('riverStage', C.riverStage());
+saveImage('riverfrontExt', C.riverfrontExt());
 
 drawFont(P.white, P.ink).save(path.join(OUT, 'font.png'));
 manifest.font = { file: 'font.png', frameWidth: CELL_W, frameHeight: CELL_H };

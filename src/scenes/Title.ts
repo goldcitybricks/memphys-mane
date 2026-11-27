@@ -87,7 +87,7 @@ export class Title extends Phaser.Scene {
     const layer = this.add.container(0, 0).setDepth(50);
     layer.add(this.add.rectangle(0, 0, W, 216, 0x070a1c, 0.95).setOrigin(0).setInteractive());
     layer.add(px(this, W / 2, 10, 'CREDITS', COLORS.goldHi).setOrigin(0.5, 0));
-    CREDITS.forEach((line, i) => layer.add(px(this, 12, 26 + i * 11, line, i % 3 === 0 ? COLORS.gold : 0xffffff)));
+    CREDITS.forEach((line, i) => layer.add(px(this, 12, 24 + i * 10, line, i === 0 || ['ART + CODE', 'MUSIC + SOUND', 'ENGINE', 'PLACES'].includes(line) ? COLORS.gold : 0xffffff)));
     const close = px(this, W / 2, 202, '> CLOSE', COLORS.goldHi).setOrigin(0.5).setInteractive({ useHandCursor: true });
     layer.add(close);
     close.on('pointerdown', (_p: unknown, _x: unknown, _y: unknown, e: Phaser.Types.Input.EventData) => { e.stopPropagation(); layer.destroy(); });

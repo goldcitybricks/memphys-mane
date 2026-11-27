@@ -1640,6 +1640,111 @@
   "factPanel": {
    "file": "factPanel.png"
   },
+  "crowe": {
+   "file": "crowe.png",
+   "frameWidth": 64,
+   "frameHeight": 64,
+   "anims": {
+    "idle": [
+     0,
+     3
+    ],
+    "walk": [
+     4,
+     7
+    ],
+    "jab": [
+     8,
+     10
+    ],
+    "stick": [
+     11,
+     14
+    ],
+    "ping": [
+     15,
+     17
+    ],
+    "rocket": [
+     18,
+     19
+    ],
+    "stuck": [
+     20,
+     22
+    ],
+    "block": [
+     23,
+     23
+    ],
+    "hurt": [
+     24,
+     25
+    ],
+    "dazed": [
+     26,
+     27
+    ],
+    "knockdown": [
+     28,
+     29
+    ],
+    "getup": [
+     30,
+     31
+    ],
+    "taunt": [
+     32,
+     33
+    ],
+    "sway": [
+     34,
+     34
+    ],
+    "glitch": [
+     35,
+     36
+    ],
+    "peel": [
+     37,
+     39
+    ],
+    "gigaz": [
+     40,
+     41
+    ]
+   }
+  },
+  "crowePortrait": {
+   "file": "crowePortrait.png",
+   "frameWidth": 32,
+   "frameHeight": 32
+  },
+  "croweCam": {
+   "file": "croweCam.png",
+   "frameWidth": 56,
+   "frameHeight": 44
+  },
+  "pingShot": {
+   "file": "pingShot.png",
+   "frameWidth": 12,
+   "frameHeight": 12,
+   "anims": {
+    "spin": [
+     0,
+     3
+    ]
+   }
+  },
+  "facePlate": {
+   "file": "facePlate.png"
+  },
+  "riverStage": {
+   "file": "riverStage.png"
+  },
+  "riverfrontExt": {
+   "file": "riverfrontExt.png"
+  },
   "font": {
    "file": "font.png",
    "frameWidth": 7,

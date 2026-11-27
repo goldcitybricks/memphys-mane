@@ -8,7 +8,7 @@ export const PIP_MOVES: Record<string, Move> = {
   jab: { id: 'jab', anim: 'jab', windFrame: 0, hitFrame: 1, windup: 0.42, recover: 0.32, damage: 8, chip: 0.15, stun: 0.25, sfx: 'punch', tell: 'white', lunge: 10 },
   hay: { id: 'hay', anim: 'hay', windFrame: 1, hitFrame: 2, windup: 0.85, recover: 0.6, damage: 19, chip: 0.25, heavy: true, armor: true, stun: 0.5, sfx: 'punchHeavy', tell: 'gold', say: 'SINGLE-USE!', lunge: 16 },
   cap: { id: 'cap', anim: 'cap', windFrame: 0, hitFrame: 1, windup: 0.55, recover: 0.5, damage: 10, chip: 0.2, stun: 0.3, sfx: 'capPop', projectile: { tex: 'capShot', flight: 0.42 } },
-  flip: { id: 'flip', anim: 'crouch', windFrame: 0, hitFrame: 0, windup: 0.6, recover: 0.45, damage: 22, blockable: false, heavy: true, armor: true, stun: 0.55, sfx: 'punchHeavy', tell: 'red', say: 'BOTTLE FLIP!' },
+  flip: { id: 'flip', anim: 'crouch', windFrame: 0, hitFrame: 0, windup: 0.6, recover: 0.45, damage: 22, blockable: false, heavy: true, armor: true, stun: 0.55, sfx: 'punchHeavy', tell: 'red', say: 'BOTTLE FLIP!', strands: true },
   pop: { id: 'pop', anim: 'pop', windFrame: 0, hitFrame: 0, windup: 0.2, recover: 0.45, damage: 13, chip: 0.2, heavy: true, stun: 0.4, sfx: 'punchHeavy', lunge: 12 },
 };
 

@@ -47,6 +47,10 @@ export abstract class FightScene extends Phaser.Scene {
   private projectiles: { img: Phaser.GameObjects.Sprite; att: Fighter; m: Move; t: number; flight: number; x0: number; x1: number }[] = [];
   private captionBox?: Phaser.GameObjects.Container;
   private tips = new Set<string>();
+  // what a mission can change: the opponent's HUD portrait and its own one-time tips
+  foePortrait = 'pipPortrait';
+  toastY = 46; // where the HUD's quick callouts sit
+  extraTips: { touch?: Record<string, string>; keys?: Record<string, string> } = {};
 
   get W() { return this.scale.width; }
   get midX() { return this.W / 2; }
@@ -166,14 +170,19 @@ export abstract class FightScene extends Phaser.Scene {
       this.addScore(50);
       this.player.addMeter(18);
       (att as any).onDodged ? (att as any).onDodged(m) : att.open(0.8);
-      this.say(this.player, m.id === 'flip' ? MANE.goofy : 'TOO SLOW!', 900);
-      this.toast(m.id === 'flip' ? 'DODGED! HE\'S STUCK!' : 'DODGED! COUNTER!');
+      this.say(this.player, m.strands ? MANE.goofy : 'TOO SLOW!', 900);
+      this.toast(m.strands ? 'DODGED! HE\'S STUCK!' : 'DODGED! COUNTER!');
       this.tip('counter');
       return 'dodged';
     }
     // crinkled down: high punches fly over
     if (def.state === 'crinkle' && m.high !== false && !m.unstoppable) {
       this.say(def, 'CRINKLE!', 700);
+      return 'whiff';
+    }
+    // swayed back: it saw that punch coming (Crowe Prime's prediction)
+    if (def.state === 'sway' && !m.unstoppable) {
+      this.say(def, (def as any).swayLine ?? 'MISSED ME.', 800);
       return 'whiff';
     }
     // blocked
@@ -199,7 +208,7 @@ export abstract class FightScene extends Phaser.Scene {
     let label = '';
     if (isMane) {
       if (def.state === 'windup' && !def.move?.armor) { mult = 1.3; label = 'COUNTER!'; }
-      if (def.state === 'open' || def.state === 'stuck' || def.state === 'taunt') { mult = 1.5; label = label || (def.state === 'stuck' ? 'BOTTOMS UP!' : ''); }
+      if (def.state === 'open' || def.state === 'stuck' || def.state === 'taunt') { mult = 1.5; label = label || (def.state === 'stuck' ? ((def as any).stuckLabel ?? 'BOTTOMS UP!') : ''); }
     }
     const dmg = m.damage * mult * att.power;
     def.hp = Math.max(0, def.hp - dmg);
@@ -308,8 +317,9 @@ export abstract class FightScene extends Phaser.Scene {
     this.spark(p.x + 14, FLOOR_Y - 80, COLORS.goldHi);
     if (['idle', 'windup', 'recover', 'block', 'taunt'].includes(f.state)) {
       f.open((f as any).style?.daze ?? 1.1);
-      this.say(f, '?! MY EYES!', 900);
+      this.say(f, (f as any).shineLine ?? '?! MY EYES!', 900);
       this.addScore(15);
+      this.onShineHit();
     }
   }
 
@@ -330,6 +340,10 @@ export abstract class FightScene extends Phaser.Scene {
   toast(s: string) { this.events.emit('toast', s); }
   // a one-time tip, shown the first time something comes up
   tip(k: string) { if (this.tips.has(k)) return; this.tips.add(k); this.events.emit('tutorial', k); }
+  // the grill shine landed (a mission can count them)
+  onShineHit() { /* override */ }
+  // what the round banner and the HUD call round n
+  roundName(n: number) { return n === 3 ? 'FINAL ROUND' : `ROUND ${n}`; }
   onSuperReady() { this.toast('SUPER READY!'); this.sfx('pickup', 0.6); this.tip('super'); }
 
   // ---------------------------------------------------------------- rounds
@@ -340,7 +354,7 @@ export abstract class FightScene extends Phaser.Scene {
     this.downEvent = null;
     Controls.clear();
     this.events.emit('hud');
-    this.events.emit('banner', { top: n === 3 ? 'FINAL ROUND' : `ROUND ${n}`, bottom: 'FIGHT!' });
+    this.events.emit('banner', { top: this.roundName(n), bottom: 'FIGHT!' });
     this.refPose('fight');
     this.sfx('ding', 0.8);
     this.time.delayedCall(350, () => this.sfx('ding', 0.6));
