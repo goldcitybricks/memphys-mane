@@ -408,4 +408,73 @@ const S3: Record<string, Buf> = {
 };
 for (const [k, b] of Object.entries(S3)) writeAudio(b, path.join(OUT, `${k}.mp3`), { kbps: 96 });
 writeAudio(fightTrack(), path.join(OUT, 'music_fight.mp3'), { kbps: 112 });
-console.log(`audio: ${Object.keys(S).length + Object.keys(S2).length + Object.keys(S3).length} sfx + 6 music files written to ${OUT}`);
+
+// ------------------------------------------------------------------ Mission 4: "Bridge Run" (Blues and Rock station)
+// A 12-bar blues-rock shuffle in E at 148 BPM: boogie bass, a crunchy saw "guitar" riff, harmonica-ish lead. Original composition.
+const guitar = (notes: number[], dur: number, g = 0.12) => {
+  const o = new Float32Array(Math.ceil((dur + 0.1) * SR));
+  for (const n of notes) for (const det of [0.996, 1.004]) {
+    const t = tone({ wave: 'saw', freq: mtof(n) * det, dur, a: 0.003, d: 0.1, s: 0.6, r: 0.05, gain: g, lp: 1800 });
+    for (let i = 0; i < t.length && i < o.length; i++) o[i] += Math.tanh(t[i] * 3) * 0.5;
+  }
+  return o;
+};
+const harp = (note: number, dur: number, g = 0.12) => tone({ wave: 'square', freq: (t) => mtof(note) * (t < 0.04 ? 0.97 + t * 0.75 : 1), dur, a: 0.02, d: 0.1, s: 0.7, r: 0.08, gain: g, vib: 0.012, vibRate: 6, lp: 2600 });
+function bridgeTrack() {
+  const bpm = 148, beat = 60 / bpm, bar = beat * 4;
+  const form = [0, 0, 0, 0, 5, 5, 0, 0, 7, 5, 0, 7]; // 12-bar blues in E
+  const bars = 24;
+  const len = bar * bars;
+  const m = new Buf(len + 2);
+  const sw = (k: number) => (k % 2 ? beat * (2 / 3) : 0) + Math.floor(k / 2) * beat; // swung eighths
+  const lick = [[0, 76, 0.66], [0.66, 79, 0.34], [1, 81, 0.5], [1.5, 79, 0.5], [2, 76, 1], [3, 74, 0.66], [3.66, 76, 1.3]];
+  for (let b = 0; b < bars; b++) {
+    const t0 = b * bar, off = form[b % 12], root = 40 + off, chorus = Math.floor(b / 12);
+    // drums: kick 1 and 3, snare 2 and 4, shuffled hats
+    m.mix(kick(), t0); m.mix(kick(0.8), t0 + beat * 2);
+    if (b % 2) m.mix(kick(0.6), t0 + sw(5));
+    m.mix(snare(0.9), t0 + beat); m.mix(snare(0.9), t0 + beat * 3);
+    for (let k = 0; k < 8; k++) m.mix(hat(k % 2 ? 0.5 : 0.85), t0 + sw(k));
+    if (b % 12 === 11) for (let k = 0; k < 4; k++) m.mix(snare(0.5 + k * 0.12), t0 + beat * 2 + k * beat * 0.5);
+    // boogie bass: root, 3rd, 5th, 6th, b7, 6th, 5th, 3rd
+    const walk = [0, 4, 7, 9, 10, 9, 7, 4];
+    for (let k = 0; k < 8; k++) m.mix(tone({ wave: 'tri', freq: mtof(root - 12 + walk[k]), dur: beat * 0.4, a: 0.004, d: 0.1, s: 0.7, r: 0.04, gain: 0.55 }), t0 + sw(k));
+    // guitar chug: root+5th then root+6th, shuffled
+    for (let k = 0; k < 8; k++) m.mix(guitar([root + 12, root + 12 + (k % 4 < 2 ? 7 : 9)], beat * 0.3, 0.1), t0 + sw(k));
+    // harmonica lick on bars 1, 5 and 9 of the second chorus, a turnaround stab on 12
+    if (chorus === 1 && b % 4 === 0) for (const [st, n, d] of lick) m.mix(harp(n + off, beat * d * 0.9, 0.1), t0 + st * beat);
+    if (b % 12 === 11) m.mix(guitar([71, 75, 78], beat * 0.9, 0.12), t0);
+  }
+  m.wrapTo(len);
+  m.softClip(1.2);
+  m.normalize(0.8);
+  return m;
+}
+
+const S4: Record<string, Buf> = {
+  // sweet tea boost: a rising whoosh
+  boost: sfx(0.9, (b) => {
+    b.mix(tone({ wave: 'noise', freq: 1, dur: 0.8, a: 0.05, d: 0.6, s: 0.3, r: 0.1, gain: 0.7, lp: 6000, hp: 600 }), 0);
+    b.mix(tone({ wave: 'saw', freq: (t) => 110 + t * 500, dur: 0.7, a: 0.02, d: 0.5, s: 0.3, r: 0.1, gain: 0.35, lp: 2000 }), 0);
+  }, 0.7),
+  // tires screeching in a drift
+  skid: sfx(0.6, (b) => {
+    b.mix(tone({ wave: 'square', freq: 1400, dur: 0.5, a: 0.03, d: 0.3, s: 0.6, r: 0.08, gain: 0.25, vib: 0.03, vibRate: 23, lp: 4000, hp: 900 }), 0);
+    b.mix(tone({ wave: 'noise', freq: 1, dur: 0.5, a: 0.03, d: 0.3, s: 0.5, r: 0.08, gain: 0.35, lp: 5000, hp: 2500 }), 0);
+  }, 0.5),
+  // spinning out
+  spin: sfx(0.7, (b) => {
+    b.mix(tone({ wave: 'square', freq: (t) => 900 - t * 900, dur: 0.6, a: 0.005, d: 0.5, s: 0.3, r: 0.05, gain: 0.25, vib: 0.08, vibRate: 14, lp: 3000 }), 0);
+  }, 0.55),
+  // an AetherCar talking: "re-cal-cu-lat-ing"
+  recalc: sfx(0.5, (b) => [84, 79, 84, 79, 76].forEach((n, i) => b.mix(tone({ wave: 'sine', freq: mtof(n), dur: 0.06, a: 0.002, d: 0.05, s: 0.4, r: 0.02, gain: 0.5 }), i * 0.08)), 0.45),
+  // the tanker bursting: water rushing up into the sky
+  geyser: sfx(3.0, (b) => {
+    b.mix(tone({ wave: 'noise', freq: 1, dur: 2.6, a: 0.05, d: 2.0, s: 0.2, r: 0.4, gain: 1, lp: 2500, hp: 120 }), 0);
+    b.mix(tone({ wave: 'sine', freq: (t) => 60 + t * 20, dur: 1.8, a: 0.01, d: 1.6, s: 0.1, r: 0.2, gain: 0.8 }), 0);
+    for (let i = 0; i < 12; i++) b.mix(tone({ wave: 'sine', freq: (t) => 500 + i * 90 + t * 1500, dur: 0.05, a: 0.002, d: 0.05, s: 0, gain: 0.25 }), 0.6 + i * 0.17);
+  }, 0.85),
+};
+for (const [k, b] of Object.entries(S4)) writeAudio(b, path.join(OUT, `${k}.mp3`), { kbps: 96 });
+writeAudio(bridgeTrack(), path.join(OUT, 'music_bridge.mp3'), { kbps: 112 });
+console.log(`audio: ${Object.keys(S).length + Object.keys(S2).length + Object.keys(S3).length + Object.keys(S4).length} sfx + 7 music files written to ${OUT}`);

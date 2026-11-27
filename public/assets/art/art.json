@@ -1020,6 +1020,135 @@
   "btnSuper": {
    "file": "btnSuper.png"
   },
+  "bigBlue": {
+   "file": "bigBlue.png",
+   "frameWidth": 88,
+   "frameHeight": 52
+  },
+  "bigBlueSide": {
+   "file": "bigBlueSide.png",
+   "frameWidth": 160,
+   "frameHeight": 56
+  },
+  "aetherCar": {
+   "file": "aetherCar.png",
+   "frameWidth": 64,
+   "frameHeight": 40
+  },
+  "altimaRear": {
+   "file": "altimaRear.png",
+   "frameWidth": 64,
+   "frameHeight": 40
+  },
+  "altimaRearBlack": {
+   "file": "altimaRearBlack.png",
+   "frameWidth": 64,
+   "frameHeight": 40
+  },
+  "infinitiRear": {
+   "file": "infinitiRear.png",
+   "frameWidth": 64,
+   "frameHeight": 40
+  },
+  "tanker": {
+   "file": "tanker.png",
+   "frameWidth": 128,
+   "frameHeight": 112
+  },
+  "itemBox": {
+   "file": "itemBox.png",
+   "frameWidth": 28,
+   "frameHeight": 28,
+   "anims": {
+    "glow": [
+     0,
+     3
+    ]
+   }
+  },
+  "barrel": {
+   "file": "barrel.png",
+   "frameWidth": 28,
+   "frameHeight": 32,
+   "anims": {
+    "spin": [
+     0,
+     1
+    ]
+   }
+  },
+  "itemTea": {
+   "file": "itemTea.png"
+  },
+  "itemSauce": {
+   "file": "itemSauce.png"
+  },
+  "itemBones": {
+   "file": "itemBones.png"
+  },
+  "saucePuddle": {
+   "file": "saucePuddle.png"
+  },
+  "bonesDecal": {
+   "file": "bonesDecal.png"
+  },
+  "phoneBook": {
+   "file": "phoneBook.png"
+  },
+  "bridgeLamp": {
+   "file": "bridgeLamp.png"
+  },
+  "towerA": {
+   "file": "towerA.png"
+  },
+  "towerB": {
+   "file": "towerB.png"
+  },
+  "towerC": {
+   "file": "towerC.png"
+  },
+  "pyramid": {
+   "file": "pyramid.png"
+  },
+  "boardDenile": {
+   "file": "boardDenile.png"
+  },
+  "boardAether": {
+   "file": "boardAether.png"
+  },
+  "boardMemphys": {
+   "file": "boardMemphys.png"
+  },
+  "signWest": {
+   "file": "signWest.png"
+  },
+  "signRiver": {
+   "file": "signRiver.png"
+  },
+  "signState": {
+   "file": "signState.png"
+  },
+  "signBeale": {
+   "file": "signBeale.png"
+  },
+  "tireShop": {
+   "file": "tireShop.png"
+  },
+  "glyph": {
+   "file": "glyph.png"
+  },
+  "driveSky": {
+   "file": "driveSky.png"
+  },
+  "driveFar": {
+   "file": "driveFar.png"
+  },
+  "btnItem": {
+   "file": "btnItem.png"
+  },
+  "btnDrift": {
+   "file": "btnDrift.png"
+  },
   "font": {
    "file": "font.png",
    "frameWidth": 7,
