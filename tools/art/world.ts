@@ -46,47 +46,81 @@ export function dogFrames() {
 }
 
 // ------------------------------------------------------------------ drive-out cars (128x48)
-export function carFrames(body: RGBA, bodyD: RGBA, opts: { primer?: boolean; gold?: boolean; seed: number }) {
+// Silhouettes of a late-2000s mid-size sedan (Altima-like) and a sporty luxury sedan (Infiniti G-like).
+// No badges, no logos, no grille emblems.
+export type CarModel = 'altima' | 'infiniti';
+
+export function carFrames(body: RGBA, bodyD: RGBA, opts: { model: CarModel; donut?: boolean; gold?: boolean; seed: number }) {
   const out: Pix[] = [];
+  const glassC = hex('#1a2436'), glassHi = hex('#4e6a8e');
   for (let f = 0; f < 2; f++) {
     const g = new Pix(128, 48);
     const r = rng(opts.seed);
-    const hi = mix(body, P.white, 0.35);
-    // body: long low sedan, nose to the right
-    g.poly([[6, 30], [10, 24], [34, 22], [48, 10], [86, 10], [100, 22], [120, 25], [124, 30], [124, 38], [4, 38]], body);
-    g.rect(4, 34, 120, 4, bodyD);
-    g.hline(10, 120, 25, hi);
-    // windows
-    g.poly([[51, 13], [66, 13], [66, 22], [40, 22]], hex('#1d2a3c'));
-    g.poly([[70, 13], [84, 13], [96, 22], [70, 22]], hex('#1d2a3c'));
-    g.line(53, 14, 47, 20, hex('#5a7aa0')); g.line(74, 14, 72, 20, hex('#5a7aa0'));
-    g.vline(68, 11, 22, bodyD);
-    // doors
-    g.vline(68, 22, 36, bodyD); g.vline(40, 23, 36, bodyD); g.vline(98, 23, 36, bodyD);
-    g.rect(60, 27, 4, 1, bodyD); g.rect(90, 27, 4, 1, bodyD);
-    if (opts.primer) g.rect(70, 23, 27, 12, hex('#7d7d84')); // primer grey door
-    if (opts.gold) { g.hline(6, 122, 31, P.goldHi); for (let i = 0; i < 4; i++) g.set(20 + i * 30, 27, P.white); }
-    // dents and rust
-    for (let i = 0; i < 6; i++) { const x = 8 + Math.floor(r() * 108); g.set(x, 30 + Math.floor(r() * 4), opts.gold ? P.goldDark : hex('#6b3b22')); }
-    // lights: headlight right, tail left
-    g.rect(119, 27, 5, 3, hex('#fff6c8'));
-    g.rect(4, 28, 3, 4, P.red);
-    // bumpers
-    g.rect(118, 33, 7, 3, P.grey); g.rect(3, 33, 6, 3, P.grey);
-    // wheels with turning spokes (no badges, no logos)
-    for (const wx of [26, 102]) {
-      g.circle(wx, 38, 8, P.ink);
-      g.circle(wx, 38, 6, hex('#2a2a30'));
-      g.circle(wx, 38, 4, opts.gold ? P.gold : P.grey);
-      g.circle(wx, 38, 1, P.ink);
-      const a = f * (Math.PI / 4);
-      for (let k = 0; k < 4; k++) {
-        const ang = a + (k * Math.PI) / 2;
-        g.line(wx, 38, wx + Math.round(Math.cos(ang) * 3), 38 + Math.round(Math.sin(ang) * 3), opts.gold ? P.goldDark : P.greyDark);
-      }
+    const hi = mix(body, P.white, 0.4);
+    const alt = opts.model === 'altima';
+    // body profile, nose to the right
+    const shape: [number, number][] = alt
+      ? [[4, 38], [3, 31], [6, 26], [10, 23], [24, 21], [32, 20], [40, 13], [50, 9], [64, 8], [74, 9], [82, 12], [94, 21], [108, 23], [118, 25], [123, 28], [125, 33], [124, 38]]
+      : [[4, 37], [4, 30], [7, 25], [12, 22], [26, 21], [34, 19], [44, 12], [56, 9], [66, 9], [74, 11], [90, 21], [104, 23], [116, 25], [123, 28], [125, 33], [124, 37]];
+    g.poly(shape, body);
+    // lower body shade + rocker
+    g.rect(5, 33, 119, 5, bodyD);
+    g.hline(6, 122, 32, mix(body, bodyD, 0.5));
+    // shoulder highlight (beltline)
+    for (let x = 10; x < 118; x++) g.set(x, alt ? 23 : 23, hi);
+    // greenhouse
+    const glass: [number, number][] = alt
+      ? [[36, 20], [44, 13], [52, 10.5], [66, 10], [74, 11], [83, 14], [90, 20]]
+      : [[38, 20], [47, 13], [57, 11], [66, 11], [73, 13], [86, 20]];
+    g.poly(glass, glassC);
+    // pillars: B pillar, rear quarter glass
+    const bx = alt ? 64 : 62;
+    g.line(bx, 10, bx - 1, 20, bodyD, 2);
+    g.line(alt ? 44 : 47, 13, alt ? 44 : 46, 20, bodyD);
+    g.line(alt ? 70 : 68, 12, alt ? 74 : 72, 19, glassHi);
+    g.line(alt ? 54 : 56, 12, alt ? 51 : 53, 18, glassHi);
+    // chrome window trim on the Infiniti
+    if (!alt) for (let i = 0; i < glass.length - 1; i++) g.line(glass[i][0], glass[i][1] - 1, glass[i + 1][0], glass[i + 1][1] - 1, hex('#d8dce4'));
+    // mirrors
+    g.rect(alt ? 86 : 84, 17, 4, 3, bodyD);
+    // doors and handles
+    g.vline(bx, 21, 34, bodyD); g.vline(alt ? 36 : 38, 22, 34, bodyD); g.vline(alt ? 92 : 89, 22, 34, bodyD);
+    g.rect(bx - 8, 26, 4, 1, hi); g.rect((alt ? 92 : 89) - 8, 26, 4, 1, hi);
+    // headlight swept back, taillight wrapped around the rear
+    if (alt) { g.poly([[112, 25], [120, 26], [124, 29], [116, 29]], hex('#f4f0d8')); g.rect(3, 26, 6, 4, hex('#c82828')); g.hline(4, 8, 26, hex('#ff6a5a')); }
+    else { g.poly([[110, 25], [121, 26], [124, 29], [114, 28]], hex('#f4f0d8')); g.poly([[4, 26], [12, 24], [12, 27], [4, 29]], hex('#c82828')); }
+    // lower intakes / bumper lines
+    g.hline(110, 123, 34, mix(bodyD, P.ink, 0.4)); g.hline(4, 12, 34, mix(bodyD, P.ink, 0.4));
+    if (opts.gold) { g.hline(10, 118, 30, P.goldHi); }
+    // wear
+    if (!opts.gold && !(!alt)) for (let i = 0; i < 4; i++) { const x = 10 + Math.floor(r() * 100); g.set(x, 29 + Math.floor(r() * 4), mix(bodyD, P.ink, 0.5)); }
+    // wheels: wheels sit near the corners
+    const wheels = alt ? [[26, 8], [102, 8]] : [[25, 9], [104, 9]];
+    wheels.forEach(([wx, wr], idx) => {
+      const isDonut = opts.donut && idx === 1;
+      const rr = isDonut ? wr - 1 : wr;
       // wheel arch
-      for (let k = -9; k <= 9; k++) { const y = 38 - Math.round(Math.sqrt(Math.max(0, 81 - k * k))); g.set(wx + k, y - 1, P.ink); }
-    }
+      g.circle(wx, 38, wr + 2, mix(bodyD, P.ink, 0.6));
+      g.circle(wx, 38, rr, P.ink);
+      g.circle(wx, 38, rr - 2, hex('#2a2a30'));
+      const a0 = f * (Math.PI / 5);
+      if (isDonut) {
+        // spare donut: black steel wheel with lug dots
+        g.circle(wx, 38, rr - 3, hex('#3a3a42'));
+        for (let k = 0; k < 5; k++) { const a = a0 + (k * 2 * Math.PI) / 5; g.set(wx + Math.round(Math.cos(a) * 2), 38 + Math.round(Math.sin(a) * 2), hex('#6a6a74')); }
+        g.circle(wx, 38, 1, hex('#5a5a62'));
+      } else {
+        const rim = opts.gold ? P.gold : alt ? hex('#b8bcc4') : hex('#d8dce4');
+        g.circle(wx, 38, rr - 3, rim);
+        const spokes = alt ? 5 : 10;
+        for (let k = 0; k < spokes; k++) {
+          const a = a0 + (k * 2 * Math.PI) / spokes;
+          if (alt) g.line(wx, 38, wx + Math.round(Math.cos(a) * (rr - 3)), 38 + Math.round(Math.sin(a) * (rr - 3)), hex('#4a4e58'));
+          else g.set(wx + Math.round(Math.cos(a) * (rr - 4)), 38 + Math.round(Math.sin(a) * (rr - 4)), hex('#5a5e68'));
+        }
+        g.circle(wx, 38, 1, opts.gold ? P.goldDark : hex('#6a6e78'));
+      }
+    });
     g.outline(P.ink);
     out.push(g);
   }
@@ -574,8 +608,16 @@ export function wallLayer(): Pix {
   g.rect(gx + 17, gy - 35, 4, 6, navy);
   // music notes + a treble clef
   const note = (x: number, y: number) => { g.ellipse(x, y, 2, 1, navy); g.vline(x + 2, y - 7, y, navy); g.line(x + 2, y - 7, x + 5, y - 5, navy); };
-  note(cX + 48, cTop + 52); note(cX + 58, cTop + 46); note(cX + 46, cTop + 66);
-  g.circle(cX + 64, cTop + 62, 3, navy); g.circle(cX + 64, cTop + 62, 1, hex('#e8e6e0')); g.line(cX + 66, cTop + 70, cX + 66, cTop + 50, navy); g.line(cX + 66, cTop + 50, cX + 62, cTop + 56, navy);
+  note(cX + 44, cTop + 46); note(cX + 50, cTop + 64);
+  // big treble clef, like the one painted on the real mural
+  const tc = (pts: [number, number][]) => { for (let i = 0; i < pts.length - 1; i++) g.line(cX + pts[i][0], cTop + pts[i][1], cX + pts[i + 1][0], cTop + pts[i + 1][1], navy, 2); };
+  tc([[66, 70], [67, 56], [69, 42], [71, 36], [73, 34], [75, 36], [75, 40], [72, 45], [66, 51], [62, 56], [61, 61], [63, 65], [68, 67], [73, 65], [75, 61], [73, 57], [69, 56], [66, 59], [67, 62]]);
+  g.circle(cX + 64, cTop + 71, 2, navy);
+  // sharp
+  g.vline(cX + 81, cTop + 36, cTop + 46, navy); g.vline(cX + 84, cTop + 35, cTop + 45, navy);
+  g.line(cX + 79, cTop + 39, cX + 86, cTop + 37, navy); g.line(cX + 79, cTop + 43, cX + 86, cTop + 41, navy);
+  // flat
+  g.vline(cX + 82, cTop + 56, cTop + 67, navy); g.circle(cX + 84, cTop + 65, 2, navy); g.set(cX + 84, cTop + 65, hex('#e8e6e0'));
   // barred door with a light above
   g.rect(cX + 96, cTop + 38, 22, groundY - cTop - 38, hex('#2a2a34'));
   for (let x = cX + 98; x < cX + 118; x += 4) g.vline(x, cTop + 40, groundY - 1, hex('#5a5a66'));
@@ -589,8 +631,6 @@ export function wallLayer(): Pix {
     const d = Math.hypot(x - (cX + 107), (y - (cTop + 40)) * 1.2);
     g.set(x, y, mix(c, hex('#1a2048'), 0.55 - Math.max(0, 1 - d / 90) * 0.35) as RGBA);
   }
-  // planter out front
-  g.rect(cX + 60, groundY - 10, 18, 10, hex('#3a3030')); g.circle(cX + 69, groundY - 13, 7, hex('#2a4a30')); g.circle(cX + 66, groundY - 16, 3, hex('#c04060'));
 
   // --- strip mall back: green metal roof, loading doors, dryer vents
   const sX = 1700, sW = 520;

@@ -80,9 +80,9 @@ export class Mission1 extends BrawlerScene {
     this.lock(Math.max(0, 1000 - this.viewW * 0.5));
     this.events.emit('tutorial', 'car');
     await this.wait(600);
-    await this.driveBy(Phaser.Math.Clamp(this.player.y, 162, 204), -1, 'carMaroon');
+    await this.driveBy(Phaser.Math.Clamp(this.player.y, 162, 204), -1, 'carAltimaGrey');
     await this.wait(400);
-    await this.driveBy(Phaser.Math.Clamp(this.player.y, 162, 204), 1, 'carSilver', 900);
+    await this.driveBy(Phaser.Math.Clamp(this.player.y, 162, 204), 1, 'carInfiniti', 900);
     // ----- Wave 3 with a car through the middle
     const w3 = this.wave([
       { kind: 'rusher', side: 'right' },
@@ -90,7 +90,7 @@ export class Mission1 extends BrawlerScene {
       { kind: 'thrower', side: 'right', delay: 900 },
       { kind: 'rusher', side: 'right', delay: 2500 },
     ]);
-    this.time.delayedCall(5200, () => { if (this.enemies.length > 1) this.driveBy(Phaser.Math.Between(166, 200), -1, 'carBlue'); });
+    this.time.delayedCall(5200, () => { if (this.enemies.length > 1) this.driveBy(Phaser.Math.Between(166, 200), -1, 'carAltimaBlack'); });
     await w3;
     this.unlock();
 
@@ -102,14 +102,14 @@ export class Mission1 extends BrawlerScene {
       { kind: 'thrower', side: 'left', y: 200, delay: 300 },
       { kind: 'rusher', side: 'right', y: 196, delay: 800 },
     ]);
-    this.time.delayedCall(3500, () => this.driveBy(Phaser.Math.Between(166, 200), 1, 'carMaroon'));
+    this.time.delayedCall(3500, () => this.driveBy(Phaser.Math.Between(166, 200), 1, 'carAltimaGrey'));
     await w4a;
     const w4b = this.wave([
       { kind: 'rusher', side: 'left', y: 180 },
       { kind: 'rusher', side: 'right', y: 170, delay: 200 },
       { kind: 'thrower', side: 'right', y: 200, delay: 1200 },
     ]);
-    this.time.delayedCall(4000, () => { if (this.enemies.length > 0) this.driveBy(Phaser.Math.Between(166, 200), -1, 'carSilver'); });
+    this.time.delayedCall(4000, () => { if (this.enemies.length > 0) this.driveBy(Phaser.Math.Between(166, 200), -1, 'carInfiniti'); });
     await w4b;
     this.unlock();
 

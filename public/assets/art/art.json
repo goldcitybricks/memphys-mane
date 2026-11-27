@@ -298,18 +298,18 @@
     ]
    }
   },
-  "carMaroon": {
-   "file": "carMaroon.png",
+  "carAltimaGrey": {
+   "file": "carAltimaGrey.png",
    "frameWidth": 128,
    "frameHeight": 48
   },
-  "carSilver": {
-   "file": "carSilver.png",
+  "carInfiniti": {
+   "file": "carInfiniti.png",
    "frameWidth": 128,
    "frameHeight": 48
   },
-  "carBlue": {
-   "file": "carBlue.png",
+  "carAltimaBlack": {
+   "file": "carAltimaBlack.png",
    "frameWidth": 128,
    "frameHeight": 48
   },

@@ -321,7 +321,7 @@ export abstract class BrawlerScene extends Phaser.Scene {
   }
 
   // A drive-out car whips through a lane. Warns first: horn + flashing arrow.
-  async driveBy(laneY: number, dir: 1 | -1, tex = 'carMaroon', warnMs = 1100) {
+  async driveBy(laneY: number, dir: 1 | -1, tex = 'carAltimaGrey', warnMs = 1100) {
     this.events.emit('carWarn', { y: laneY, dir, ms: warnMs });
     this.sfx('horn', 0.6);
     const lane = this.add.rectangle(0, laneY, VIEW_W_MAX, 14, 0xfff6c8, 0.08).setOrigin(0, 0.5).setScrollFactor(0).setDepth(-900);

@@ -47,7 +47,7 @@ export function createAnims(scene: Phaser.Scene) {
     }
   }
   // two-frame sheets without named anims
-  for (const car of ['carMaroon', 'carSilver', 'carBlue', 'carGold']) {
+  for (const car of ['carAltimaGrey', 'carInfiniti', 'carAltimaBlack', 'carGold']) {
     if (!scene.anims.exists(car + ':roll')) scene.anims.create({ key: car + ':roll', frames: scene.anims.generateFrameNumbers(car, { start: 0, end: 1 }), frameRate: 14, repeat: -1 });
   }
 }

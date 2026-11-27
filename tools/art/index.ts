@@ -43,10 +43,10 @@ for (const [k, o, d] of [['malik', malik, malikDef()], ['uncleT', uncleT, uncleT
 
 const dog = W.dogFrames();
 saveSheet('dog', dog.frames, dog.anims);
-saveSheet('carMaroon', W.carFrames(hex('#7a2430'), hex('#521820'), { primer: true, seed: 1 }));
-saveSheet('carSilver', W.carFrames(hex('#9aa0ac'), hex('#6a707c'), { seed: 2 }));
-saveSheet('carBlue', W.carFrames(hex('#2c4c8a'), hex('#1e3462'), { primer: true, seed: 4 }));
-saveSheet('carGold', W.carFrames(P.gold, P.goldDark, { gold: true, seed: 3 }));
+saveSheet('carAltimaGrey', W.carFrames(hex('#5f636b'), hex('#3e4148'), { model: 'altima', donut: true, seed: 1 }));
+saveSheet('carInfiniti', W.carFrames(hex('#b8bcc4'), hex('#7e828c'), { model: 'infiniti', seed: 2 }));
+saveSheet('carAltimaBlack', W.carFrames(hex('#2a2c34'), hex('#16171c'), { model: 'altima', seed: 4 }));
+saveSheet('carGold', W.carFrames(P.gold, P.goldDark, { model: 'infiniti', gold: true, seed: 3 }));
 saveSheet('canPickup', W.canPickup(), { glow: [0, 3] });
 saveImage('bbq', W.bbqPlate());
 saveImage('wings', W.wingsPlate());
