@@ -107,10 +107,15 @@ export class Mission3 extends FightScene {
     p.setState('scripted'); p.x = -80;
     pip.setState('scripted'); pip.z = 400; pip.sprite.setVisible(false);
     Audio.music(this, 'music_backdoor', 0.25);
-    this.sfx('crowd', 0.5);
+    // establishing shot: the Coliseum from the street, then we go inside
+    const ext = this.add.image(this.midX, 0, 'coliseumExt').setOrigin(0.5, 0).setDepth(5000);
+    this.tweens.add({ targets: ext, scale: 1.05, y: -6, duration: 2600 });
     this.cameras.main.fadeIn(700, 0, 0, 0);
-    await this.wait(800);
-    this.events.emit('banner', { top: 'MISSION 3', bottom: 'FIGHT NIGHT' });
+    await this.wait(1900);
+    this.sfx('crowd', 0.5);
+    await this.tween({ targets: ext, alpha: 0, duration: 450 });
+    ext.destroy();
+    if (!this.skipping) this.events.emit('banner', { top: 'MISSION 3', bottom: 'FIGHT NIGHT' });
     await this.wait(2000);
     await this.caption('', 'THAT SAME NIGHT. MID-SOUTH COLISEUM, RIGHT NEXT DOOR TO ORANGE MOUND.', 2800);
     await this.caption('', 'AETHERCORP IS LAUNCHING DENILE WATER WITH A FIGHT NIGHT. THEIR MASCOT WILL FIGHT ANYBODY.', 3400);

@@ -559,3 +559,113 @@ export function spotlight(): Pix {
   }
   return g;
 }
+
+// Mid-South Coliseum from the street at night: the establishing shot before we go inside.
+// Round drum, shallow silver dome, ribbed white facade with angled buttresses, the long flat
+// covered walkway on square columns, crepe myrtles, the street in front.
+export function coliseumExterior(): Pix {
+  const W = ARENA_W, H = 216, cx = W / 2;
+  const g = new Pix(W, H);
+  const r = rng(901);
+  const SKY_T = hex('#070a1e'), SKY_B = hex('#2a2458');
+  for (let y = 0; y < H; y++) g.hline(0, W - 1, y, mix(SKY_T, SKY_B, Math.min(1, y / 130)));
+  for (let i = 0; i < 90; i++) { const x = Math.floor(r() * W), y = Math.floor(r() * 95); g.set(x, y, r() < 0.2 ? P.white : hex('#8890c0')); }
+  // moon
+  g.circle(400, 26, 9, hex('#f4ecd0')); g.circle(404, 23, 8, mix(SKY_T, SKY_B, 0.18));
+  // searchlights sweeping up from behind the building
+  const beam = (x0: number, y0: number, ang: number) => {
+    for (let d = 0; d < 150; d++) {
+      const hw = 2 + d * 0.13;
+      const bx = x0 + Math.sin(ang) * d, by = y0 - Math.cos(ang) * d;
+      for (let o = -hw; o <= hw; o++) g.set(bx + Math.cos(ang) * o, by + Math.sin(ang) * o, [220, 230, 255, Math.round(34 * (1 - d / 150))]);
+    }
+  };
+  beam(196, 96, -0.45); beam(286, 96, 0.38);
+
+  // big dark trees at the edges
+  const TREE = hex('#14301e'), TREE_HI = hex('#21482c');
+  for (const [tx, ty, rx, ry] of [[28, 128, 40, 30], [70, 138, 26, 20], [452, 126, 40, 32], [412, 140, 24, 18]] as number[][]) {
+    g.ellipse(tx, ty, rx, ry, TREE);
+    for (let i = 0; i < 26; i++) g.circle(tx + (r() - 0.5) * rx * 1.6, ty + (r() - 0.7) * ry * 1.3, 2 + Math.floor(r() * 3), TREE_HI);
+  }
+
+  // the dome: shallow, silver, lit by the moon
+  const RIM_Y = 90, RX = 132, DOME_H = 28;
+  for (let y = RIM_Y - DOME_H; y <= RIM_Y; y++) {
+    const t = (RIM_Y - y) / DOME_H;
+    const hw = RX * Math.sqrt(Math.max(0, 1 - t * t));
+    for (let x = Math.round(cx - hw); x <= Math.round(cx + hw); x++) {
+      const side = (x - cx) / RX;
+      g.set(x, y, mix(hex('#c8d0dc'), hex('#5a6478'), Math.min(1, 0.25 + (1 - t) * 0.35 + Math.max(0, side) * 0.45)));
+    }
+  }
+  for (let x = Math.round(cx - 100); x < cx + 20; x++) { const t = (x - cx + 40) / 60; g.set(x, RIM_Y - 12 + Math.round(t * t * 3), [240, 244, 250, Math.round(150 * Math.max(0, 1 - Math.abs(t)))]); }
+
+  // the drum: wider at the top, ribbed with angled buttresses
+  const TOP_RX = 130, BOT_RX = 104, TOP_Y = RIM_Y + 1, BOT_Y = 134;
+  const topAt = (dx: number) => TOP_Y + 10 * Math.sqrt(Math.max(0, 1 - (dx / TOP_RX) ** 2));
+  const botAt = (dx: number) => Math.abs(dx) <= BOT_RX
+    ? BOT_Y + 8 * Math.sqrt(Math.max(0, 1 - (dx / BOT_RX) ** 2))
+    : TOP_Y + (BOT_Y - TOP_Y) * (TOP_RX - Math.abs(dx)) / (TOP_RX - BOT_RX);
+  const FAC = hex('#d8d4c8'), FAC_D = hex('#8a8678'), GLOW = hex('#ffc860');
+  for (let x = Math.round(cx - TOP_RX); x <= Math.round(cx + TOP_RX); x++) {
+    const dx = x - cx, y0 = Math.round(topAt(dx)), y1 = Math.round(botAt(dx));
+    const shade = Math.min(1, Math.abs(dx) / TOP_RX * 0.8 + (dx > 0 ? 0.15 : 0));
+    for (let y = y0; y <= y1; y++) g.set(x, y, mix(FAC, FAC_D, shade));
+    // the warm band of light along the bottom of the drum
+    for (let y = y1 - 7; y <= y1 - 3; y++) if (y > y0 + 6) g.set(x, y, mix(GLOW, FAC_D, 0.25 + shade * 0.5));
+  }
+  g.hline(Math.round(cx - TOP_RX), Math.round(cx + TOP_RX), TOP_Y, hex('#efece2'));
+  // buttresses
+  for (let i = 0; i < 22; i++) {
+    const th = (i / 22) * Math.PI * 2 + 0.07;
+    if (Math.cos(th) < 0.12) continue;
+    const s = Math.sin(th);
+    const xt = cx + TOP_RX * s, xb = cx + BOT_RX * s;
+    const yt = topAt(xt - cx) - 2, yb = botAt(xb - cx) + 1;
+    const lit = mix(hex('#fbf8ef'), FAC_D, Math.max(0, s) * 0.6);
+    g.line(xt, yt, xb, yb, lit, 4);
+    g.line(xt + 3, yt, xb + 3, yb, mix(FAC_D, hex('#3a3830'), 0.4), 1);
+  }
+
+  // the low brick base behind the walkway
+  const BRICK = hex('#7a6448'), BRICK_D = hex('#5a4a36');
+  g.rect(58, 141, W - 116, 35, BRICK);
+  for (let y = 144; y < 176; y += 4) g.hline(58, W - 59, y, BRICK_D);
+  for (const dx of [-72, -36, 0, 36, 72]) { g.rect(cx + dx - 7, 158, 14, 18, hex('#ffd890')); g.vline(cx + dx, 158, 175, hex('#c89a50')); }
+
+  // crepe myrtles in bloom in front of the drum
+  const MYR = hex('#a8285a'), MYR_HI = hex('#e0508a'), MYR_D = hex('#6a1a3c');
+  for (const [tx, ty] of [[cx - 70, 136], [cx + 82, 138]]) {
+    g.rect(tx - 1, ty + 8, 3, 24, hex('#4a3428'));
+    g.ellipse(tx, ty, 24, 15, MYR_D);
+    for (let i = 0; i < 40; i++) g.circle(tx + (r() - 0.5) * 40, ty + (r() - 0.6) * 24, 2 + Math.floor(r() * 3), r() < 0.4 ? MYR_HI : MYR);
+  }
+
+  // the covered walkway: long flat roof on square columns
+  const SLAB = hex('#c8c4b8'), SLAB_D = hex('#8a867c'), COL = hex('#b8b4a8'), COL_D = hex('#7a766c');
+  g.rect(0, 150, W, 6, SLAB); g.hline(0, W - 1, 150, hex('#e8e4d8')); g.hline(0, W - 1, 156, SLAB_D);
+  for (let x = 4; x < W; x += 12) g.set(x, 157, hex('#ffe0a0')); // lights under the roof
+  for (let x = 12; x < W; x += 40) { g.rect(x, 157, 8, 24, COL); g.vline(x + 7, 157, 180, COL_D); }
+  // fight night banner on the walkway
+  const t1 = 'DENILE WATER PRESENTS', t2 = 'FIGHT NIGHT TONIGHT';
+  const bw = Math.max(textWidth(t1), textWidth(t2)) + 12, bx = Math.round(cx - bw / 2);
+  g.rect(bx, 158, bw, 19, hex('#1c4a98')); g.rect(bx + 1, 159, bw - 2, 17, hex('#2a6ad0'));
+  text(g, t1, Math.round(cx - textWidth(t1) / 2), 160, P.white);
+  text(g, t2, Math.round(cx - textWidth(t2) / 2), 168, P.gold);
+
+  // sidewalk, curb, street
+  g.rect(0, 181, W, 5, hex('#5a5866')); g.hline(0, W - 1, 181, hex('#7a7888'));
+  for (let y = 186; y < H; y++) g.hline(0, W - 1, y, mix(hex('#2a2a36'), hex('#1a1a24'), (y - 186) / 30));
+  for (let x = 6; x < W; x += 30) g.rect(x, 202, 14, 2, hex('#c8a040'));
+  // street lamps and their pools of light
+  for (const lx of [40, W - 40]) {
+    g.vline(lx, 132, 183, hex('#3a3a48')); g.hline(lx - 6, lx, 132, hex('#3a3a48'));
+    g.rect(lx - 9, 133, 6, 3, hex('#fff0c0'));
+    for (let y = 186; y < 214; y++) for (let x = lx - 30; x < lx + 18; x++) {
+      const d = Math.hypot((x - lx + 6) / 26, (y - 196) / 10);
+      if (d < 1) g.set(x, y, [255, 220, 150, Math.round(50 * (1 - d))]);
+    }
+  }
+  return g;
+}

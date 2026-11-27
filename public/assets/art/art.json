@@ -988,6 +988,9 @@
   "spotlight": {
    "file": "spotlight.png"
   },
+  "coliseumExt": {
+   "file": "coliseumExt.png"
+  },
   "capShot": {
    "file": "capShot.png",
    "frameWidth": 10,
