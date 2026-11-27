@@ -22,6 +22,9 @@ export class Boot extends Phaser.Scene {
     // ?play skips the title, ?play=2 or ?play=3 jumps to that mission (handy for testing and "challenge a friend" links later)
     const n = Number(params.get('play')) || 1;
     const m = MISSIONS.find((x) => x.number === n && x.available) ?? MISSIONS[0];
+    // dev builds only: ?scene=Mission10B (or Finale) jumps straight into a later part of a mission
+    const dev = import.meta.env.DEV && params.get('scene');
+    if (dev && this.scene.get(dev)) { this.scene.start(dev, {}); return; }
     this.scene.start(params.has('play') ? m.scene : 'Title');
   }
 }

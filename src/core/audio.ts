@@ -26,6 +26,8 @@ export const Audio = {
     music = scene.sound.add(key, { loop, volume });
     music.play();
   },
+  // where the music is right now, in seconds (for hitting on the beat)
+  musicPos(): number | null { const m = music as any; return m && m.isPlaying && typeof m.seek === 'number' ? m.seek : null; },
   musicRate(rate: number) { if (music) (music as any).setRate?.(rate); },
   stopMusic() { music?.stop(); musicKey = ''; },
 };

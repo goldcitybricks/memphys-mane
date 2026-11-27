@@ -956,3 +956,150 @@ const S9: Record<string, Buf> = {
 for (const [k, b] of Object.entries(S9)) writeAudio(b, path.join(OUT, `${k}.mp3`), { kbps: 96 });
 writeAudio(gigantumTrack(), path.join(OUT, 'music_gigantum.mp3'), { kbps: 112 });
 writeAudio(coreTrack(), path.join(OUT, 'music_core.mp3'), { kbps: 112 });
+
+// ------------------------------------------------------------------ Mission 10: The Source
+// "The Source" (phase 1, Victor in person): 150 BPM half-time trap in D Phrygian dominant, the old-world flute
+// over 808s and pumping saws: Old Memphis and new Memphis in one beat. Original.
+function sourceTrack() {
+  const bpm = 150, beat = 60 / bpm, bar = beat * 4, bars = 16;
+  const len = bar * bars;
+  const m = new Buf(len + 2);
+  // D - Eb - D - C (Phrygian dominant vamp)
+  const prog = [[50, 54, 57], [51, 55, 58], [50, 54, 57], [48, 51, 55]];
+  const roots = [26, 27, 26, 24];
+  const riff = [62, 63, 66, 67, 69, 67, 66, 63];
+  for (let b = 0; b < bars; b++) {
+    const t0 = b * bar, ch = b % 4, sec = Math.floor(b / 4);
+    m.mix(kick(), t0); m.mix(kick(0.8), t0 + beat * 2.5); if (b % 2) m.mix(kick(0.7), t0 + beat * 3.5);
+    m.mix(snare(0.85), t0 + beat * 2); m.mix(clap(0.6), t0 + beat * 2);
+    for (let k = 0; k < 16; k++) {
+      const roll = b % 4 === 3 && k >= 12;
+      if (roll) for (let j = 0; j < 3; j++) m.mix(hat(0.7), t0 + k * (beat / 4) + j * (beat / 12));
+      else if (k % 2 === 0 || sec >= 2) m.mix(hat(k % 4 === 0 ? 0.9 : 0.5), t0 + k * (beat / 4));
+    }
+    m.mix(doum(0.6), t0 + beat * 1.5); m.mix(frame(0.6), t0 + beat * 3.25);
+    m.mix(b808(roots[ch], beat * 1.8), t0, 0.95);
+    m.mix(b808(roots[ch] + 12, beat * 0.6, roots[ch]), t0 + beat * 2.5, 0.8);
+    if (sec >= 1) for (let k = 0; k < 4; k++) m.mix(supersaw(prog[ch], beat * 0.6, 0.035), t0 + k * beat + beat * 0.25);
+    // the riff, in eighths
+    for (let k = 0; k < 8; k++) m.mix(harp(riff[(k + ch * 2) % 8] + (ch === 1 ? 1 : 0), beat * 0.42, 0.07), t0 + k * (beat / 2));
+    // the flute line over the top in the back half
+    if (sec >= 2 && b % 2 === 0) for (const [st, n, d] of [[0, 74, 1], [1, 75, 0.5], [1.5, 78, 0.5], [2, 79, 1.5], [3.5, 78, 0.5], [4, 75, 1], [5, 74, 3]]) m.mix(flute(n, beat * d * 0.95, 0.12), t0 + st * beat);
+  }
+  m.wrapTo(len);
+  m.softClip(1.3);
+  m.normalize(0.8);
+  return m;
+}
+// "Pharaoh of DeNile" (phase 2): 138 BPM, heavy. Doum and frame drums under a distorted 808, organ choir,
+// a square-wave fanfare that sounds like a king and a server at the same time. Original.
+function pharaohTrack() {
+  const bpm = 138, beat = 60 / bpm, bar = beat * 4, bars = 16;
+  const len = bar * bars;
+  const m = new Buf(len + 2);
+  const roots = [26, 26, 27, 24];
+  const chords = [[62, 66, 69], [62, 66, 69], [63, 67, 70], [60, 63, 67]];
+  for (let b = 0; b < bars; b++) {
+    const t0 = b * bar, ch = b % 4, sec = Math.floor(b / 4);
+    for (let k = 0; k < 4; k++) m.mix(kick(k === 0 ? 1 : 0.8), t0 + k * beat);
+    m.mix(snare(0.9), t0 + beat); m.mix(snare(0.9), t0 + beat * 3); m.mix(clap(0.5), t0 + beat * 3);
+    for (let k = 0; k < 8; k++) m.mix(doum(k % 4 === 0 ? 0.9 : 0.4), t0 + k * (beat / 2) + (k % 2 ? beat * 0.25 : 0));
+    for (let k = 0; k < 16; k++) if (k % 3 !== 1) m.mix(frame(0.5), t0 + k * (beat / 4));
+    m.mix(b808(roots[ch], beat * 3.6), t0, 1);
+    m.mix(organ(chords[ch], bar * 0.95, 0.05), t0);
+    if (sec >= 1) {
+      const fan = [[0, 74, 0.5], [0.5, 75, 0.5], [1, 78, 1], [2, 75, 0.5], [2.5, 74, 0.5], [3, 72, 1]];
+      for (const [st, n, d] of fan) m.mix(lead(n + (ch === 2 ? 1 : ch === 3 ? -2 : 0), beat * d * 0.9, 0.09, 'square'), t0 + st * beat);
+    }
+    if (sec >= 2 && ch === 3) [86, 85, 82, 81, 78, 77, 74, 73].forEach((n, i) => m.mix(blip(n, 0.07), t0 + i * (beat / 2)));
+  }
+  m.wrapTo(len);
+  m.softClip(1.5);
+  m.normalize(0.8);
+  return m;
+}
+// "Memphis, Remember" (phase 3, the beat super): 120 BPM, a kick on every beat so you can feel it, claps on 2 and 4,
+// gospel organ and horns in E-flat major, Pit Stop's hook brought back in major. Beat 1 lands exactly at 0:00. Original.
+function rememberTrack() {
+  const bpm = 120, beat = 60 / bpm, bar = beat * 4, bars = 16;
+  const len = bar * bars;
+  const m = new Buf(len + 2);
+  // Eb - Cm - Ab - Bb
+  const prog = [[51, 55, 58], [48, 51, 55], [44, 48, 51], [46, 50, 53]];
+  const roots = [39, 36, 32, 34];
+  const hook = [[0, 79, 1], [1, 77, 0.5], [1.5, 75, 0.5], [2, 74, 1], [3, 75, 0.5], [3.5, 70, 2.5], [8, 79, 1], [9, 80, 0.5], [9.5, 79, 0.5], [10, 77, 1], [11, 75, 1], [12, 74, 1], [13, 75, 3]];
+  for (let b = 0; b < bars; b++) {
+    const t0 = b * bar, ch = b % 4, sec = Math.floor(b / 4);
+    for (let k = 0; k < 4; k++) m.mix(kick(1), t0 + k * beat);
+    m.mix(clap(0.9), t0 + beat); m.mix(clap(0.9), t0 + beat * 3); m.mix(snare(0.5), t0 + beat * 3);
+    for (let k = 0; k < 8; k++) m.mix(tamb(k % 2 ? 0.4 : 0.2), t0 + k * (beat / 2));
+    m.mix(b808(roots[ch], beat * 1.6), t0, 0.9); m.mix(b808(roots[ch] + 7, beat * 0.8), t0 + beat * 2, 0.7);
+    m.mix(organ(prog[ch].map((n) => n + 12), bar * 0.95, 0.045), t0);
+    if (sec >= 1) for (const k of [0, 1.5, 2.5]) m.mix(horn(prog[ch].map((n) => n + 12), beat * 0.4, 0.06), t0 + k * beat);
+    if (sec >= 2 && b % 4 === 0) for (const [st, n, d] of hook) m.mix(lead(n, beat * d * 0.9, 0.1), t0 + st * beat);
+    // a bell on every beat: the beat you hit on
+    for (let k = 0; k < 4; k++) m.mix(bell(prog[ch][0] + 36, beat * 0.3, k === 0 ? 0.18 : 0.1), t0 + k * beat);
+  }
+  m.wrapTo(len);
+  m.softClip(1.25);
+  m.normalize(0.8);
+  return m;
+}
+// "Royal by Nature" (the ending and the credits): 88 BPM, warm soul. Rhodes keys, round bass, brushed drums,
+// the Pit Stop hook one more time, slow and in major. Original.
+function creditsTrack() {
+  const bpm = 88, beat = 60 / bpm, bar = beat * 4, bars = 24;
+  const len = bar * bars;
+  const m = new Buf(len + 2);
+  // Eb maj7 - Cm7 - Fm7 - Bb7
+  const prog = [[51, 55, 58, 62], [48, 51, 55, 58], [53, 56, 60, 63], [46, 50, 53, 56]];
+  const roots = [39, 36, 41, 34];
+  const hook = [[0, 79, 1], [1, 77, 0.5], [1.5, 75, 0.5], [2, 74, 1], [3, 75, 0.5], [3.5, 70, 2.5]];
+  for (let b = 0; b < bars; b++) {
+    const t0 = b * bar, ch = b % 4, sec = Math.floor(b / 8);
+    if (b >= 2) {
+      m.mix(kick(0.8), t0); m.mix(kick(0.6), t0 + beat * 2.5);
+      m.mix(snare(0.5), t0 + beat); m.mix(snare(0.5), t0 + beat * 3);
+      for (let k = 0; k < 8; k++) m.mix(hat(k % 2 ? 0.35 : 0.6), t0 + k * (beat / 2) + (k % 2 ? beat * 0.08 : 0));
+    }
+    m.mix(keys(prog[ch].map((n) => n + 12), beat * 1.8, 0.07), t0);
+    m.mix(keys(prog[ch].map((n) => n + 12), beat * 1.2, 0.05), t0 + beat * 2.5);
+    m.mix(tone({ wave: 'sine', freq: mtof(roots[ch]), dur: beat * 1.6, a: 0.01, d: 0.3, s: 0.6, r: 0.1, gain: 0.35 }), t0);
+    m.mix(tone({ wave: 'sine', freq: mtof(roots[ch] + 7), dur: beat * 0.8, a: 0.01, d: 0.2, s: 0.5, r: 0.1, gain: 0.25 }), t0 + beat * 2);
+    if (sec >= 1 && b % 2 === 0) for (const [st, n, d] of hook) m.mix(flute(n + (ch === 2 ? -2 : 0), beat * d * 0.95, 0.1), t0 + st * beat);
+    if (sec === 2) for (let k = 0; k < 4; k++) m.mix(bell(prog[ch][k] + 24, beat * 0.5, 0.08), t0 + k * beat + beat / 2);
+  }
+  m.wrapTo(len);
+  m.softClip(1.1);
+  m.normalize(0.75);
+  return m;
+}
+const S10: Record<string, Buf> = {
+  // the can crushed: a tin crumple and a hollow dent
+  crumple: sfx(0.7, (b) => {
+    for (let i = 0; i < 9; i++) b.mix(tone({ wave: 'noise', freq: 1, dur: 0.03, a: 0.001, d: 0.03, s: 0, gain: 0.7 - i * 0.05, lp: 6000, hp: 1500 }), i * 0.045 + (i % 3) * 0.01);
+    b.mix(tone({ wave: 'tri', freq: (t) => 320 - t * 400, dur: 0.25, a: 0.001, d: 0.25, s: 0, gain: 0.5 }), 0.05);
+  }, 0.7),
+  // Mane pouring himself out: a long bright glug into water
+  pour: sfx(2.4, (b) => {
+    for (let i = 0; i < 18; i++) b.mix(tone({ wave: 'sine', freq: (t) => 380 + i * 12 + Math.sin(t * 60) * 40, dur: 0.09, a: 0.005, d: 0.08, s: 0, gain: 0.35 }), i * 0.11);
+    b.mix(tone({ wave: 'noise', freq: 1, dur: 2.2, a: 0.2, d: 0.5, s: 0.6, r: 0.3, gain: 0.25, lp: 3000, hp: 400 }), 0);
+    [75, 79, 82, 87].forEach((n, i) => b.mix(bell(n, 0.8, 0.2), 1.2 + i * 0.18));
+  }, 0.75),
+  // a hit right on the beat: a punch with a gold chime
+  beatHit: sfx(0.6, (b) => {
+    b.mix(kick(1), 0); b.mix(clap(0.7), 0);
+    [87, 91, 94].forEach((n, i) => b.mix(bell(n, 0.3, 0.25), 0.01 + i * 0.03));
+  }, 0.85),
+  // the whole city shouting: a crowd roar under a big major chord
+  choir: sfx(2.6, (b) => {
+    b.mix(tone({ wave: 'noise', freq: 1, dur: 2.2, a: 0.25, d: 0.6, s: 0.7, r: 0.3, gain: 0.5, lp: 1800, hp: 300 }), 0);
+    b.mix(pad([51, 55, 58, 63, 67], 2.2, 0.08), 0.05);
+    b.mix(horn([63, 67, 70], 1.4, 0.08), 0.3);
+  }, 0.8),
+};
+for (const [k, b] of Object.entries(S10)) writeAudio(b, path.join(OUT, `${k}.mp3`), { kbps: 96 });
+writeAudio(sourceTrack(), path.join(OUT, 'music_source.mp3'), { kbps: 112 });
+writeAudio(pharaohTrack(), path.join(OUT, 'music_pharaoh.mp3'), { kbps: 112 });
+writeAudio(rememberTrack(), path.join(OUT, 'music_remember.mp3'), { kbps: 112 });
+writeAudio(creditsTrack(), path.join(OUT, 'music_credits.mp3'), { kbps: 112 });
