@@ -1,5 +1,6 @@
 // One input model for keyboard and touch. Game code only reads this.
-export type Button = 'attack' | 'jump' | 'sip' | 'flex' | 'pause';
+// 'attack' is the brawler's punch and the fight's jab; hook/block/dodge/super are the fight mode's
+export type Button = 'attack' | 'jump' | 'sip' | 'flex' | 'pause' | 'hook' | 'block' | 'dodge' | 'super';
 
 class ControlsImpl {
   // analog move, -1..1

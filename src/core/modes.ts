@@ -1,4 +1,4 @@
-// The game is built as a set of play modes that missions plug into. Only the brawler exists so far;
+// The game is built as a set of play modes that missions plug into. The brawler and the 1-on-1 fight exist;
 // the rest are listed so the structure is ready for them.
 export type ModeId = 'hub' | 'brawler' | 'fight' | 'driving' | 'shooter';
 
@@ -16,7 +16,7 @@ export interface MissionDef {
 export const MISSIONS: MissionDef[] = [
   { id: 'm1-the-sip', number: 1, title: 'THE SIP', mode: 'brawler', scene: 'Mission1', available: true, enemyLabel: 'SHIESTY BOYS KO', hazardLabel: 'DRIVE-OUT KOS' },
   { id: 'm2-old-memphis', number: 2, title: 'OLD MEMPHIS', mode: 'brawler', scene: 'Mission2', available: true, enemyLabel: 'JACKALS KO', hazardLabel: 'CHARIOT KOS' },
-  { id: 'm3-fight-night', number: 3, title: 'FIGHT NIGHT', mode: 'fight', scene: 'Mission3', available: false },
+  { id: 'm3-fight-night', number: 3, title: 'FIGHT NIGHT', mode: 'fight', scene: 'Mission3', available: true, enemyLabel: 'KNOCKDOWNS', hazardLabel: 'DODGE COUNTERS' },
   { id: 'm4-bridge-run', number: 4, title: 'BRIDGE RUN', mode: 'driving', scene: 'Mission4', available: false },
   { id: 'm5-the-plant', number: 5, title: 'THE PLANT', mode: 'shooter', scene: 'Mission5', available: false },
 ];

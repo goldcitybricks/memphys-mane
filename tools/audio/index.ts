@@ -333,4 +333,79 @@ const S2: Record<string, Buf> = {
 for (const [k, b] of Object.entries(S2)) writeAudio(b, path.join(OUT, `${k}.mp3`), { kbps: 96 });
 writeAudio(riverTrack(), path.join(OUT, 'music_river.mp3'), { kbps: 112 });
 writeAudio(bossTrack(), path.join(OUT, 'music_jackal.mp3'), { kbps: 112 });
-console.log(`audio: ${Object.keys(S).length + Object.keys(S2).length} sfx + 5 music files written to ${OUT}`);
+
+// ------------------------------------------------------------------ Mission 3: Fight Night
+// "Fight Night" (Hip Hop station): 96 BPM boom-bap, horn-like square stabs, a walking 808. Original.
+function fightTrack() {
+  const bpm = 96, beat = 60 / bpm, bar = beat * 4, bars = 16;
+  const len = bar * bars;
+  const m = new Buf(len + 2);
+  // Gm - Eb - Cm - D
+  const prog = [[55, 58, 62], [51, 55, 58], [48, 51, 55], [50, 54, 57]];
+  const roots = [31, 27, 24, 26];
+  const stab = (notes: number[], t: number, d: number, g = 0.1) => { for (const n of notes) m.mix(tone({ wave: 'square', freq: mtof(n + 12), dur: d, a: 0.003, d: 0.06, s: 0.5, r: 0.05, gain: g, lp: 2400 }), t); };
+  const hook = [[0, 74, 0.5], [0.5, 74, 0.5], [1, 77, 0.75], [2, 74, 0.5], [2.5, 72, 0.5], [3, 70, 1]];
+  for (let b = 0; b < bars; b++) {
+    const t0 = b * bar, ch = Math.floor(b / 2) % 4, sec = Math.floor(b / 4);
+    // boom-bap: kick on 1 and the "and" of 2, snare on 2 and 4
+    m.mix(kick(), t0); m.mix(kick(0.8), t0 + beat * 1.5); if (b % 2) m.mix(kick(0.7), t0 + beat * 2.75);
+    m.mix(snare(0.9), t0 + beat); m.mix(snare(0.9), t0 + beat * 3); m.mix(clap(0.5), t0 + beat * 3);
+    for (let k = 0; k < 8; k++) m.mix(hat(k % 2 ? 0.45 : 0.8), t0 + k * (beat / 2) + (k % 2 ? beat * 0.06 : 0));
+    if (b % 4 === 3) m.mix(hat(0.6, true), t0 + beat * 3.5);
+    // 808 walks the root
+    m.mix(b808(roots[ch], beat * 1.4), t0, 0.9);
+    m.mix(b808(roots[ch] + 7, beat * 0.4), t0 + beat * 2, 0.7);
+    m.mix(b808(roots[ch] + 12, beat * 0.4, roots[ch] + 7), t0 + beat * 2.5, 0.7);
+    // horn stabs on the off-beats
+    if (sec > 0) { stab(prog[ch], t0 + beat * 0.5, beat * 0.25); stab(prog[ch], t0 + beat * 2.5, beat * 0.25, 0.08); }
+    // the hook every other bar in the back half
+    if (sec >= 2 && b % 2 === 0) for (const [st, n, d] of hook) m.mix(lead(n - (ch === 1 ? 4 : ch === 2 ? 7 : 0), beat * d * 0.9, 0.11, 'square'), t0 + st * beat);
+  }
+  m.wrapTo(len);
+  m.softClip(1.3);
+  m.normalize(0.8);
+  return m;
+}
+
+const S3: Record<string, Buf> = {
+  // the ring bell: ding
+  ding: sfx(1.6, (b) => {
+    for (const [f, g] of [[1180, 0.6], [2950, 0.3], [4410, 0.15], [5960, 0.08]]) b.mix(tone({ wave: 'sine', freq: f, dur: 1.4, a: 0.001, d: 1.4, s: 0, gain: g }), 0);
+    b.mix(tone({ wave: 'noise', freq: 1, dur: 0.01, a: 0.001, d: 0.01, s: 0, gain: 0.4, hp: 3000 }), 0);
+  }, 0.75),
+  // a crowd roar swelling and fading
+  crowd: sfx(2.6, (b) => {
+    b.mix(tone({ wave: 'noise', freq: 1, dur: 2.2, a: 0.35, d: 1.2, s: 0.5, r: 0.4, gain: 0.8, lp: 1800, hp: 250 }), 0);
+    b.mix(tone({ wave: 'noise', freq: 1, dur: 2.0, a: 0.5, d: 1.2, s: 0.4, r: 0.4, gain: 0.35, lp: 4200, hp: 1800 }), 0.1);
+    for (let i = 0; i < 10; i++) b.mix(tone({ wave: 'saw', freq: 250 + noise() * 120, dur: 0.6, a: 0.1, d: 0.4, s: 0.2, r: 0.2, gain: 0.05, lp: 1400, vib: 0.03 }), 0.2 + i * 0.12);
+  }, 0.6),
+  // the crowd going "ooooh"
+  ooh: sfx(1.6, (b) => {
+    for (let i = 0; i < 8; i++) b.mix(tone({ wave: 'saw', freq: (t) => (180 + i * 23) * (1 + t * 0.08), dur: 1.2, a: 0.2, d: 0.6, s: 0.5, r: 0.3, gain: 0.08, lp: 900, vib: 0.02, vibRate: 4 + i * 0.3 }), i * 0.02);
+    b.mix(tone({ wave: 'noise', freq: 1, dur: 1.2, a: 0.3, d: 0.6, s: 0.3, r: 0.3, gain: 0.2, lp: 1200, hp: 300 }), 0);
+  }, 0.55),
+  // plastic bottle crunching
+  crinkle: sfx(0.5, (b) => {
+    for (let i = 0; i < 14; i++) b.mix(tone({ wave: 'noise', freq: 1, dur: 0.012, a: 0.001, d: 0.012, s: 0, gain: 0.3 + Math.abs(noise()) * 0.7, hp: 1800, lp: 9000 }), i * 0.03 + Math.abs(noise()) * 0.015);
+    b.mix(tone({ wave: 'noise', freq: 1, dur: 0.3, a: 0.02, d: 0.28, s: 0, gain: 0.25, hp: 3000 }), 0);
+  }, 0.7),
+  // the cap popping off and flying
+  capPop: sfx(0.4, (b) => {
+    b.mix(tone({ wave: 'sine', freq: (t) => 900 - t * 2400, dur: 0.06, a: 0.001, d: 0.06, s: 0, gain: 1 }), 0);
+    b.mix(tone({ wave: 'noise', freq: 1, dur: 0.04, a: 0.001, d: 0.04, s: 0, gain: 0.6, hp: 2500 }), 0);
+    b.mix(tone({ wave: 'noise', freq: 1, dur: 0.25, a: 0.05, d: 0.2, s: 0, gain: 0.3, lp: 2500, hp: 900 }), 0.06);
+  }, 0.6),
+  // old flashbulb: pop + whine
+  flash: sfx(0.5, (b) => {
+    b.mix(tone({ wave: 'noise', freq: 1, dur: 0.03, a: 0.001, d: 0.03, s: 0, gain: 0.8, hp: 2000 }), 0);
+    b.mix(tone({ wave: 'sine', freq: (t) => 3000 + t * 3000, dur: 0.35, a: 0.01, d: 0.35, s: 0, gain: 0.15 }), 0.02);
+  }, 0.45),
+  // a blocked punch: dull glove-on-glove thud
+  block: sfx(0.2, (b) => {
+    b.mix(tone({ wave: 'sine', freq: (t) => 220 - t * 500, dur: 0.08, a: 0.001, d: 0.08, s: 0, gain: 0.8 }), 0);
+    b.mix(tone({ wave: 'noise', freq: 1, dur: 0.04, a: 0.001, d: 0.04, s: 0, gain: 0.4, lp: 1200 }), 0);
+  }, 0.55),
+};
+for (const [k, b] of Object.entries(S3)) writeAudio(b, path.join(OUT, `${k}.mp3`), { kbps: 96 });
+writeAudio(fightTrack(), path.join(OUT, 'music_fight.mp3'), { kbps: 112 });
+console.log(`audio: ${Object.keys(S).length + Object.keys(S2).length + Object.keys(S3).length} sfx + 6 music files written to ${OUT}`);

@@ -19,7 +19,7 @@ export class Boot extends Phaser.Scene {
     createAnims(this);
     registerFont(this);
     const params = new URLSearchParams(location.search);
-    // ?play skips the title, ?play=2 jumps to Mission 2 (handy for testing and "challenge a friend" links later)
+    // ?play skips the title, ?play=2 or ?play=3 jumps to that mission (handy for testing and "challenge a friend" links later)
     const n = Number(params.get('play')) || 1;
     const m = MISSIONS.find((x) => x.number === n && x.available) ?? MISSIONS[0];
     this.scene.start(params.has('play') ? m.scene : 'Title');
