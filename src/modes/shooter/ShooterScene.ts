@@ -149,7 +149,7 @@ export abstract class ShooterScene extends Phaser.Scene {
       if (DOORS.has(c)) this.doors.set(`${x},${y}`, { x, y, open: 0, locked: c !== 'D', opening: false });
     }
     this.setupView();
-    this.weapon = this.add.image(this.W / 2, H + 8, 'hydrator', 0).setOrigin(0.5, 1).setDepth(4990);
+    this.weapon = this.add.image(this.W / 2 + 44, H + 8, 'hydrator', 0).setOrigin(0.5, 1).setDepth(4990);
     this.setupKeyboard();
     this.scene.launch('ShooterUI', { world: this });
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
@@ -177,7 +177,7 @@ export abstract class ShooterScene extends Phaser.Scene {
     this.bw = w;
     this.zbuf = new Float32Array(w);
     this.view = this.add.image(0, 0, 'shooterView').setOrigin(0).setDepth(0);
-    this.weapon?.setX(w / 2);
+    this.weapon?.setX(w / 2 + 44);
   }
 
   // shade lookup: LUT[level*256 + v] for each channel, fading toward the fog color
@@ -447,7 +447,7 @@ export abstract class ShooterScene extends Phaser.Scene {
     const bx = moving > 0.2 ? Math.cos(this.bob) * 6 : 0;
     const gold = this.maneT > 0 ? 3 : 0;
     const f = this.fireAnim > 0 ? (this.fireAnim > 0.06 ? 1 : 2) : 0;
-    this.weapon.setFrame(f + gold).setPosition(this.W / 2 + bx, H + 3 + by + (this.capped > 0 ? 40 : 0));
+    this.weapon.setFrame(f + gold).setPosition(this.W / 2 + 44 + bx, H + 3 + by + (this.capped > 0 ? 40 : 0));
     this.weapon.setVisible(!this.inCutscene || this.showWeaponInCutscene);
   }
   showWeaponInCutscene = false;

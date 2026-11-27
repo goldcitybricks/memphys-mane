@@ -401,41 +401,93 @@ export function foremanFrames() {
 
 // ------------------------------------------------------------------ Mane's Hydrator, first person (144x88)
 // White gloves on a cream-gold water blaster with a MEMPHYS-can tank on top. Gold glow in Mane Mode.
+// The Hydrator: a gold pump-action water blaster held at the hip, seen from behind Mane's right shoulder.
+// Pressure tank on top with a strap band, long white barrel with a blue nozzle cap, a ribbed pump
+// under the barrel, pistol grip and trigger. The tank wears the MEMPHYS mark: the bridge M over the pyramid.
 function drawHydrator(fire: number, gold: boolean): Pix {
-  const g = new Pix(144, 88);
-  const cx = 72, kick = fire ? 4 : 0;
-  const y0 = 30 + kick;
-  // barrel
-  g.poly([[cx - 18, y0 + 58], [cx - 10, y0 + 6], [cx + 10, y0 + 6], [cx + 18, y0 + 58]], gold ? P.gold : P.can);
-  g.poly([[cx - 18, y0 + 58], [cx - 10, y0 + 6], [cx - 6, y0 + 6], [cx - 12, y0 + 58]], gold ? P.goldHi : P.canHi);
-  g.poly([[cx + 12, y0 + 58], [cx + 6, y0 + 6], [cx + 10, y0 + 6], [cx + 18, y0 + 58]], gold ? P.goldDark : P.canShade);
-  // gold bands and the nozzle
-  for (const y of [y0 + 20, y0 + 40]) g.hline(cx - 15, cx + 14, y, P.goldMid);
-  g.rect(cx - 6, y0 - 2, 12, 9, P.goldMid); g.rect(cx - 4, y0 - 4, 8, 3, P.goldDark); g.rect(cx - 2, y0 - 4, 4, 2, hex('#2a7ad8'));
-  // the can tank on top, label facing us: bridge arches and the pyramid
-  const tx = cx - 9, ty = y0 + 12;
-  g.rect(tx, ty, 18, 22, P.can); g.hline(tx, tx + 17, ty, P.rim); g.hline(tx, tx + 17, ty + 21, P.rimDark);
-  for (let x = 0; x < 16; x++) { const t = (x % 8) / 8; g.set(tx + 1 + x, ty + 6 - Math.round(Math.sin(t * Math.PI) * 3), P.label); }
-  g.hline(tx + 1, tx + 16, ty + 7, P.label);
-  for (let r = 0; r < 5; r++) g.hline(tx + 9 - r, tx + 9 + r, ty + 11 + r, P.labelGold);
-  // water sloshing in a sight glass
-  g.rect(tx + 4, ty + 17, 10, 3, hex('#7fd8ff'));
-  // white gloves gripping it from below
-  for (const s of [-1, 1]) {
-    const gx = cx + s * 26, gy = y0 + 48;
-    g.ellipse(gx, gy, 14, 12, P.glove);
-    g.ellipse(gx + s * 4, gy + 3, 9, 7, P.gloveShade);
-    for (let k = 0; k < 3; k++) g.hline(gx - 8 + (s < 0 ? 6 : 0), gx + 2 + (s < 0 ? 6 : 0), gy - 6 + k * 4, P.gloveShade);
-    g.rect(gx - 10, gy + 8, 20, 8, P.glove); g.hline(gx - 10, gx + 9, gy + 9, P.gloveShade); // cuff
-  }
+  const g = new Pix(200, 120);
+  const kx = fire ? 3 : 0, ky = fire ? 2 : 0;
+  const N = [62 + kx, 40 + ky], R = [168 + kx, 80 + ky];
+  const dx = R[0] - N[0], dy = R[1] - N[1], len = Math.hypot(dx, dy);
+  const ux = dy / len, uy = -dx / len; // "up" across the gun
+  const sc = (t: number) => 0.8 + 0.7 * t; // nearer parts are bigger
+  const at = (t: number, off: number): [number, number] => [N[0] + dx * t + ux * off * sc(t), N[1] + dy * t + uy * off * sc(t)];
+  const band = (t0: number, t1: number, lo: number, hi: number, c: RGBA) => g.poly([at(t0, lo), at(t1, lo), at(t1, hi), at(t0, hi)], c);
+  const ring = (t: number, lo: number, hi: number, c: RGBA) => { const a = at(t, lo), b = at(t, hi); g.line(a[0], a[1], b[0], b[1], c); };
+  const BODY = gold ? P.goldHi : P.gold, BODY_D = gold ? P.gold : P.goldMid, BODY_DD = P.goldDark;
+  const CAP = hex('#2a7ad8'), CAP_D = hex('#1a4e9a'), CAP_H = hex('#6fb0ff');
+  const TUBE = gold ? P.goldHi : hex('#f4f6fa'), TUBE_D = gold ? P.gold : hex('#b8c0d0');
+
+  // pistol grip and trigger guard (drawn first, the body overlaps their tops)
+  const g0 = at(0.74, -16), g1 = at(0.86, -16);
+  g.poly([g0, g1, [g1[0] + 10, g1[1] + 30], [g1[0] - 2, g1[1] + 34], [g0[0] + 2, g0[1] + 26]], BODY_D);
+  g.poly([[g1[0] + 3, g1[1] + 6], [g1[0] + 10, g1[1] + 30], [g1[0] + 4, g1[1] + 32]], BODY_DD);
+  const tg = at(0.66, -16);
+  g.poly([[tg[0], tg[1]], [tg[0] + 4, tg[1] + 14], [tg[0] + 13, tg[1] + 14], [tg[0] + 12, tg[1] + 2]], BODY_DD);
+  g.poly([[tg[0] + 3, tg[1] + 1], [tg[0] + 6, tg[1] + 11], [tg[0] + 10, tg[1] + 11], [tg[0] + 9, tg[1] + 2]], hex('#20263a'));
+  g.poly([[tg[0] + 5, tg[1]], [tg[0] + 6, tg[1] + 8], [tg[0] + 8, tg[1] + 8], [tg[0] + 8, tg[1] + 1]], CAP); // trigger
+
+  // long barrel and the nozzle cap
+  band(0.0, 0.44, -4, 4, TUBE); band(0.0, 0.44, 1.5, 4, gold ? P.white : hex('#ffffff')); band(0.0, 0.44, -4, -2, TUBE_D);
+  band(-0.05, 0.03, -6.5, 6.5, CAP); band(-0.05, 0.03, 3, 6.5, CAP_H); band(-0.05, 0.03, -6.5, -4, CAP_D);
+  for (const t of [-0.03, -0.01, 0.01]) ring(t, -6, 6, CAP_D);
+  const tip = at(-0.05, 0); g.circle(tip[0], tip[1], 2, hex('#20263a'));
+
+  // pump handle under the barrel, ribbed
+  band(0.12, 0.42, -15, -3, BODY); band(0.12, 0.42, -6, -3, gold ? P.white : P.goldHi); band(0.12, 0.42, -15, -12, BODY_DD);
+  for (let t = 0.16; t < 0.4; t += 0.035) ring(t, -12, -6, BODY_DD);
+
+  // main body with a blue pressure collar at the front
+  band(0.44, 1.0, -18, 8, BODY); band(0.44, 1.0, 4, 8, gold ? P.white : P.goldHi); band(0.44, 1.0, -18, -13, BODY_D);
+  band(0.40, 0.46, -19, 9, CAP); band(0.40, 0.46, 5, 9, CAP_H); band(0.40, 0.46, -19, -14, CAP_D);
+  for (const t of [0.56, 0.7, 0.84]) ring(t, -11, 2, BODY_D); // panel seams
+  for (let t = 0.6; t < 0.82; t += 0.04) ring(t, -16, -14, BODY_DD); // grip texture along the bottom
+
+  // pressure tank on top: a rounded capsule with a strap band and a fill cap
+  const TANK = gold ? P.goldHi : P.can, TANK_H = P.canHi, TANK_D = gold ? P.gold : P.canShade;
+  for (const t of [0.52, 0.86]) band(t - 0.03, t + 0.03, 7, 12, BODY_D); // mounts
+  const f0 = at(0.32, 22), f1 = at(0.94, 22);
+  g.ellipse(f0[0], f0[1], 11, 13, TANK); g.ellipse(f1[0], f1[1], 14, 17, TANK);
+  band(0.32, 0.94, 11, 33, TANK); band(0.32, 0.94, 27, 33, TANK_H); band(0.32, 0.94, 11, 15, TANK_D);
+  g.ellipse(f0[0] - 2, f0[1] - 3, 3, 4, TANK_H);
+  band(0.50, 0.57, 9, 35, BODY); band(0.50, 0.57, 9, 35, BODY); ring(0.50, 9, 35, BODY_DD); ring(0.57, 9, 35, BODY_DD);
+  band(0.50, 0.57, 30, 35, gold ? P.white : P.goldHi);
+  const fc = at(0.84, 33); // fill cap on top of the tank
+  g.rect(fc[0] - 5, fc[1] - 6, 11, 7, CAP); g.hline(fc[0] - 5, fc[0] + 5, fc[1] - 6, CAP_H);
+  for (let k = 0; k < 4; k++) g.vline(fc[0] - 4 + k * 3, fc[1] - 4, fc[1], CAP_D);
+  // water sloshing low in the tank (window)
+  band(0.62, 0.86, 13, 17, hex('#7fd8ff')); band(0.62, 0.86, 16, 17, hex('#dff6ff'));
+  // MEMPHYS mark on the tank: the bridge M arches over the gold pyramid
+  const m = at(0.75, 24);
+  const mx = Math.round(m[0]), my = Math.round(m[1]);
+  for (let x = 0; x <= 22; x++) { const t = (x % 11) / 11; const y = my - 5 - Math.round(Math.sin(t * Math.PI) * 6); g.set(mx - 11 + x, y, P.label); g.set(mx - 11 + x, y + 1, P.label); }
+  g.hline(mx - 11, mx + 11, my - 3, P.label); for (const x of [-11, 0, 11]) { g.vline(mx + x, my - 5, my + 7, P.label); }
+  for (let r = 0; r < 7; r++) g.hline(mx - r, mx + r, my + 1 + r, gold ? P.goldDark : P.labelGold);
+  g.set(mx, my + 1, P.goldHi);
+  // a small pyramid stamped on the body side too
+  const pb = at(0.92, -5); for (let r = 0; r < 4; r++) g.hline(Math.round(pb[0]) - r, Math.round(pb[0]) + r, Math.round(pb[1]) - 3 + r, BODY_DD);
+
+  // white gloves: left hand on the pump, right hand on the grip
+  const lh = at(0.27, -16);
+  g.ellipse(lh[0], lh[1] + 2, 11, 8, P.glove); g.ellipse(lh[0] + 2, lh[1] + 5, 8, 4, P.gloveShade);
+  for (let k = 0; k < 3; k++) g.hline(lh[0] - 8 + k * 2, lh[0] - 2 + k * 2, lh[1] - 3 + k * 3, P.gloveShade);
+  g.poly([[lh[0] - 4, lh[1] + 6], [lh[0] + 8, lh[1] + 6], [lh[0] + 2, lh[1] + 30], [lh[0] - 14, lh[1] + 30]], P.glove); // wrist
+  const rh = [g1[0] + 2, g1[1] + 18];
+  g.ellipse(rh[0], rh[1], 15, 12, P.glove); g.ellipse(rh[0] + 4, rh[1] + 4, 10, 7, P.gloveShade);
+  for (let k = 0; k < 3; k++) g.hline(rh[0] - 12, rh[0] - 2, rh[1] - 6 + k * 4, P.gloveShade);
+  g.poly([[rh[0] - 6, rh[1] + 8], [rh[0] + 12, rh[1] + 6], [rh[0] + 18, 120], [rh[0] - 4, 120]], P.glove); // cuff and sleeve
+  g.hline(rh[0] - 5, rh[0] + 13, rh[1] + 10, P.gloveShade);
+
   // the spray leaving the nozzle
   if (fire) {
     const c = gold ? P.goldHi : hex('#bfefff');
-    g.ellipse(cx, y0 - 8, fire === 1 ? 6 : 8, fire === 1 ? 5 : 7, c);
-    g.ellipse(cx, y0 - 9, 3, 3, P.white);
-    for (let k = 0; k < 4; k++) g.set(cx - 9 + k * 6, y0 - 12 - (k % 2) * 4, c);
+    const s = at(-0.1, 0), s2 = at(-0.16, 0);
+    g.ellipse(s[0], s[1], fire === 1 ? 6 : 8, fire === 1 ? 5 : 7, c);
+    g.ellipse(s2[0], s2[1], fire === 1 ? 3 : 5, fire === 1 ? 3 : 4, c);
+    g.ellipse(s[0] - 1, s[1] - 1, 3, 2, P.white);
+    for (let k = 0; k < 4; k++) g.set(s[0] - 10 + k * 5, s[1] - 7 - (k % 2) * 4, c);
   }
-  if (gold) { drawSparkle(g, cx + 20, y0 + 10, 2); drawSparkle(g, cx - 22, y0 + 26, 1); }
+  if (gold) { const a = at(0.6, 40), b = at(0.2, 10); drawSparkle(g, a[0], a[1], 2); drawSparkle(g, b[0], b[1], 1); }
   g.outline(INK);
   return g;
 }
