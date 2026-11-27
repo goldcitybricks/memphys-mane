@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import type { DriveScene } from './DriveScene';
-import { MAX_SPEED, MANE_MODE_SECONDS, MAX_CANS } from './DriveScene';
+import { MAX_SPEED, MANE_MODE_SECONDS, MAX_CANS, CHASE_SECONDS } from './DriveScene';
 import { Controls, Button } from '../../core/controls';
 import { Audio } from '../../core/audio';
 import { COLORS } from '../../core/config';
@@ -21,6 +21,7 @@ const TIPS_TOUCH: Record<string, string> = {
   startLoop: 'BIG BLUE DRIVES HERSELF. LEFT THUMB STEERS.\n3 LAPS AROUND I-240 TO THE LAST EXIT.',
   gantry: 'DRIVE UNDER THE GOLD LIGHT: MEMPHIS REMEMBERS.\nBLUE LIGHTS MAKE THE CITY FORGET.',
   memory: 'KEEP THE MEMORY BAR UP!\nGOLD LIGHTS AND MEMPHYS SIPS BRING IT BACK.',
+  trooper: 'STATE TROOPER! TOO MUCH SPEED.\nOUTRUN HIM, OR SAUCE HIM, OR GET PULLED OVER.',
   convoy: 'THE CONVOY RIDES WITH YOU.\nSTEER AND THE WEDGE STEERS WITH YOU.',
 };
 const TIPS_KEYS: Record<string, string> = {
@@ -74,6 +75,10 @@ export class DriveUI extends Phaser.Scene {
   private contLayer!: Phaser.GameObjects.Container;
   private contTimer?: Phaser.Time.TimerEvent;
   private contCount = 9;
+  // the rear-view mirror: the trooper closing in
+  private mirror: Phaser.GameObjects.GameObject[] = [];
+  private mirrorImg!: Phaser.GameObjects.Image;
+  private mirrorBar!: Phaser.GameObjects.Rectangle;
 
   constructor() { super('DriveUI'); }
   init(data: { world: DriveScene }) { this.world = data.world; }
@@ -124,6 +129,16 @@ export class DriveUI extends Phaser.Scene {
     this.hud.push(...this.meterObjs);
     this.hud.push(strip, mf, this.portrait, name, ...this.canIcons, this.mmBack, this.mmBar, this.scoreText, this.itemFrame, this.itemIcon, itemLbl, this.mph, this.progBack, l1, l2, this.progTk, this.progMe, ...this.tk);
 
+    // rear-view mirror, under Mane's corner, only while the trooper's after you
+    const mb = this.add.rectangle(4, 46, 48, 30, 0x0b0f26, 0.85).setOrigin(0).setStrokeStyle(1, 0x7fa8ff);
+    const mg = this.add.rectangle(6, 48, 44, 20, 0x2a3048).setOrigin(0);
+    this.mirrorImg = this.add.image(28, 66, 'trooperMirror', 0).setOrigin(0.5, 1);
+    const mbb = this.add.rectangle(6, 70, 44, 3, 0x2a3058).setOrigin(0);
+    this.mirrorBar = this.add.rectangle(6, 70, 44, 3, 0x2a6aff).setOrigin(0);
+    const ml = px(this, 28, 77, 'TROOPER', 0x9ad0ff).setOrigin(0.5, 0);
+    this.mirror = [mb, mg, this.mirrorImg, mbb, this.mirrorBar, ml];
+    for (const o of this.mirror) (o as any).setVisible(false);
+
     this.toastText = px(this, W / 2, 46, '', COLORS.goldHi).setOrigin(0.5, 0).setAlpha(0);
     this.tutorial = px(this, W / 2, 70, '', 0xffffff).setOrigin(0.5, 0).setCenterAlign().setAlpha(0);
     this.skipBtn = px(this, W - 6, 6, 'SKIP >', 0xffffff).setOrigin(1, 0).setVisible(false).setInteractive({ useHandCursor: true }).setDepth(60);
@@ -153,6 +168,7 @@ export class DriveUI extends Phaser.Scene {
   private setCutscene(v: boolean) {
     this.skipBtn.setVisible(v);
     for (const o of this.hud) (o as any).setVisible(!v);
+    if (v) for (const o of this.mirror) (o as any).setVisible(false);
     for (const o of this.touch) (o as any).setVisible(!v);
     if (v) { this.tweens.killTweensOf([this.tutorial, this.tutBack]); this.tutorial.setAlpha(0); this.tutBack?.setAlpha(0); this.toastText.setAlpha(0); }
     this.refresh();
@@ -204,11 +220,25 @@ export class DriveUI extends Phaser.Scene {
       const tw = Math.round(this.barW * Math.max(0, w.tanker.hp / w.tanker.maxHp));
       this.tkBar.width += (tw - this.tkBar.width) * 0.25;
     }
+    this.updateMirror();
     if (this.time.now > this.toastUntil) this.toastText.setAlpha(Math.max(0, this.toastText.alpha - 0.05));
     for (const b of this.buttons) {
       if (b.b === 'sip') b.img.setAlpha(w.cans > 0 && !mm ? (Math.floor(this.time.now / 250) % 2 ? 1 : 0.75) : 0.3);
       if (b.b === 'item') b.img.setAlpha(w.item && w.rolling <= 0 ? 1 : 0.45);
     }
+  }
+
+  // the trooper grows in the mirror as he closes in; the bar under it is how much longer he'll keep at it
+  private updateMirror() {
+    const w = this.world, tr = w.trooper;
+    const on = !!tr && (w.trooperState === 'chase' || w.trooperState === 'pulled');
+    for (const o of this.mirror) (o as any).setVisible(on);
+    if (!on || !tr) return;
+    const gap = Math.max(0, w.playerZ - tr.z);
+    const close = w.trooperState === 'pulled' ? 1 : Phaser.Math.Clamp(1 - gap / 6000, 0, 1);
+    this.mirrorImg.setFrame(Math.floor(this.time.now / 140) % 2).setScale(0.4 + close * 0.6);
+    const left = w.trooperState === 'pulled' ? 0 : Phaser.Math.Clamp(1 - w.chaseT / CHASE_SECONDS, 0, 1);
+    this.mirrorBar.width = Math.round(44 * left);
   }
 
   private showItem() {

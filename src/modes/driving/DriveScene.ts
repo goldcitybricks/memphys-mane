@@ -28,13 +28,26 @@ export const MAX_SPEED = SEG_LEN * 45; // 45 segments a second
 export const MAX_CANS = 3;
 export const MANE_MODE_SECONDS = 7;
 
-export type CarKind = 'traffic' | 'aether' | 'escort' | 'ally';
+export type CarKind = 'traffic' | 'aether' | 'escort' | 'ally' | 'trooper';
+// 18-wheelers in traffic (Missions 4 and 8), drawn from the reference photos: white dry vans, a red cab,
+// a white cab with a green container, a blue cab. They're long, they don't spin, and they honk.
+export const SEMI_TEX = ['semiMemphys', 'semiRed', 'semiGreen', 'semiBlue'];
+const SEMI_LEN = 1100; // how far the trailer reaches ahead of its back doors, in world units
+// The state trooper: boost too fast for too long (sweet tea or a chain of drift boosts) and he lights you up.
+const SPEEDING = 1.2; // above this much of top speed you're speeding (plain driving and Mane Mode stay under it)
+const HEAT_LIMIT = 1.35; // seconds of speeding before he clocks you (a sweet tea starts you at 0.5 and always gets there; one drift boost or a sip doesn't)
+const TROOPER_SPEED = 1.1; // he's a little faster than Big Blue's top speed, slower than a boost
+export const CHASE_SECONDS = 9; // stay ahead this long and he gives up
+const PULLED_SECONDS = 3.2; // a pull-over costs you about this long, plus getting back up to speed
+const TROOPER_REST = 20; // seconds before he'll clock you again
 export interface Car {
   z: number; x: number; tx: number; speed: number; base: number; tex: string; kind: CarKind;
   spinT: number; ang: number; w: number; bumpCd: number; talkCd: number; gone?: boolean;
   sx: number; sy: number; seen: boolean; // where it was drawn this frame (speech bubbles follow it)
   lead?: number; slot?: number; // allies: where they hold formation (world units ahead of you, and across the road from you)
+  len?: number; // 18-wheelers: how far the trailer reaches ahead of z
 }
+export type TrooperState = 'none' | 'chase' | 'pulled' | 'leaving';
 export type HazKind = 'pothole' | 'sauce' | 'bones' | 'barrel' | 'sauceShot';
 export interface Haz { z: number; x: number; vx: number; kind: HazKind; vz: number; t: number; w: number; gone?: boolean }
 export interface Pick { z: number; x: number; kind: 'can' | 'box' | 'card'; taken: boolean; back: number }
@@ -79,6 +92,14 @@ export abstract class DriveScene extends Phaser.Scene {
   tanker: Tanker | null = null;
   escapeZ = Infinity; // where the tanker gets away
   archLights: 'normal' | 'glyph' = 'normal';
+  // the state trooper
+  trooper: Car | null = null;
+  trooperState: TrooperState = 'none';
+  heat = 0;
+  chaseT = 0;
+  pullT = 0;
+  trooperRest = 0;
+  trooperStops = 0;
   // laps (a looping track) and the HUD's extra bar
   lap = 1;
   lapsTotal = 0;
@@ -131,6 +152,8 @@ export abstract class DriveScene extends Phaser.Scene {
   onLap(_lap: number) { /* override: called when a looping track's start line is crossed */ }
   onBump(_c: Car) { /* override: a car hit you (not in Mane Mode) */ }
   onPickCard() { /* override: picked up the hidden Aquifer Fact card */ }
+  trooperAllowed() { return true; } // override: no speeding tickets during a mission's big set piece
+  onPulledOver() { /* override */ }
 
   create() {
     this.position = 0; this.playerX = 0; this.speed = 0; this.steer = 0; this.boostT = 0; this.spinT = 0; this.hopT = 0; this.wallCd = 0;
@@ -138,6 +161,7 @@ export abstract class DriveScene extends Phaser.Scene {
     this.cars = []; this.hazards = []; this.picks = []; this.tanker = null; this.escapeZ = Infinity; this.archLights = 'normal'; this.lap = 1;
     this.racing = false; this.frozen = false; this.inCutscene = false; this.skipping = false; this.paused = false; this.continuing = false;
     this.score = 0; this.elapsed = 0; this.kos = 0; this.rams = 0; this.sips = 0;
+    this.trooper = null; this.trooperState = 'none'; this.heat = 0; this.chaseT = 0; this.pullT = 0; this.trooperRest = 0; this.trooperStops = 0;
     this.pool = []; this.bands = []; this.spk = {}; this.bubbles = []; this.waiters = []; this.tips.clear(); this.hitstopMs = 0; this.clock = 0;
     Controls.clear();
     Audio.apply(this);
@@ -156,7 +180,7 @@ export abstract class DriveScene extends Phaser.Scene {
     this.setupKeyboard();
     this.startEngine();
     this.scene.launch('DriveUI', { world: this });
-    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => { this.scene.stop('DriveUI'); this.input.keyboard?.removeAllListeners(); this.stopEngine(); });
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => { this.scene.stop('DriveUI'); this.input.keyboard?.removeAllListeners(); this.stopEngine(); this.stopSiren(); });
     const relayout = () => { this.sky.setSize(this.W, H); this.far.setSize(this.W, H); };
     this.scale.on('resize', relayout);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.scale.off('resize', relayout));
@@ -198,7 +222,7 @@ export abstract class DriveScene extends Phaser.Scene {
   togglePause() {
     if (this.continuing) return;
     this.paused = !this.paused;
-    if (this.paused) { this.sound.pauseAll(); this.tweens.pauseAll(); this.time.paused = true; this.anims.pauseAll(); }
+    if (this.paused) { this.sound.pauseAll(); this.tweens.pauseAll(); this.time.paused = true; this.anims.pauseAll(); this.sirenVolume(0); }
     else { this.sound.resumeAll(); this.tweens.resumeAll(); this.time.paused = false; this.anims.resumeAll(); }
     this.events.emit('paused', this.paused);
   }
@@ -254,6 +278,7 @@ export abstract class DriveScene extends Phaser.Scene {
       if (this.racing) {
         this.updateTanker(dt);
         this.updateCars(dt);
+        this.updateTrooper(dt);
         this.updateHazards(dt);
         if (this.track.loop) this.wrapWorld();
         this.collide();
@@ -277,9 +302,12 @@ export abstract class DriveScene extends Phaser.Scene {
   private updatePlayer(dt: number) {
     const pct = this.speedPct;
     let steer = this.racing ? Controls.moveX : 0;
-    const driftHeld = this.racing && Controls.isDown('drift');
+    const driftHeld = this.racing && this.pullT <= 0 && Controls.isDown('drift');
     // spun out: no control for a beat
     if (this.spinT > 0) { this.spinT -= dt; steer = 0; this.speed *= 1 - 1.6 * dt; }
+    // pulled over: ease onto the shoulder and stop until the trooper's done talking
+    const pulled = this.pullT > 0;
+    if (pulled) { steer = Phaser.Math.Clamp((this.pullX() - this.playerX) * 4, -0.6, 0.6); this.drift.on = false; }
     // drift: hold DRIFT while turning at speed. Hold it longer for blue, then gold sparks; let go for a boost.
     if (this.drift.on) {
       if (!driftHeld || this.spinT > 0 || pct < 0.3) {
@@ -309,7 +337,8 @@ export abstract class DriveScene extends Phaser.Scene {
     const top = MAX_SPEED * (this.maneT > 0 ? 1.15 : 1) * (this.boostT > 0 ? 1.35 : 1);
     if (this.boostT > 0) { this.boostT -= dt; this.speed += MAX_SPEED * 1.2 * dt; }
     if (this.maneT > 0) { this.maneT -= dt; if (this.maneT <= 0) this.events.emit('hud'); }
-    if (this.racing && this.spinT <= 0) {
+    if (pulled) { this.speed = Math.max(0, this.speed - MAX_SPEED * 1.4 * dt); this.boostT = 0; }
+    else if (this.racing && this.spinT <= 0) {
       if (driftHeld && !this.drift.on) this.speed -= MAX_SPEED * 1.1 * dt;
       else this.speed += (MAX_SPEED / 3.2) * dt * (this.speed < MAX_SPEED * 0.5 ? 1.4 : 1);
     } else if (!this.racing) this.speed -= MAX_SPEED * 0.6 * dt;
@@ -341,7 +370,7 @@ export abstract class DriveScene extends Phaser.Scene {
     }
     else this.position = Math.min(this.position, this.track.length - PLAYER_Z - SEG_LEN * (DRAW + 2));
     // using things
-    if (this.racing && this.spinT <= 0) {
+    if (this.racing && this.spinT <= 0 && !pulled) {
       if (Controls.consume('item')) this.useItem();
       if (Controls.consume('sip')) this.sip();
     }
@@ -360,7 +389,10 @@ export abstract class DriveScene extends Phaser.Scene {
     const it = this.item;
     this.item = null;
     this.events.emit('item');
-    if (it === 'tea') { this.boost(1.7, 0xffb050, 'SWEET TEA BOOST!'); this.say(this.maneSpeaker(), 'SWEET TEA!', 900); }
+    if (it === 'tea') {
+      this.boost(1.7, 0xffb050, 'SWEET TEA BOOST!'); this.say(this.maneSpeaker(), 'SWEET TEA!', 900);
+      if (this.trooperState === 'none' && this.trooperRest <= 0) this.heat += 0.5; // the trooper's radar loves sweet tea
+    }
     else if (it === 'sauce') {
       // lobbed ahead: it flies past anything in front, then splats into a slick
       this.hazards.push({ z: this.playerZ + 300, x: this.playerX, vx: 0, kind: 'sauceShot', vz: this.speed + MAX_SPEED * 0.9, t: 0.55, w: 0.22 });
@@ -418,9 +450,26 @@ export abstract class DriveScene extends Phaser.Scene {
 
   // ---------------------------------------------------------------- the world
   spawnCar(kind: CarKind, z: number, x: number, speed: number, tex: string): Car {
-    const c: Car = { z, x, tx: x, speed, base: speed, tex, kind, spinT: 0, ang: 0, w: (tex === 'tanker' ? 128 : 60) * NORM, bumpCd: 0, talkCd: 0, sx: 0, sy: -100, seen: false };
+    const semi = SEMI_TEX.includes(tex);
+    const c: Car = { z, x, tx: x, speed, base: speed, tex, kind, spinT: 0, ang: 0, w: (tex === 'tanker' ? 128 : semi ? 84 : tex === 'trooper' ? 68 : 60) * NORM, bumpCd: 0, talkCd: 0, sx: 0, sy: -100, seen: false };
+    if (semi) c.len = SEMI_LEN;
     this.cars.push(c);
     return c;
+  }
+  isSemi(c: Car) { return !!c.len; }
+  // 18-wheelers spread along a stretch of road (segments `from` to `to`), slow, mostly in the outside lanes.
+  // Every so often two run side by side, a rolling wall you have to wait out, drift around or bash in Mane Mode.
+  addSemis(rnd: Phaser.Math.RandomDataGenerator, from: number, to: number, n: number) {
+    const L = this.lanes();
+    const step = (to - from) / n;
+    for (let i = 0; i < n; i++) {
+      const z = (from + i * step + rnd.between(0, Math.floor(step * 0.4))) * SEG_LEN;
+      const lane = [0, 2, 1, 0, 2][i % 5];
+      const speed = MAX_SPEED * rnd.realInRange(0.36, 0.46);
+      this.spawnCar('traffic', z, L[lane], speed, SEMI_TEX[i % SEMI_TEX.length]);
+      // a pair side by side, about one in four, never across all three lanes
+      if (i % 4 === 2) this.spawnCar('traffic', z + rnd.between(-150, 150), L[lane === 1 ? 0 : 1], speed, SEMI_TEX[(i + 2) % SEMI_TEX.length]);
+    }
   }
   addPick(z: number, x: number, kind: Pick['kind']) { this.picks.push({ z, x, kind, taken: false, back: 0 }); }
   addHaz(z: number, x: number, kind: HazKind) {
@@ -471,6 +520,7 @@ export abstract class DriveScene extends Phaser.Scene {
       if (c.gone) continue;
       const dz = c.z - pz;
       if (c.kind === 'ally') { this.updateAlly(c, dt); continue; }
+      if (c.kind === 'trooper') continue; // updateTrooper drives him
       if (c.spinT > 0) {
         c.spinT -= dt;
         c.ang += dt * 900;
@@ -506,11 +556,11 @@ export abstract class DriveScene extends Phaser.Scene {
     if (c.talkCd > 0) c.talkCd -= dt;
     // it plows anything it runs into
     for (const o of this.cars) {
-      if (o === c || o.kind === 'ally' || o.spinT > 0 || Math.abs(o.z - c.z) > CAR_LEN || Math.abs(o.x - c.x) > (o.w + c.w) / 2) continue;
+      if (o === c || o.kind === 'ally' || o.kind === 'trooper' || o.spinT > 0 || o.bumpCd > 0 || c.z < o.z - CAR_LEN || c.z > o.z + (o.len ?? CAR_LEN) || Math.abs(o.x - c.x) > (o.w + c.w) / 2) continue;
       o.tx = o.x + (o.x >= c.x ? 0.7 : -0.7);
       o.x += o.x >= c.x ? 0.12 : -0.12;
-      o.z += 160;
-      this.spinCar(o, o.kind === 'traffic' ? 'AYE!' : 'RECALCULATING...');
+      if (this.isSemi(o)) { o.bumpCd = 1; this.honk(o, 'HONNNK!'); }
+      else { o.z += 160; this.spinCar(o, o.kind === 'traffic' ? 'AYE!' : 'RECALCULATING...'); }
       this.addScore(200);
       this.sfx('crash', 0.4);
       this.onAllyPlow(c, o);
@@ -529,7 +579,14 @@ export abstract class DriveScene extends Phaser.Scene {
       // cars run into slicks, bones and each other's barrels
       if (h.kind !== 'pothole' && h.kind !== 'barrel') {
         for (const c of this.cars) {
-          if (c.kind === 'ally' || c.spinT > 0 || Math.abs(c.z - h.z) > CAR_LEN || Math.abs(c.x - h.x) > (c.w + h.w) / 2) continue;
+          if (c.kind === 'ally' || this.isSemi(c) || c.spinT > 0 || Math.abs(c.z - h.z) > CAR_LEN || Math.abs(c.x - h.x) > (c.w + h.w) / 2) continue;
+          if (c.kind === 'trooper') {
+            if (this.trooperState !== 'chase') continue;
+            c.spinT = 1.4; this.sfx('spin', 0.45);
+            if (h.kind === 'sauceShot') { h.kind = 'sauce'; h.vz = 0; h.t = 20; }
+            this.shookTrooper(h.kind === 'bones' ? 'WING BONES?! IN MY TIRES?!' : 'AW, SAUCE!');
+            continue;
+          }
           this.spinCar(c, h.kind === 'bones' ? 'POP! RECALCULATING...' : 'RECALCULATING...');
           if (h.kind === 'sauceShot') { h.kind = 'sauce'; h.vz = 0; h.t = 20; }
           this.addScore(200);
@@ -557,9 +614,10 @@ export abstract class DriveScene extends Phaser.Scene {
     const mm = this.maneT > 0;
     // cars
     for (const c of this.cars) {
-      if (c.kind === 'ally') continue;
-      if (c.bumpCd > 0 || Math.abs(c.z - pz) > CAR_LEN || Math.abs(c.x - px0) > (pw + c.w) / 2 * 0.9) continue;
+      if (c.kind === 'ally' || c.kind === 'trooper' || this.pullT > 0) continue;
+      if (c.bumpCd > 0 || pz < c.z - CAR_LEN || pz > c.z + (c.len ?? CAR_LEN) || Math.abs(c.x - px0) > (pw + c.w) / 2 * 0.9) continue;
       c.bumpCd = 0.6;
+      if (this.isSemi(c)) { this.bumpSemi(c, mm); continue; }
       const talk = c.kind === 'traffic' ? ['AYE, WATCH IT!', 'BRO!', 'MY CAR!'][Math.floor(Math.random() * 3)] : ['RECALCULATING...', 'RECALCULATING...', 'YIELD. YIELD. YIELD.', 'ROUTE BLOCKED.'][Math.floor(Math.random() * 4)];
       if (mm) {
         // Mane Mode: bash them aside
@@ -602,7 +660,7 @@ export abstract class DriveScene extends Phaser.Scene {
     }
     // hazards
     for (const h of this.hazards) {
-      if (h.kind === 'sauceShot' || h.kind === 'bones' || h.gone) continue; // yours
+      if (h.kind === 'sauceShot' || h.kind === 'bones' || h.gone || this.pullT > 0) continue; // yours
       if (Math.abs(h.z - (pz + 60)) > 220 || Math.abs(h.x - px0) > (pw + h.w) / 2 * 0.8) continue;
       if (h.kind === 'pothole') {
         if (this.hopT > 0) continue;
@@ -629,6 +687,194 @@ export abstract class DriveScene extends Phaser.Scene {
         else { this.playerX += t.x >= px0 ? -0.3 : 0.3; this.speed *= 0.8; this.sfx('crash', 0.5); this.shake(120, 0.006); t.ramCd = 0.5; }
       }
     }
+  }
+
+  // an 18-wheeler doesn't spin out: run up its back doors and you stop dead, scrape its side and it shoves you off.
+  // In Mane Mode you bash it a lane over.
+  private bumpSemi(c: Car, mm: boolean) {
+    const px0 = this.playerX, pz = this.playerZ;
+    const away = c.x >= px0 ? -1 : 1;
+    if (mm) {
+      c.tx = Phaser.Math.Clamp(c.x - away * 0.7, -0.85, 0.85);
+      c.x -= away * 0.08;
+      c.bumpCd = 1.2;
+      this.playerX += away * 0.12;
+      this.kos++;
+      this.addScore(300);
+      this.toast('BIG RIG BASHED! +300');
+      this.sfx('punchHeavy', 0.7);
+      this.shake(160, 0.008);
+      this.sparkAt(this.W / 2, 160, COLORS.goldHi);
+      this.honk(c, 'HONNNK!');
+      return;
+    }
+    this.sfx('crash', 0.6);
+    this.shake(180, 0.009);
+    this.onBump(c);
+    if (pz < c.z - CAR_LEN * 0.4) {
+      // ran up the back doors: you stop to its speed and bounce off
+      this.speed = Math.min(this.speed, c.speed * 0.7);
+      this.position = c.z - CAR_LEN - PLAYER_Z;
+      if (Math.random() < 0.5) this.say(this.maneSpeaker(), 'THAT\'S A WHOLE WALL, MANE!', 1000);
+    } else {
+      // alongside the trailer: it leans you over a lane
+      this.playerX += away * 0.3;
+      this.speed *= 0.85;
+    }
+    this.honk(c, ['HONNNK!', 'BIG RIG, LIL\' CAN!', 'CHECK YO MIRRORS!'][Math.floor(Math.random() * 3)]);
+  }
+  honk(c: Car, line: string) {
+    this.sfx('horn', 0.55);
+    if (c.talkCd <= 0) { c.talkCd = 2.5; this.say(this.carSpeaker(c), line, 1200); }
+  }
+
+  // ---------------------------------------------------------------- the state trooper
+  // Speed too long (a sweet tea, or drift boosts back to back) and he clocks you, lights on, from behind.
+  // He's a little faster than Big Blue, so you either stay ahead for a few seconds (another boost does it,
+  // but keeps the heat on), sauce him or drop wing bones, or he pulls you over: a short stop, a warning, and
+  // you're back on the road. No points lost; the stop is the price.
+  private updateTrooper(dt: number) {
+    if (this.trooperRest > 0) this.trooperRest -= dt;
+    const st = this.trooperState;
+    if (st === 'none') {
+      const speeding = this.speed > MAX_SPEED * SPEEDING && this.trooperRest <= 0 && this.trooperAllowed();
+      this.heat = speeding ? this.heat + dt : Math.max(0, this.heat - dt * 0.5);
+      if (this.heat >= HEAT_LIMIT) this.startChase();
+      return;
+    }
+    const c = this.trooper!;
+    const pz = this.playerZ;
+    if (st === 'chase') {
+      this.chaseT += dt;
+      if (c.spinT > 0) { c.spinT -= dt; c.ang += dt * 900; c.speed *= 1 - 1.5 * dt; }
+      else {
+        // he's faster than you unless you boost; up close he matches you so he doesn't just ram you
+        const gap = pz - c.z;
+        let want = MAX_SPEED * TROOPER_SPEED;
+        if (gap > SEG_LEN * 45) want = this.speed + MAX_SPEED * 0.25; // never loses you completely while it lasts
+        c.speed += (want - c.speed) * Math.min(1, dt * 2);
+        c.tx = this.playerX;
+        c.x += Math.sign(c.tx - c.x) * Math.min(Math.abs(c.tx - c.x), 0.5 * dt);
+        if (gap < CAR_LEN * 1.2) { this.pullOver(); return; }
+      }
+      c.z += c.speed * dt;
+      if (!this.trooperAllowed()) { this.endChase(false); return; }
+      if (this.chaseT > CHASE_SECONDS) { this.shookTrooper('...HE GAVE UP!'); return; }
+      this.sirenVolume(Phaser.Math.Clamp(1 - (pz - c.z) / (SEG_LEN * 40), 0.25, 1));
+    } else if (st === 'pulled') {
+      // he sits on the shoulder just ahead of you with the lights going
+      c.speed = this.speed;
+      c.z = Math.max(c.z + c.speed * dt, pz + CAR_LEN * 0.3);
+      c.tx = Phaser.Math.Clamp(this.pullX() + (this.pullX() > 0 ? -0.05 : 0.05), -0.9, 0.9);
+      c.x += Math.sign(c.tx - c.x) * Math.min(Math.abs(c.tx - c.x), 0.6 * dt);
+      this.pullT -= dt;
+      if (this.pullT <= 0) this.letGo();
+    } else {
+      // leaving: he pulls back out and drives off ahead, lights off
+      c.speed = Math.min(c.speed + MAX_SPEED * 0.6 * dt, MAX_SPEED * 1.3);
+      c.z += c.speed * dt;
+      c.x += Math.sign(c.tx - c.x) * Math.min(Math.abs(c.tx - c.x), 0.4 * dt);
+      if (c.z - pz > SEG_LEN * 120) this.endChase(true);
+    }
+  }
+  pullX() { return this.playerX >= 0 ? 0.78 : -0.78; } // the nearer shoulder
+
+  private startChase() {
+    this.heat = 0;
+    this.chaseT = 0;
+    this.trooperState = 'chase';
+    this.trooper = this.spawnCar('trooper', this.playerZ - SEG_LEN * 30, this.playerX, this.speed * 0.9, 'trooper');
+    this.startSiren();
+    this.toast(`CLOCKED AT ${Math.round(this.speedPct * 88)} MPH!`);
+    this.tip('trooper');
+    this.time.delayedCall(500, () => { if (this.trooperState === 'chase') this.say(this.malikSpeaker(), Phaser.Utils.Array.GetRandom(['MANE! STATE TROOPER!', 'BLUE LIGHTS! BEHIND US!', 'MANE, THAT\'S THE TROOPER!']), 1600); });
+    this.events.emit('trooper');
+  }
+  // you got away: he spun on your sauce or bones, or gave up
+  private shookTrooper(line: string) {
+    const c = this.trooper;
+    if (!c || this.trooperState !== 'chase') return;
+    this.addScore(500);
+    this.toast('SHOOK THE TROOPER! +500');
+    this.say(this.maneSpeaker(), Phaser.Utils.Array.GetRandom(['SWEET TEA, OFFICER!', 'CAN\'T CATCH A CAN!', 'HAVE A BLESSED NIGHT!']), 1400);
+    if (c.seen) this.say(this.carSpeaker(c), line, 1400); else this.say(this.malikSpeaker(), line, 1400);
+    this.trooperRest = TROOPER_REST;
+    this.endChase(false);
+  }
+  private pullOver() {
+    const c = this.trooper!;
+    this.trooperState = 'pulled';
+    this.pullT = PULLED_SECONDS;
+    this.trooperStops++;
+    this.boostT = 0; this.spinT = 0; this.drift.on = false;
+    // he slides past and sets up just ahead on the shoulder so you can see him
+    c.z = this.playerZ + CAR_LEN * 1.6;
+    c.x = Phaser.Math.Clamp(this.playerX + (this.playerX > 0 ? 0.25 : -0.25), -0.85, 0.85);
+    c.spinT = 0; c.ang = 0;
+    this.sirenVolume(0.5);
+    this.sfx('horn', 0.4);
+    this.toast('PULLED OVER!');
+    this.events.emit('hud');
+    this.onPulledOver();
+    const lines = [
+      ['LICENSE AND REGISTRATION.', 'IT WAS THE SWEET TEA, OFFICER!', 'MM-HM. WARNING THIS TIME. EASE UP.'],
+      ['YOU KNOW HOW FAST YOU WAS GOIN\'?', '...FAST ENOUGH?', 'SLOW IT DOWN, CAN. HAVE A NIGHT.'],
+      ['IS THAT A CAN DRIVIN\'?', 'I GOT A PHONE BOOK, OFFICER!', '...GO ON. AND SLOW DOWN.'],
+    ][(this.trooperStops - 1) % 3];
+    const say = (who: () => Speaker, text: string, at: number) => this.time.delayedCall(at, () => { if (this.trooperState === 'pulled') this.say(who(), text, 1100); });
+    say(() => this.carSpeaker(c), lines[0], 500);
+    say(() => this.maneSpeaker(), lines[1], 1500);
+    say(() => this.carSpeaker(c), lines[2], 2400);
+  }
+  private letGo() {
+    const c = this.trooper!;
+    this.pullT = 0;
+    this.trooperState = 'leaving';
+    this.trooperRest = TROOPER_REST;
+    this.stopSiren();
+    c.tx = Phaser.Math.Clamp(-this.pullX() * 0.5, -0.85, 0.85);
+    c.speed = Math.max(c.speed, MAX_SPEED * 0.4);
+    this.toast('WARNING ONLY. BACK ON THE ROAD!');
+    this.say(this.maneSpeaker(), 'YES SIR. SLOWIN\' DOWN, SIR.', 1300);
+    this.events.emit('hud');
+  }
+  // clear him off the road (a cutscene, a continue, the mission's set piece, or he drove off)
+  endChase(quiet = true) {
+    if (this.trooper) this.trooper.gone = true;
+    this.cars = this.cars.filter((c) => !c.gone);
+    this.trooper = null;
+    this.trooperState = 'none';
+    this.pullT = 0;
+    this.heat = 0;
+    this.stopSiren();
+    if (!quiet) this.events.emit('hud');
+  }
+
+  // the siren: a live wail, like the engine, so there's no sound file to swap
+  private siren?: { osc: OscillatorNode; lfo: OscillatorNode; gain: GainNode };
+  private startSiren() {
+    if (this.siren) return;
+    const sm = this.sound as Phaser.Sound.WebAudioSoundManager;
+    const ctx = (sm as any).context as AudioContext | undefined;
+    if (!ctx || !(sm as any).destination) return;
+    try {
+      const gain = ctx.createGain(); gain.gain.value = 0;
+      const osc = ctx.createOscillator(); osc.type = 'triangle'; osc.frequency.value = 900;
+      const lfo = ctx.createOscillator(); lfo.type = 'sine'; lfo.frequency.value = 0.55; // the slow wail
+      const depth = ctx.createGain(); depth.gain.value = 320;
+      lfo.connect(depth); depth.connect(osc.frequency);
+      osc.connect(gain); gain.connect((sm as any).destination);
+      osc.start(); lfo.start();
+      this.siren = { osc, lfo, gain };
+      this.sirenVolume(0.3);
+    } catch { this.siren = undefined; }
+  }
+  private sirenVolume(k: number) { const s = this.siren; if (s) s.gain.gain.setTargetAtTime(k * 0.045, s.osc.context.currentTime, 0.1); }
+  private stopSiren() {
+    const s = this.siren;
+    if (!s) return;
+    try { s.gain.gain.value = 0; s.osc.stop(); s.lfo.stop(); s.gain.disconnect(); } catch { /* ignore */ }
+    this.siren = undefined;
   }
 
   private ramTanker() {
@@ -805,7 +1051,9 @@ export abstract class DriveScene extends Phaser.Scene {
     }
     for (const c of this.cars) {
       const yaw = c.tx < c.x - 0.02 ? 0 : c.tx > c.x + 0.02 ? 2 : 1;
-      const img = put(c.z, c.x, c.tex, c.spinT > 0 ? Math.floor(t * 12) % 3 : yaw);
+      let frame = c.spinT > 0 ? Math.floor(t * 12) % 3 : yaw;
+      if (c.kind === 'trooper' && this.trooperState !== 'leaving') frame += Math.floor(t * 7) % 2 ? 3 : 0;
+      const img = put(c.z, c.x, c.tex, frame);
       c.seen = !!img;
       if (img) { img.setAngle(c.spinT > 0 ? Math.sin(c.ang * 0.05) * 25 : 0); c.sx = img.x; c.sy = img.y - img.displayHeight; }
     }
@@ -868,6 +1116,13 @@ export abstract class DriveScene extends Phaser.Scene {
         f.fillStyle(i % 2 ? 0xffffff : c, 1).fillRect(W / 2 + ex + (Math.random() - 0.5) * 10 + this.drift.dir * 4, cy - 2 - Math.random() * 6, 2, 2);
       }
     }
+    if (this.trooperState === 'chase' || this.trooperState === 'pulled') {
+      // blue lights washing the edges of the screen
+      const on = Math.floor(t * 7) % 2;
+      const a = this.trooperState === 'pulled' ? 0.3 : 0.12 + 0.2 * Math.max(0, 1 - (this.playerZ - (this.trooper?.z ?? 0)) / (SEG_LEN * 30));
+      f.fillStyle(on ? 0x2a6aff : 0xffffff, a).fillRect(0, 42, 10, H - 42);
+      f.fillStyle(on ? 0xffffff : 0x2a6aff, a).fillRect(W - 10, 42, 10, H - 42);
+    }
     if (this.maneT > 0) {
       const a = 0.18 + 0.1 * Math.sin(t * 12);
       f.fillStyle(COLORS.gold, a).fillEllipse(W / 2, cy - 22, 110, 54);
@@ -896,6 +1151,7 @@ export abstract class DriveScene extends Phaser.Scene {
   // ---------------------------------------------------------------- the tanker gets away
   showContinue() {
     if (this.continuing) return;
+    this.endChase();
     this.racing = false;
     this.continuing = true;
     this.drift.on = false;
@@ -993,7 +1249,7 @@ export abstract class DriveScene extends Phaser.Scene {
     this.clearCaption();
   }
   clearCaption() { this.captionBox?.destroy(); this.captionBox = undefined; }
-  startCutscene() { this.inCutscene = true; this.racing = false; this.drift.on = false; this.events.emit('cutscene', true); }
+  startCutscene() { this.endChase(); this.inCutscene = true; this.racing = false; this.drift.on = false; this.events.emit('cutscene', true); }
   endCutscene() { this.clearBubbles(); this.clearCaption(); this.inCutscene = false; this.skipping = false; this.events.emit('cutscene', false); Controls.clear(); }
   skipCutscene() { if (this.inCutscene) this.skipping = true; }
 

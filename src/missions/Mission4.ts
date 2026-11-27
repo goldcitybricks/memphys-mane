@@ -94,6 +94,8 @@ export class Mission4 extends DriveScene {
     const sedans = ['altimaRear', 'altimaRearBlack', 'infinitiRear'];
     for (let i = 0; i < 16; i++) this.spawnCar('traffic', (240 + i * 120 + rnd.between(-30, 30)) * S, L[rnd.between(0, 2)], MAX_SPEED * rnd.realInRange(0.4, 0.55), sedans[i % 3]);
     for (let i = 0; i < 9; i++) this.spawnCar('aether', (420 + i * 190 + rnd.between(-20, 20)) * S, L[rnd.between(0, 2)], MAX_SPEED * rnd.realInRange(0.5, 0.62), 'aetherCar');
+    // 18-wheelers downtown and across the bridge (their own seed, so the cars above stay where they were)
+    this.addSemis(new Phaser.Math.RandomDataGenerator(['bridge-run-semis']), 300, 4700, 16);
   }
 
   // ------------------------------------------------------------------ the script
@@ -138,6 +140,8 @@ export class Mission4 extends DriveScene {
   continueZ() { return Math.max(BRIDGE * SEG_LEN, this.playerZ - SEG_LEN * 900); }
 
   private seg() { return this.playerZ / SEG_LEN; }
+  // no speeding tickets once the tanker's going down
+  trooperAllowed() { return !this.finale; }
   private drifted() { return (this as any).tips?.has?.('drift'); }
   private liveSpeaker() { const w = this; return ((this as any).__live ??= { get x() { return w.W / 2; }, get headY() { return 74; } }); }
 
