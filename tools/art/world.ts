@@ -128,23 +128,40 @@ export function carFrames(body: RGBA, bodyD: RGBA, opts: { model: CarModel; donu
 }
 
 // ------------------------------------------------------------------ props and FX
+// MEMPHYS can: cream can, M-shaped bridge arches up top, wordmark band, gold pyramid on the water
+const SILVER = hex('#c4c8d0'), SILVER_D = hex('#8a8e98'), PYR_L = hex('#dcb862');
+function drawCan(g: Pix, x0: number, y0: number, w: number, h: number) {
+  const x1 = x0 + w - 1, y1 = y0 + h - 1;
+  g.rect(x0, y0, w, h, P.can);
+  g.vline(x0 + 1, y0 + 1, y1 - 1, P.canHi);
+  g.vline(x1, y0 + 1, y1 - 1, P.canShade);
+  g.hline(x0, x1, y0, SILVER); g.hline(x0, x1, y1, SILVER_D);
+  if (w >= 10) g.hline(x0 + 1, x1 - 1, y0 + 1, hex('#e9edf2'));
+}
 export function canPickup(): Pix[] {
   return [0, 1, 2, 3].map((f) => {
-    const g = new Pix(16, 16);
+    const g = new Pix(20, 26);
     const glow = [0.25, 0.45, 0.6, 0.45][f];
-    g.ellipse(8, 8, 7, 7, [245, 197, 66, Math.round(glow * 140)]);
-    g.rect(5, 3, 6, 10, P.can);
-    g.rect(5, 3, 6, 1, P.rim); g.rect(5, 12, 6, 1, P.rim);
-    g.vline(6, 4, 11, P.canHi); g.vline(10, 4, 11, P.canShade);
-    g.hline(6, 9, 5, P.label); // bridge
-    g.rect(7, 8, 3, 1, P.gold); // grill
-    g.set(7, 7, P.ink); g.set(9, 7, P.ink);
-    const o = new Pix(16, 16); o.blit(g, 0, 0);
-    // outline only the can
-    const c = new Pix(16, 16);
-    c.rect(5, 3, 6, 10, P.white); c.outline(P.ink);
-    for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) { const p = c.get(x, y)!; if (p[0] === P.ink[0] && p[3]) o.set(x, y, P.ink); }
-    if (f === 2) drawSparkle(o, 11, 4, 1);
+    g.ellipse(10, 13, 9, 11, [245, 197, 66, Math.round(glow * 140)]);
+    const o = new Pix(20, 26); o.blit(g, 0, 0);
+    // can body x 5..14, y 3..22
+    drawCan(o, 5, 3, 10, 20);
+    const L = P.label;
+    // bridge: two arches meeting in the middle (the M), deck, water line
+    for (const [x, y] of [[7, 5], [8, 5], [11, 5], [12, 5], [6, 6], [9, 6], [10, 6], [13, 6]]) o.set(x, y, L);
+    for (const x of [7, 8, 11, 12]) o.set(x, 7, P.canShade);
+    o.hline(6, 13, 8, L);
+    o.set(7, 9, P.canShade); o.set(11, 9, P.canShade);
+    // MEMPHYS wordmark + PURE ARTESIAN WATER
+    o.hline(6, 13, 11, L); o.set(9, 11, P.can);
+    o.hline(7, 12, 13, P.canShade);
+    // pyramid: light face on the left, solid gold on the right, on the water
+    for (let r = 0; r < 4; r++) for (let x = 9 - r; x <= 10 + r; x++) o.set(x, 15 + r, x >= 10 ? P.labelGold : PYR_L);
+    for (let x = 6; x <= 13; x++) o.set(x, x % 2 ? 20 : 19, P.labelGold);
+    // ink outline around the can only
+    const c = new Pix(20, 26); c.rect(5, 3, 10, 20, P.white); c.outline(P.ink);
+    for (let y = 0; y < 26; y++) for (let x = 0; x < 20; x++) { const p = c.get(x, y)!; if (p[0] === P.ink[0] && p[3]) o.set(x, y, P.ink); }
+    if (f === 2) drawSparkle(o, 15, 5, 1);
     return o;
   });
 }
@@ -289,11 +306,20 @@ export function smoke(): Pix[] {
 export function hudBits() {
   const heart = new Pix(8, 8);
   heart.rect(1, 1, 6, 5, P.red);
-  const can = new Pix(8, 10);
-  can.rect(1, 1, 6, 8, P.can); can.hline(1, 6, 1, P.rim); can.hline(2, 5, 6, P.gold); can.vline(2, 2, 7, P.canHi);
+  const can = new Pix(10, 14);
+  drawCan(can, 1, 1, 8, 12);
+  for (const [x, y] of [[3, 3], [6, 3], [2, 4], [4, 4], [5, 4], [7, 4]]) can.set(x, y, P.label);
+  can.hline(2, 7, 6, P.label);
+  can.hline(4, 5, 8, P.labelGold);
+  for (let x = 3; x <= 6; x++) can.set(x, 9, x >= 5 ? P.labelGold : PYR_L);
+  for (let x = 2; x <= 7; x++) can.set(x, 10, x >= 5 ? P.labelGold : PYR_L);
   can.outline(P.ink);
-  const canEmpty = new Pix(8, 10);
-  canEmpty.rect(1, 1, 6, 8, [80, 80, 100, 200]); canEmpty.outline(P.ink);
+  const canEmpty = new Pix(10, 14);
+  canEmpty.rect(1, 1, 8, 12, [80, 80, 100, 200]);
+  for (const [x, y] of [[3, 3], [6, 3], [2, 4], [4, 4], [5, 4], [7, 4]]) canEmpty.set(x, y, [50, 50, 70, 220]);
+  for (let x = 3; x <= 6; x++) canEmpty.set(x, 9, [60, 60, 80, 220]);
+  for (let x = 2; x <= 7; x++) canEmpty.set(x, 10, [60, 60, 80, 220]);
+  canEmpty.outline(P.ink);
   return { can, canEmpty };
 }
 

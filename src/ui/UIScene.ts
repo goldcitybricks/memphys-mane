@@ -61,7 +61,7 @@ export class UIScene extends Phaser.Scene {
     this.hpBar = this.add.rectangle(45, 16, 80, 5, COLORS.gold).setOrigin(0);
     this.mmBack = this.add.rectangle(44, 24, 82, 4, 0x0b0f26).setOrigin(0).setVisible(false);
     this.mmBar = this.add.rectangle(45, 25, 80, 2, 0xffffff).setOrigin(0).setVisible(false);
-    for (let i = 0; i < MAX_CANS; i++) this.canIcons.push(this.add.image(46 + i * 10, 30, 'hudCanEmpty').setOrigin(0));
+    for (let i = 0; i < MAX_CANS; i++) this.canIcons.push(this.add.image(46 + i * 11, 28, 'hudCanEmpty').setOrigin(0));
     this.scoreText = px(this, 80, 31, '0', 0xffffff);
     this.hudGroup.push(frame, this.portrait, name, this.hpBack, this.hpBar, ...this.canIcons, this.scoreText);
 

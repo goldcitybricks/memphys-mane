@@ -320,8 +320,8 @@
   },
   "canPickup": {
    "file": "canPickup.png",
-   "frameWidth": 16,
-   "frameHeight": 16,
+   "frameWidth": 20,
+   "frameHeight": 26,
    "anims": {
     "glow": [
      0,
