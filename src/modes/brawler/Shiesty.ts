@@ -147,8 +147,8 @@ export class Shiesty extends Actor {
     if (d < 2) { this.vx = this.vy = 0; this.play('idle'); return true; }
     this.vx = (dx / d) * this.speed * mul;
     this.vy = (dy / d) * this.speed * 0.7 * mul;
-    // step around picnic tables instead of pushing into them
-    const t = this.scene.tableAt(this.x + Math.sign(dx) * 10, this.y);
+    // step around tables, jars and stalls instead of pushing into them
+    const t = this.scene.obstacleAt(this.x + Math.sign(dx) * 10, this.y);
     if (t && Math.abs(dx) > 4) {
       const goUp = ty < t.y || (ty === t.y && this.y < t.y);
       this.vy = (goUp ? -1 : 1) * this.speed * 0.8 * mul;

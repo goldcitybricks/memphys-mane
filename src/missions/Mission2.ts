@@ -68,6 +68,8 @@ export class Mission2 extends BrawlerScene {
     }
     // the date seller's stall
     this.add.image(STALL_X, 160, 'stall').setOrigin(0.5, 1).setDepth(159);
+    // the stall is solid all the way back to the wall: go around the front
+    this.addObstacle(STALL_X, 156, 38, 7);
 
     // mud holes (jump them)
     for (const [x, y] of [[470, 196], [600, 170], [780, 200], [1210, 178], [1330, 198], [1500, 172], [1880, 196], [2010, 176]]) this.addPothole(x, y);
@@ -322,6 +324,7 @@ export class Mission2 extends BrawlerScene {
     const v = new Extra(this, 'vendor', STALL_X + 6, 168);
     v.facing = -1;
     this.extras.push(v);
+    this.addSolidActor(v);
     await this.walkTo(p, STALL_X - 40, 176, 70);
     p.facing = 1;
     p.play('idle');
