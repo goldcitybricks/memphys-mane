@@ -2,15 +2,17 @@
 
 A retro 90s beat-'em-up (Turtles in Time feel) set in Memphis, TN, starring MEMPHYS Mane. A free promo game for MEMPHYS Water, built to run in a phone browser and embed on memphyswater.com.
 
-This is the first playable: **Mission 1, "The Sip"**, in the alley behind Uncle T's Pit at Park & Airways, Orange Mound, at night.
+Playable now: **Mission 1, "The Sip"**, in the alley behind Uncle T's Pit at Park & Airways, Orange Mound, at night, and **Mission 2, "Old Memphis"**, in Memphis, Egypt, 3,000 years ago.
 
 ## Play
 
 - **Phone:** turn it sideways. Left thumb anywhere on the left half is the stick. HIT, JUMP, SIP, FLEX on the right. Tap to advance dialogue, SKIP to jump past the intro.
 - **Keyboard:** arrows/WASD move, Z or J punch, X/K/Space jump, C or L sip, V or I flex, Esc or P pause.
-- Add `?play` to the URL to skip the title screen.
+- Add `?play` to the URL to skip the title screen, or `?play=2` to jump straight into Mission 2. Beating Mission 1 unlocks a mission picker on the title screen, and the results screen has NEXT.
 
 What's in Mission 1: the intro (Malik, the Shiesty Boys, Uncle T's toss, the one-frame flash of Old Memphis, Mane bursting out of the can), four fight waves, a three-hit combo and flying kick, potholes that trip you, drive-out cars to jump or dodge (they flatten Shiesty Boys too), breakable trash cans with ribs, wings and MEMPHYS cans inside, carrying up to 3 cans and sipping one for 10 seconds of Mane Mode, the grill shine (stand still 3 seconds, or FLEX to daze everyone in front of you), the first punch knocking a mask off for Pothole to steal, O.G. Drive-Out's gold car at the end, the glowing pyramid puddle, and a results screen with a rank and local best score.
+
+What's in Mission 2: Mane flies out of a reflecting pool into ancient Memphis and Nia rises from the water ("Welcome back, Keeper."), jackal-masked guards with spears, blades and thrown clay pots, mud holes, clay jars with bread, dates and MEMPHYS cans, war chariots charging through the lanes, the date seller who gets offered Mane's gold grill as payment, Nia's memory of the day the young king (face in shadow) had Mane sealed in the golden jar, the Jackal Captain boss (telegraphed charge, a howl that calls guards, a fake surrender: "Quit flaugin'."), Nia's "You ain't a king. You a keeper.", and the pull-back where the Nile lines up with the Mississippi and the old pyramid with the Memphis Pyramid.
 
 ## Develop
 
@@ -36,10 +38,12 @@ src/
   modes/brawler/             the reusable Turtles-in-Time engine
     BrawlerScene.ts          camera locks, waves, hit detection, hitstop, cars, pickups, speech bubbles, script helpers
     Mane.ts                  the player: movement, combo, jump kick, Sip/Mane Mode, flex, knockdowns
-    Shiesty.ts               enemy AI (rushers and bottle throwers, two attack tokens at a time)
+    Shiesty.ts               enemy AI (rushers and throwers, two attack tokens at a time); each mission skins it
+    JackalCaptain.ts         Mission 2 boss
     Props.ts                 cars, pickups, trash cans, bottles
   missions/
     Mission1.ts              The Sip: level layout, the intro, waves, the ending
+    Mission2.ts              Old Memphis: the market, the grill gag, Nia's memory, the Jackal Captain, the pull-back
     lines.ts                 Mane's lines and enemy trash talk, in one place for review
   ui/UIScene.ts              HUD, touch controls, pause and continue screens
   scenes/                    Boot, Title, Results, credits

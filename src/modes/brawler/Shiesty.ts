@@ -2,7 +2,6 @@ import Phaser from 'phaser';
 import { Actor, HitInfo } from './Actor';
 import type { BrawlerScene } from './BrawlerScene';
 import { FLOOR_TOP, FLOOR_BOTTOM } from '../../core/config';
-import { SHIESTY_TALK } from '../../missions/lines';
 
 export type ShiestyKind = 'rusher' | 'thrower';
 
@@ -22,11 +21,13 @@ export class Shiesty extends Actor {
   talked = false;
   scriptControlled = false;
   hurtCount = 0;
+  punchDamage = 8;
 
   constructor(scene: BrawlerScene, kind: ShiestyKind, x: number, y: number, tex?: string) {
-    super(scene, tex ?? (kind === 'thrower' ? 'shiestyGrey' : Phaser.Math.RND.pick(['shiestyRed', 'shiestyGreen'])), x, y, kind === 'thrower' ? 22 : 30);
+    const look = scene.look.enemies;
+    super(scene, tex ?? Phaser.Math.RND.pick(kind === 'thrower' ? look.thrower : look.rusher), x, y, kind === 'thrower' ? 22 : 30);
     this.kind = kind;
-    this.name = 'SHIESTY BOY';
+    this.name = look.name;
     this.speed = kind === 'thrower' ? 46 : Phaser.Math.Between(50, 62);
     this.radius = 10;
     this.cooldown = Phaser.Math.FloatBetween(0.5, 1.4);
@@ -52,7 +53,7 @@ export class Shiesty extends Actor {
           const tx = Phaser.Math.Clamp(this.x, view.left + 30, view.right - 30);
           if (Math.abs(tx - this.x) < 4) this.entering = false;
           this.moveToward(tx, this.y, dt, 1.1);
-          if (!this.talked && Math.random() < 0.35) { this.talked = true; this.scene.say(this, Phaser.Math.RND.pick(SHIESTY_TALK), 1400); }
+          if (!this.talked && Math.random() < 0.35) { this.talked = true; this.scene.say(this, Phaser.Math.RND.pick(this.scene.look.enemies.talk), 1400); }
           break;
         }
         if (this.kind === 'thrower') this.thinkThrower(dt, view);
@@ -76,7 +77,7 @@ export class Shiesty extends Actor {
           const hits = this.scene.hitTest(this, [2, 34], 9, this.hitSet, true);
           for (const t of hits) {
             this.hitSet.add(t);
-            t.takeHit({ damage: 8, dir: this.facing, knockback: 70, source: this, kind: 'punch' });
+            t.takeHit({ damage: this.punchDamage, dir: this.facing, knockback: 70, source: this, kind: 'punch' });
           }
         }
         if (this.stateTime > 0.5) this.endAttack();

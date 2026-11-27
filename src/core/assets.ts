@@ -10,16 +10,18 @@ export const FONT_CHARS = art.fontChars as string;
 export const SFX = [
   'punch', 'punchHeavy', 'whiff', 'tonk', 'jump', 'land', 'pickup', 'sip', 'maneMode', 'horn', 'carBy', 'bottle',
   'throw', 'ko', 'shine', 'select', 'grunt', 'eat', 'splash', 'bark', 'crash', 'portal', 'burst', 'blip',
+  'howl', 'clang', 'hooves', 'potBreak', 'seal',
 ] as const;
 export type SfxKey = (typeof SFX)[number];
-export const MUSIC = ['music_pitstop', 'music_backdoor', 'music_victory'] as const;
+export const MUSIC = ['music_pitstop', 'music_backdoor', 'music_victory', 'music_river', 'music_jackal'] as const;
 
 const FPS: Record<string, number> = {
   idle: 5, walk: 11, run: 12, jump: 8, punch1: 16, punch2: 15, punch3: 11, kick: 12, hurt: 10, knockdown: 8, taunt: 8,
   shine: 9, sip: 8, victory: 7, idleShades: 4, punch: 10, throw: 10, dazed: 4, talk: 5, toss: 7, tip: 5, scared: 6,
   glow: 8, spin: 14, hit: 24, puff: 14, rise: 6, bark: 6, runMask: 12,
+  flicker: 9, dash: 10, howl: 4, bow: 3, laugh: 5, point: 4, carry: 3, bite: 4, give: 4,
 };
-const LOOP = new Set(['idle', 'walk', 'run', 'idleShades', 'dazed', 'talk', 'glow', 'spin', 'rise', 'scared', 'runMask', 'bark']);
+const LOOP = new Set(['idle', 'walk', 'run', 'idleShades', 'dazed', 'talk', 'glow', 'spin', 'rise', 'scared', 'runMask', 'bark', 'flicker', 'dash', 'howl', 'bow', 'laugh', 'carry']);
 
 export function preloadAll(scene: Phaser.Scene) {
   const base = 'assets/';
@@ -47,7 +49,7 @@ export function createAnims(scene: Phaser.Scene) {
     }
   }
   // two-frame sheets without named anims
-  for (const car of ['carAltimaGrey', 'carInfiniti', 'carAltimaBlack', 'carGold']) {
+  for (const car of ['carAltimaGrey', 'carInfiniti', 'carAltimaBlack', 'carGold', 'chariot']) {
     if (!scene.anims.exists(car + ':roll')) scene.anims.create({ key: car + ':roll', frames: scene.anims.generateFrameNumbers(car, { start: 0, end: 1 }), frameRate: 14, repeat: -1 });
   }
 }

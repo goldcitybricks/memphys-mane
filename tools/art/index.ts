@@ -4,8 +4,10 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { Pix, sheet, hex } from './pix';
 import { maneFrames, manePortraits } from './mane';
-import { humanSheet, shiestyDef, shiestyOutfits, malik, malikDef, uncleT, uncleTDef, og, ogDef } from './human';
+import { humanSheet, shiestyDef, shiestyOutfits, malik, malikDef, uncleT, uncleTDef, og, ogDef,
+  jackalOutfits, jackalDef, jackalCaptain, jackalCaptainDef, nia, niaDef, vendor, vendorDef, king, kingDef, priest, priestDef, glowFrames } from './human';
 import * as W from './world';
+import * as E from './egypt';
 import { drawFont, FONT_CHARS, CELL_W, CELL_H } from './font';
 import { P } from './palette';
 
@@ -78,6 +80,41 @@ saveImage('bgFar', W.farLayer());
 saveImage('bgWall', W.wallLayer());
 saveImage('bgGround', W.groundLayer());
 saveImage('egypt', W.egyptFlash());
+
+// ------------------------------------------------------------------ Mission 2: Old Memphis
+for (const [k, w] of [['jackalSpear', 'spear'], ['jackalBlade', 'khopesh'], ['jackalPot', 'pot']] as const) {
+  const s = humanSheet(jackalOutfits[k], jackalDef(w));
+  saveSheet(k, s.frames, s.anims);
+}
+{
+  const s = humanSheet(jackalCaptain, jackalCaptainDef());
+  saveSheet('jackalCaptain', s.frames, s.anims);
+  const n = humanSheet(nia, niaDef());
+  saveSheet('nia', glowFrames(n.frames), n.anims);
+  for (const [k, o, d] of [['vendor', vendor, vendorDef()], ['king', king, kingDef()], ['priest', priest, priestDef()]] as const) {
+    const h = humanSheet(o, d);
+    saveSheet(k, h.frames, h.anims);
+  }
+}
+saveImage('bgSky2', E.skyLayer2());
+saveImage('bgFar2', E.farLayer2());
+saveImage('bgWall2', E.wallLayer2());
+saveImage('bgGround2', E.groundLayer2());
+saveSheet('pool', E.poolFrames(), { glow: [0, 3] });
+saveImage('mudPit', E.mudPit());
+saveSheet('urn', E.urnFrames());
+saveImage('bench', E.marketBench());
+saveImage('stall', E.stallProp());
+saveSheet('torch', E.torchFrames(), { flicker: [0, 3] });
+saveSheet('pot', E.potProj(), { spin: [0, 3] });
+saveImage('bread', E.breadPlate());
+saveImage('dates', E.datesBowl());
+saveImage('grillProp', E.grillProp());
+saveSheet('jar', E.jarFrames());
+saveSheet('chariot', E.chariotFrames());
+saveImage('memoryHall', E.memoryHall());
+saveImage('panOld', E.panOld());
+saveImage('panNew', E.panNew());
 
 drawFont(P.white, P.ink).save(path.join(OUT, 'font.png'));
 manifest.font = { file: 'font.png', frameWidth: CELL_W, frameHeight: CELL_H };

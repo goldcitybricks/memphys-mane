@@ -1,4 +1,4 @@
-// Generates all SFX and music for Mission 1 into public/assets/audio as MP3.
+// Generates all SFX and music into public/assets/audio as MP3.
 import path from 'node:path';
 import fs from 'node:fs';
 import { Buf, tone, mtof, writeAudio, noise, SR } from './synth';
@@ -139,6 +139,68 @@ function victoryJingle() {
   return m;
 }
 
+// ------------------------------------------------------------------ "River Keeper" (Mission 2, Soul station)
+// 92 BPM, D Phrygian dominant (the old-world flavor), Rhodes-style keys, round bass, a reedy flute lead. Original.
+const flute = (note: number, dur: number, g = 0.14) => {
+  const a = tone({ wave: 'sine', freq: mtof(note), dur, a: 0.04, d: 0.1, s: 0.8, r: 0.12, gain: g, vib: 0.012, vibRate: 5 });
+  const n = tone({ wave: 'noise', freq: 1, dur, a: 0.03, d: 0.1, s: 0.3, r: 0.1, gain: g * 0.12, lp: 3000, hp: 1200 });
+  for (let i = 0; i < n.length && i < a.length; i++) a[i] += n[i];
+  return a;
+};
+const frame = (g = 1) => tone({ wave: 'noise', freq: 1, dur: 0.05, a: 0.001, d: 0.05, s: 0, gain: 0.5 * g, lp: 4000, hp: 1500 }); // finger drum
+const doum = (g = 1) => tone({ wave: 'sine', freq: (t) => 70 + 60 * Math.exp(-t * 20), dur: 0.3, a: 0.002, d: 0.28, s: 0, gain: g });
+function riverTrack() {
+  const bpm = 92, beat = 60 / bpm, bar = beat * 4, bars = 16;
+  const len = bar * bars;
+  const m = new Buf(len + 2);
+  // D phrygian dominant: D Eb F# G A Bb C. Chords: D, Eb, Cm, D
+  const prog = [[50, 54, 57, 60], [51, 55, 58, 62], [48, 51, 55, 58], [50, 54, 57, 62]];
+  const roots = [38, 39, 36, 38];
+  const mel = [[0, 74, 1], [1, 75, 0.5], [1.5, 78, 0.5], [2, 79, 1.5], [3.5, 78, 0.5], [4, 75, 1], [5, 74, 1], [6, 72, 0.5], [6.5, 70, 0.5], [7, 74, 1]];
+  for (let b = 0; b < bars; b++) {
+    const t0 = b * bar, ch = Math.floor(b / 2) % 4, sec = Math.floor(b / 4);
+    m.mix(keys(prog[ch], beat * 1.8, 0.1), t0);
+    m.mix(keys(prog[ch].slice(1).map((n) => n + 12), beat * 0.8, 0.05), t0 + beat * 2.5);
+    m.mix(tone({ wave: 'sine', freq: mtof(roots[ch]), dur: beat * 1.4, a: 0.01, d: 0.4, s: 0.6, r: 0.1, gain: 0.55 }), t0);
+    m.mix(tone({ wave: 'sine', freq: mtof(roots[ch] + 7), dur: beat * 0.7, a: 0.01, d: 0.3, s: 0.5, r: 0.1, gain: 0.4 }), t0 + beat * 2.5);
+    m.mix(tone({ wave: 'sine', freq: mtof(roots[ch] + 12), dur: beat * 0.5, a: 0.01, d: 0.3, s: 0.5, r: 0.1, gain: 0.35 }), t0 + beat * 3.5);
+    if (sec > 0) { m.mix(kick(0.7), t0); m.mix(kick(0.5), t0 + beat * 2.5); m.mix(snare(0.4), t0 + beat); m.mix(snare(0.45), t0 + beat * 3); }
+    // doum-tek pattern on a hand drum
+    m.mix(doum(0.5), t0); m.mix(doum(0.4), t0 + beat * 1.5);
+    for (let k = 0; k < 8; k++) m.mix(frame(k % 2 ? 0.5 : 0.8), t0 + k * (beat / 2) + (k % 2 ? beat * 0.07 : 0));
+    if (sec >= 1 && b % 2 === 0) for (const [st, n, d] of mel) m.mix(flute(n - (sec === 2 ? 12 : 0), beat * d * 0.95), t0 + st * beat);
+  }
+  m.wrapTo(len);
+  m.softClip(1.2);
+  m.normalize(0.75);
+  return m;
+}
+
+// ------------------------------------------------------------------ "Jackal March" (Mission 2 boss)
+function bossTrack() {
+  const bpm = 150, beat = 60 / bpm, bar = beat * 4, bars = 16;
+  const len = bar * bars;
+  const m = new Buf(len + 2);
+  const roots = [38, 39, 38, 36];
+  const riff = [0, 1, 4, 3, 1, 0, 1, 7];
+  for (let b = 0; b < bars; b++) {
+    const t0 = b * bar, ch = Math.floor(b / 2) % 4;
+    m.mix(kick(), t0); m.mix(kick(0.8), t0 + beat * 1.5); m.mix(kick(0.9), t0 + beat * 2); if (b % 2) m.mix(kick(0.7), t0 + beat * 3.5);
+    m.mix(snare(0.8), t0 + beat); m.mix(snare(0.8), t0 + beat * 3); m.mix(clap(0.5), t0 + beat * 3);
+    for (let k = 0; k < 8; k++) m.mix(hat(k % 2 ? 0.5 : 0.8), t0 + k * (beat / 2));
+    for (let k = 0; k < 8; k++) {
+      const n = roots[ch] + [0, 1, 4, 5, 7, 8, 10, 12][riff[k]];
+      m.mix(tone({ wave: 'saw', freq: mtof(n), dur: beat * 0.4, a: 0.003, d: 0.1, s: 0.5, r: 0.04, gain: 0.3, lp: 900 }), t0 + k * (beat / 2));
+    }
+    m.mix(b808(roots[ch], beat * 1.8), t0, 0.8);
+    if (b >= 8) for (let k = 0; k < 4; k++) m.mix(lead(roots[ch] + 36 + [0, 1, 4, 1][k], beat * 0.9, 0.1, 'square'), t0 + k * beat);
+  }
+  m.wrapTo(len);
+  m.softClip(1.4);
+  m.normalize(0.8);
+  return m;
+}
+
 // ------------------------------------------------------------------ SFX
 function sfx(dur: number, fn: (b: Buf) => void, peak = 0.9) {
   const b = new Buf(dur);
@@ -239,4 +301,36 @@ for (const [k, b] of Object.entries(S)) writeAudio(b, path.join(OUT, `${k}.mp3`)
 writeAudio(missionTrack(), path.join(OUT, 'music_pitstop.mp3'), { kbps: 112 });
 writeAudio(titleTrack(), path.join(OUT, 'music_backdoor.mp3'), { kbps: 112 });
 writeAudio(victoryJingle(), path.join(OUT, 'music_victory.mp3'), { kbps: 112 });
-console.log(`audio: ${Object.keys(S).length} sfx + 3 music files written to ${OUT}`);
+// Mission 2 sounds come after Mission 1's so the shared noise generator leaves Mission 1's files byte-identical
+const S2: Record<string, Buf> = {
+  // jackal howl: a rising, wavering wail
+  howl: sfx(1.4, (b) => {
+    b.mix(tone({ wave: 'saw', freq: (t) => 300 + Math.min(1, t * 2) * 380 - Math.max(0, t - 0.8) * 500, dur: 1.2, a: 0.1, d: 0.3, s: 0.8, r: 0.2, gain: 0.5, lp: 1600, vib: 0.03, vibRate: 7 }), 0);
+    b.mix(tone({ wave: 'sine', freq: (t) => 600 + Math.min(1, t * 2) * 760 - Math.max(0, t - 0.8) * 900, dur: 1.2, a: 0.1, d: 0.3, s: 0.6, r: 0.2, gain: 0.3, vib: 0.03, vibRate: 7 }), 0);
+  }, 0.7),
+  // bronze blade "shing"
+  clang: sfx(0.6, (b) => {
+    for (const [f, g] of [[1320, 0.5], [2150, 0.35], [3410, 0.25], [4870, 0.15]]) b.mix(tone({ wave: 'sine', freq: f, dur: 0.5, a: 0.001, d: 0.5, s: 0, gain: g }), 0);
+    b.mix(tone({ wave: 'noise', freq: 1, dur: 0.06, a: 0.001, d: 0.06, s: 0, gain: 0.5, hp: 3000 }), 0);
+  }, 0.6),
+  // hooves and wheels: the chariot passing
+  hooves: sfx(1.4, (b) => {
+    for (let i = 0; i < 12; i++) b.mix(tone({ wave: 'noise', freq: 1, dur: 0.04, a: 0.001, d: 0.04, s: 0, gain: 0.5 + Math.sin((i / 12) * Math.PI) * 0.5, lp: 900 }), i * 0.1 + (i % 2) * 0.03);
+    b.mix(tone({ wave: 'noise', freq: 1, dur: 1.2, a: 0.4, d: 0.5, s: 0.4, r: 0.2, gain: 0.3, lp: 500 }), 0);
+  }, 0.8),
+  // clay pot shattering
+  potBreak: sfx(0.4, (b) => {
+    b.mix(tone({ wave: 'noise', freq: 1, dur: 0.25, a: 0.001, d: 0.25, s: 0, gain: 0.9, lp: 3500, hp: 600 }), 0);
+    b.mix(tone({ wave: 'sine', freq: (t) => 300 - t * 400, dur: 0.1, a: 0.001, d: 0.1, s: 0, gain: 0.5 }), 0);
+    for (let i = 0; i < 4; i++) b.mix(tone({ wave: 'noise', freq: 1, dur: 0.02, a: 0.001, d: 0.02, s: 0, gain: 0.4, hp: 2000 }), 0.08 + i * 0.04);
+  }, 0.6),
+  // the golden jar's lid slamming shut
+  seal: sfx(1.2, (b) => {
+    b.mix(tone({ wave: 'sine', freq: (t) => 110 - t * 30, dur: 1.0, a: 0.001, d: 1.0, s: 0, gain: 1 }), 0);
+    for (const [f, g] of [[520, 0.4], [870, 0.25], [1310, 0.15]]) b.mix(tone({ wave: 'sine', freq: f, dur: 0.9, a: 0.001, d: 0.9, s: 0, gain: g }), 0);
+  }, 0.8),
+};
+for (const [k, b] of Object.entries(S2)) writeAudio(b, path.join(OUT, `${k}.mp3`), { kbps: 96 });
+writeAudio(riverTrack(), path.join(OUT, 'music_river.mp3'), { kbps: 112 });
+writeAudio(bossTrack(), path.join(OUT, 'music_jackal.mp3'), { kbps: 112 });
+console.log(`audio: ${Object.keys(S).length + Object.keys(S2).length} sfx + 5 music files written to ${OUT}`);
