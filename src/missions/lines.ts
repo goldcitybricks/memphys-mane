@@ -13,7 +13,7 @@ export const MANE = {
   flaugin: "QUIT FLAUGIN'.",
   vsPip: "PIP, YOU LOOKIN' AHH PLASTIC.",
   vsTanker: "PULL OVER, TANKER. THAT WATER AIN'T YOURS.",
-  victory: 'I AM THE GREATEST WATER IN THE WORLD!',
+  victory: 'I AM THE GREATEST WATER IN THE WORLD!', // Mission 3 only: the Ali nod for the fight
 };
 
 // Mission 4: the Bridge Run. AetherCars say "recalculating"; GigaZ talks from the tanker's screen; Victor Crowe is livestreaming.
