@@ -575,3 +575,153 @@ for (const [k, b] of Object.entries(S5)) writeAudio(b, path.join(OUT, `${k}.mp3`
 writeAudio(plantTrack(), path.join(OUT, 'music_plant.mp3'), { kbps: 112 });
 writeAudio(foremanTrack(), path.join(OUT, 'music_foreman.mp3'), { kbps: 112 });
 console.log(`audio: ${Object.keys(S).length + Object.keys(S2).length + Object.keys(S3).length + Object.keys(S4).length + Object.keys(S5).length} sfx + 9 music files written to ${OUT}`);
+
+// ------------------------------------------------------------------ Mission 6: Beale Below (Blues and Rock station, plus the murals' soul)
+// "Beale Below" (the tunnels): a slow minor blues in G with a 12/8 lilt, 76 BPM. Organ chords, a walking bass,
+// a bent guitar lick answering itself down the tunnel. Original composition.
+const organ = (notes: number[], dur: number, g = 0.07) => {
+  const o = new Float32Array(Math.ceil((dur + 0.2) * SR));
+  for (const n of notes) for (const [mul, gg] of [[1, 1], [2, 0.5], [3, 0.25]] as const) {
+    const t = tone({ wave: 'sine', freq: mtof(n) * mul, dur, a: 0.02, d: 0.1, s: 0.85, r: 0.12, gain: g * gg, vib: 0.004, vibRate: 6.5 });
+    for (let i = 0; i < t.length && i < o.length; i++) o[i] += t[i];
+  }
+  return o;
+};
+const bend = (note: number, dur: number, g = 0.12) => tone({ wave: 'saw', freq: (t) => mtof(note) * (t < 0.08 ? 0.94 + t * 0.75 : 1), dur, a: 0.004, d: 0.15, s: 0.55, r: 0.1, gain: g, vib: 0.01, vibRate: 5.5, lp: 2200 });
+function bealeTrack() {
+  const bpm = 76, beat = 60 / bpm, bar = beat * 4, trip = beat / 3;
+  const form = [0, 5, 0, 0, 5, 5, 0, 0, 7, 5, 0, 7]; // quick-change 12-bar minor blues in G
+  const bars = 12;
+  const len = bar * bars;
+  const m = new Buf(len + 2);
+  const licks = [[0, 74, 0.66], [0.66, 77, 0.34], [1, 79, 1], [2.33, 77, 0.33], [2.66, 74, 1.2]];
+  for (let b = 0; b < bars; b++) {
+    const t0 = b * bar, off = form[b], root = 43 + off;
+    const minor = [root + 12, root + 15, root + 19, root + 22];
+    // drums: soft kick on 1 and 3, rim on 2 and 4, triplet hats
+    m.mix(kick(0.8), t0); m.mix(kick(0.6), t0 + beat * 2); m.mix(kick(0.4), t0 + beat * 2 + trip * 2);
+    m.mix(snare(0.5), t0 + beat); m.mix(snare(0.5), t0 + beat * 3);
+    for (let k = 0; k < 12; k++) m.mix(hat(k % 3 === 0 ? 0.6 : 0.3), t0 + k * trip);
+    // walking bass on the triplet grid
+    const walk = [0, 3, 5, 7, 10, 7, 5, 3];
+    for (let k = 0; k < 8; k++) m.mix(tone({ wave: 'tri', freq: mtof(root - 12 + walk[k]), dur: beat * 0.42, a: 0.004, d: 0.1, s: 0.7, r: 0.05, gain: 0.5 }), t0 + Math.floor(k / 2) * beat + (k % 2 ? trip * 2 : 0));
+    // organ swell
+    m.mix(organ(minor, bar * 0.95, 0.05), t0);
+    // the guitar lick on bars 1, 5 and 9, and its echo two beats later
+    if (b % 4 === 0) for (const [st, n, d] of licks) {
+      m.mix(bend(n + off - 12 + 12, beat * d * 0.9, 0.11), t0 + st * beat);
+      m.mix(bend(n + off - 12 + 12, beat * d * 0.9, 0.04), t0 + st * beat + beat * 0.75);
+    }
+    if (b === 11) m.mix(bend(62 + 12, beat * 1.5, 0.12), t0 + beat * 2);
+  }
+  m.wrapTo(len);
+  m.softClip(1.2);
+  m.normalize(0.78);
+  return m;
+}
+// "Echo Hall" (the soul mural): 98 BPM, a Memphis soul groove in Bb with horn stabs and a tambourine. Original.
+const horn = (notes: number[], dur: number, g = 0.09) => {
+  const o = new Float32Array(Math.ceil((dur + 0.1) * SR));
+  for (const n of notes) for (const det of [0.997, 1.003]) {
+    const t = tone({ wave: 'saw', freq: (tt) => mtof(n) * det * (tt < 0.03 ? 0.97 + tt : 1), dur, a: 0.015, d: 0.08, s: 0.7, r: 0.06, gain: g, lp: 2400 });
+    for (let i = 0; i < t.length && i < o.length; i++) o[i] += t[i];
+  }
+  return o;
+};
+const tamb = (g = 0.3) => tone({ wave: 'noise', freq: 1, dur: 0.06, a: 0.002, d: 0.06, s: 0, gain: g, hp: 6000 });
+function soulTrack() {
+  const bpm = 98, beat = 60 / bpm, bar = beat * 4, bars = 16;
+  const len = bar * bars;
+  const m = new Buf(len + 2);
+  // Bb - Eb/Bb - Gm - F
+  const prog = [[58, 62, 65], [58, 63, 67], [55, 58, 62], [53, 57, 60]];
+  const roots = [34, 34, 31, 29];
+  const bass = [[0, 0, 0.75], [1, 0, 0.25], [1.5, 7, 0.5], [2, 12, 0.5], [2.75, 10, 0.25], [3, 7, 0.75]];
+  for (let b = 0; b < bars; b++) {
+    const t0 = b * bar, ch = Math.floor(b / 2) % 4, sec = Math.floor(b / 4);
+    m.mix(kick(0.9), t0); m.mix(kick(0.7), t0 + beat * 1.5); m.mix(kick(0.8), t0 + beat * 2.5);
+    m.mix(snare(0.8), t0 + beat); m.mix(snare(0.8), t0 + beat * 3);
+    for (let k = 0; k < 8; k++) m.mix(hat(k % 2 ? 0.35 : 0.6), t0 + k * (beat / 2));
+    for (let k = 0; k < 4; k++) m.mix(tamb(k % 2 ? 0.35 : 0.2), t0 + k * beat + beat * 0.5);
+    for (const [st, iv, d] of bass) m.mix(tone({ wave: 'tri', freq: mtof(roots[ch] + iv), dur: beat * d * 0.9, a: 0.004, d: 0.1, s: 0.7, r: 0.04, gain: 0.55 }), t0 + st * beat);
+    m.mix(keys(prog[ch], beat * 0.4, 0.09), t0 + beat * 0.5); m.mix(keys(prog[ch], beat * 0.4, 0.09), t0 + beat * 2.5);
+    // horn stabs answer on the "and" of 4, a rising line in the second half
+    if (sec >= 1) m.mix(horn(prog[ch].map((n) => n + 12), beat * 0.3), t0 + beat * 3.5);
+    if (sec >= 2 && b % 2 === 1) [70, 72, 74, 77].forEach((n, i) => m.mix(horn([n], beat * 0.35, 0.07), t0 + i * beat * 0.5));
+  }
+  m.wrapTo(len);
+  m.softClip(1.2);
+  m.normalize(0.78);
+  return m;
+}
+// "Driller" (the boss): 164 BPM rock in D, palm-muted power chords, a double-kick run into every fourth bar. Original.
+function drillerTrack() {
+  const bpm = 164, beat = 60 / bpm, bar = beat * 4, bars = 16;
+  const len = bar * bars;
+  const m = new Buf(len + 2);
+  const roots = [38, 38, 46, 45, 38, 38, 43, 45];
+  for (let b = 0; b < bars; b++) {
+    const t0 = b * bar, root = roots[b % 8], sec = Math.floor(b / 4);
+    m.mix(kick(), t0); m.mix(kick(0.8), t0 + beat * 1.5); m.mix(kick(0.9), t0 + beat * 2);
+    m.mix(snare(1), t0 + beat); m.mix(snare(1), t0 + beat * 3);
+    for (let k = 0; k < 8; k++) m.mix(hat(k % 2 ? 0.5 : 0.8, k === 7 && b % 2 === 1), t0 + k * (beat / 2));
+    if (b % 4 === 3) for (let k = 0; k < 8; k++) m.mix(kick(0.6), t0 + beat * 2 + k * (beat / 4));
+    // chugging power chords (root + 5th), an accent on the "and" of 2
+    for (let k = 0; k < 8; k++) m.mix(guitar([root + 12, root + 19], beat * (k === 3 ? 0.45 : 0.22), k === 3 ? 0.14 : 0.1), t0 + k * (beat / 2));
+    m.mix(tone({ wave: 'saw', freq: mtof(root), dur: bar * 0.95, a: 0.005, d: 0.2, s: 0.6, r: 0.05, gain: 0.18, lp: 600 }), t0);
+    // a screaming lead on top after the first section
+    if (sec >= 1 && b % 2 === 0) [74, 77, 79, 81, 79, 77].forEach((n, i) => m.mix(bend(n, beat * 0.45, 0.08), t0 + i * beat * 0.5 + beat));
+  }
+  m.wrapTo(len);
+  m.softClip(1.4);
+  m.normalize(0.8);
+  return m;
+}
+// "Do I Know You" (the ending): slow and quiet, keys and a held organ in A minor, plays once. Original.
+function lostTrack() {
+  const bpm = 60, beat = 60 / bpm, bar = beat * 4, bars = 9;
+  const m = new Buf(bar * bars + 3);
+  // Am - F - C - E7, twice, then a held Am
+  const prog = [[57, 60, 64], [53, 57, 60], [55, 60, 64], [56, 59, 62, 64]];
+  const roots = [45, 41, 48, 40];
+  const mel = [[0, 76, 1.5], [1.5, 74, 0.5], [2, 72, 2], [4, 69, 3]];
+  for (let b = 0; b < bars; b++) {
+    const t0 = b * bar, ch = b % 4;
+    if (b === 8) { m.mix(organ([57, 60, 64], bar * 1.5, 0.05), t0); m.mix(keys([45, 57], bar, 0.1), t0); break; }
+    m.mix(keys(prog[ch], beat * 3.5, 0.08), t0);
+    m.mix(organ(prog[ch].map((n) => n - 12), bar * 0.98, 0.03), t0);
+    m.mix(tone({ wave: 'sine', freq: mtof(roots[ch] - 12), dur: bar * 0.9, a: 0.05, d: 0.5, s: 0.6, r: 0.3, gain: 0.35 }), t0);
+    if (b >= 4 && b % 2 === 0) for (const [st, n, d] of mel) m.mix(keys([n], beat * d, 0.07), t0 + st * beat);
+  }
+  m.normalize(0.7);
+  return m;
+}
+const S6: Record<string, Buf> = {
+  // a hammer drill biting into rock
+  drill: sfx(0.9, (b) => {
+    b.mix(tone({ wave: 'saw', freq: (t) => 140 + t * 260, dur: 0.8, a: 0.02, d: 0.2, s: 0.8, r: 0.08, gain: 0.4, vib: 0.06, vibRate: 38, lp: 2600 }), 0);
+    b.mix(tone({ wave: 'noise', freq: 1, dur: 0.8, a: 0.02, d: 0.2, s: 0.6, r: 0.08, gain: 0.45, lp: 3000, hp: 600 }), 0);
+  }, 0.65),
+  // a drone's rotors
+  drone: sfx(0.8, (b) => {
+    b.mix(tone({ wave: 'square', freq: 180, dur: 0.7, a: 0.05, d: 0.1, s: 0.8, r: 0.08, gain: 0.25, vib: 0.05, vibRate: 30, lp: 1400 }), 0);
+    b.mix(tone({ wave: 'square', freq: 183, dur: 0.7, a: 0.05, d: 0.1, s: 0.8, r: 0.08, gain: 0.25, vib: 0.05, vibRate: 31, lp: 1400 }), 0);
+  }, 0.5),
+  // a memory being pulled out: a long reversed shimmer down into a hum
+  drain: sfx(2.4, (b) => {
+    for (let i = 0; i < 10; i++) b.mix(bell(88 - i * 3, 0.4, 0.2), i * 0.18);
+    b.mix(tone({ wave: 'sine', freq: (t) => 400 - t * 150, dur: 2.2, a: 0.4, d: 1.0, s: 0.4, r: 0.2, gain: 0.4, vib: 0.02, vibRate: 3 }), 0);
+  }, 0.6),
+  // rocks shaking loose from the ceiling
+  rumble: sfx(1.0, (b) => {
+    b.mix(tone({ wave: 'noise', freq: 1, dur: 0.9, a: 0.05, d: 0.6, s: 0.2, r: 0.1, gain: 1, lp: 400 }), 0);
+    b.mix(tone({ wave: 'sine', freq: (t) => 55 - t * 15, dur: 0.8, a: 0.01, d: 0.7, s: 0, gain: 0.8 }), 0);
+  }, 0.85),
+  // a ghost mural coming to life: a rising shimmer of notes
+  mural: sfx(1.4, (b) => [67, 70, 74, 79, 82, 86].forEach((n, i) => b.mix(bell(n, 0.6, 0.25), i * 0.09)), 0.6),
+};
+for (const [k, b] of Object.entries(S6)) writeAudio(b, path.join(OUT, `${k}.mp3`), { kbps: 96 });
+writeAudio(bealeTrack(), path.join(OUT, 'music_beale.mp3'), { kbps: 112 });
+writeAudio(soulTrack(), path.join(OUT, 'music_soul.mp3'), { kbps: 112 });
+writeAudio(drillerTrack(), path.join(OUT, 'music_driller.mp3'), { kbps: 112 });
+writeAudio(lostTrack(), path.join(OUT, 'music_lost.mp3'), { kbps: 112 });

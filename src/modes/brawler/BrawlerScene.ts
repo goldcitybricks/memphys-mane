@@ -488,7 +488,7 @@ export abstract class BrawlerScene extends Phaser.Scene {
     for (const b of this.bubbles) {
       if (now > b.until || !b.actor.alive) { b.box.destroy(); continue; }
       const a = b.actor;
-      const top = a.y - a.z - (a.texKey === 'dog' ? 26 : a.texKey.startsWith('car') ? 50 : 52) * a.sprite.scaleY;
+      const top = a.y - a.z - (a.bubbleH || (a.texKey === 'dog' ? 26 : a.texKey.startsWith('car') ? 50 : 52)) * a.sprite.scaleY;
       const v = this.viewBounds();
       const half = (b.box.getBounds().width || 40) / 2;
       b.box.setPosition(Math.round(Phaser.Math.Clamp(a.x, v.left + half + 2, v.right - half - 2)), Math.round(Math.max(24, top)));

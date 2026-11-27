@@ -19,6 +19,7 @@ export abstract class Actor {
   shadow: Phaser.GameObjects.Image;
   texKey: string;
   name = '';
+  bubbleH = 0; // how high speech bubbles sit (0 = the usual 64px sprite)
 
   constructor(public scene: BrawlerScene, tex: string, x: number, y: number, hp: number) {
     this.texKey = tex;
