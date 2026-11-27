@@ -413,15 +413,17 @@ export class Mission8 extends DriveScene {
     const street = this.add.rectangle(0, 150, W, 66, 0x24242e).setOrigin(0);
     const curb = this.add.rectangle(0, 150, W, 3, 0x6a6e80).setOrigin(0);
     const line = this.add.rectangle(0, 186, W, 2, 0xd8b830, 0.6).setOrigin(0);
-    const pitX = W / 2 + 74;
-    const pit = this.add.image(pitX, 152, 'pitFront').setOrigin(0.5, 1);
-    const sign = this.add.sprite(pitX + 2, 70, 'pitSign', 0).setOrigin(0.5, 1);
-    const light = this.add.sprite(pitX - 178, 152, 'cornerLight', 0).setOrigin(0.5, 1);
-    const street1 = this.add.sprite(pitX - 150, 152, 'streetSign', 0).setOrigin(0.5, 1);
+    // the same strip-mall Pit as Mission 1 (pitFront is drawn by the same code); pitX is Uncle T's door
+    const pitX = W / 2 + 58;
+    const pitLeft = pitX - 187, pitTop = 150 - 146;
+    const pit = this.add.image(pitLeft, pitTop, 'pitFront').setOrigin(0);
+    const sign = this.add.sprite(pitLeft + 110, pitTop + 58, 'pitSign', 0).setOrigin(0);
+    const light = this.add.sprite(pitX - 162, 152, 'cornerLight', 0).setOrigin(0.5, 1);
+    const street1 = this.add.sprite(pitX - 134, 152, 'streetSign', 0).setOrigin(0.5, 1);
     layer.add([sky, farL, blueNight, street, curb, line, pit, sign, light, street1]);
     const carX = W / 2 - 92;
     const car = this.add.sprite(carX, 200, 'bigBlueSide', 0).setOrigin(0.5, 1);
-    const uncle = this.add.sprite(pitX - 16, 196, 'uncleTLost').setOrigin(0.5, 61 / 64).play('uncleTLost:idle').setFlipX(true);
+    const uncle = this.add.sprite(pitX, 196, 'uncleTLost').setOrigin(0.5, 61 / 64).play('uncleTLost:idle').setFlipX(true);
     const malik = this.add.sprite(carX + 86, 198, 'malik').setOrigin(0.5, 61 / 64).play('malik:idle');
     const mane = this.add.sprite(carX + 58, 196, 'mane').setOrigin(0.5, 61 / 64).play('mane:idle');
     const dog = this.add.sprite(W + 30, 200, 'dog').setOrigin(0.5, 1).play('dog:run').setFlipX(true);
@@ -445,7 +447,7 @@ export class Mission8 extends DriveScene {
     malik.play('malik:idle');
     // Uncle T comes out and looks at his own car
     uncle.play('uncleTLost:walk');
-    await this.tween({ targets: uncle, x: pitX - 34, duration: 500 });
+    await this.tween({ targets: uncle, x: pitX - 18, duration: 500 });
     uncle.play('uncleTLost:talk');
     await this.line(uS, '...NICE CAR. WHOEVER OWN THAT GOT TASTE.', 2400);
     uncle.play('uncleTLost:idle');

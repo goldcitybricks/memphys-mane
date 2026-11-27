@@ -7,6 +7,7 @@ import { Pix, RGBA, hex, rng, mix } from './pix';
 import { P } from './palette';
 import { text, textWidth } from './font';
 import { gigazFace, sedanRearFrames } from './drive';
+import { drawPit } from './world';
 
 const INK = P.ink;
 const STEEL = hex('#3a4060'), STEEL_HI = hex('#5a6286'), STEEL_D = hex('#262b44');
@@ -254,47 +255,25 @@ export function potholeWindow(): Pix[] {
   });
 }
 
-// ------------------------------------------------------------------ Uncle T's Pit at Park & Airways, night (side view, 220x110)
-// The bible's version: a small standalone building, white walls, a blue stripe along the base, picnic tables,
-// a red pole beside it. The sign is its own sprite so it can forget.
+// ------------------------------------------------------------------ Uncle T's Pit at Park & Airways, night (520x146)
+// The exact Mission 1 strip-mall front (drawPit in world.ts), so the Pit looks the same in every mission.
+// The sign is also cut out as its own sprite (pitSign) so it can forget its name on top of this.
 export function pitFront(): Pix {
-  const g = new Pix(220, 110);
-  const WALL = hex('#e6e2d8'), WALL_D = hex('#b4ae9e'), STRIPE = hex('#2a5bb8');
-  g.rect(30, 30, 160, 68, WALL);
-  g.rect(30, 30, 160, 3, hex('#3a3040'));
-  g.rect(30, 86, 160, 12, STRIPE);
-  g.hline(30, 189, 86, hex('#5a86d8'));
-  g.rect(184, 33, 6, 53, WALL_D);
-  // the door and the order window, warm light inside
-  g.rect(52, 52, 22, 34, hex('#2a2030')); g.rect(54, 54, 18, 30, hex('#6a5034')); g.hline(54, 71, 54, hex('#ffd890'));
-  g.rect(96, 48, 62, 26, hex('#2a2030')); g.rect(98, 50, 58, 22, hex('#ffd890')); g.rect(98, 62, 58, 10, hex('#c89a50'));
-  // the menu board in the window (it forgets too, in the story; here it's just shapes)
-  g.rect(104, 52, 24, 9, hex('#1a1020'));
-  for (let y = 54; y < 60; y += 2) g.hline(106, 106 + ((y * 7) % 14) + 6, y, P.white);
-  // smoke from the smoker out back
-  for (let k = 0; k < 10; k++) g.ellipse(196 + k * 1.5, 26 - k * 3, 3 + k * 0.4, 2 + k * 0.3, [200, 196, 190, 110 - k * 9]);
-  g.rect(190, 32, 6, 6, hex('#2a2a30'));
-  // the red pole
-  g.rect(14, 18, 4, 92, hex('#c8282e')); g.vline(14, 18, 109, hex('#e8584e'));
-  // picnic tables out front
-  for (const tx of [40, 128]) {
-    g.rect(tx, 96, 40, 3, hex('#8a5a32')); g.rect(tx + 4, 99, 3, 9, hex('#6b4426')); g.rect(tx + 33, 99, 3, 9, hex('#6b4426'));
-    g.rect(tx - 4, 102, 48, 2, hex('#7a4e2c'));
-  }
-  g.outline(INK);
+  const g = new Pix(520, 146);
+  drawPit(g, rng(31));
   return g;
 }
-// its sign: UNCLE T'S PIT, then it forgets (100x18, 3 frames)
+// its sign, cut from the same render so frame 0 matches pitFront pixel for pixel (156x22, 3 frames):
+// UNCLE T'S PIT, then it glitches, then it's GigaZ blue and forgets
+export const PIT_SIGN = { x: 110, y: 58, w: 156, h: 22 };
 export function pitSign(): Pix[] {
-  const words = ["UNCLE T'S PIT", "UNC?E ?'S P?T", '...PIT?'];
-  return [0, 1, 2].map((m) => {
-    const g = new Pix(104, 20);
-    g.rect(0, 0, 104, 20, m === 2 ? hex('#2a3a6a') : hex('#c8282e'));
-    g.rect(2, 2, 100, 16, m === 2 ? hex('#1a2440') : hex('#e8402e'));
-    const s = words[m];
-    text(g, s, Math.round(52 - textWidth(s) / 2), 6, m === 2 ? hex('#a8d8ff') : P.white);
-    if (m === 1) { const r = rng(5); for (let i = 0; i < 14; i++) g.set(3 + Math.floor(r() * 98), 3 + Math.floor(r() * 14), [92, 200, 255, 220]); }
-    g.outline(INK);
+  const frames: [string, RGBA][] = [["UNCLE T'S PIT", hex('#c8282e')], ["UNC?E ?'S P?T", hex('#c8282e')], ['...PIT?', hex('#2a7ad8')]];
+  return frames.map(([label, col], m) => {
+    const full = new Pix(520, 146);
+    drawPit(full, rng(31), 146, label, col);
+    const g = new Pix(PIT_SIGN.w, PIT_SIGN.h);
+    for (let y = 0; y < g.h; y++) for (let x = 0; x < g.w; x++) g.set(x, y, full.get(PIT_SIGN.x + x, PIT_SIGN.y + y));
+    if (m === 1) { const r = rng(5); for (let i = 0; i < 18; i++) g.set(3 + Math.floor(r() * 150), 3 + Math.floor(r() * 16), [92, 200, 255, 220]); }
     return g;
   });
 }
