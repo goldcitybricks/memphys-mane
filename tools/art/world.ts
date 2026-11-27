@@ -166,25 +166,76 @@ export function canPickup(): Pix[] {
   });
 }
 
+// A side cup seen from slightly above: rim, a band of what's inside, then the cup wall.
+function sideCup(g: Pix, x: number, y: number, fill: RGBA, lit: RGBA, fleck?: RGBA) {
+  const cup = hex('#e8e6e0'), cupShade = hex('#a9a7b4');
+  g.hline(x + 1, x + 3, y, cup);
+  g.set(x, y + 1, cup); g.hline(x + 1, x + 3, y + 1, fill); g.set(x + 4, y + 1, cupShade);
+  g.set(x + 1, y + 1, lit); if (fleck) g.set(x + 3, y + 1, fleck);
+  g.hline(x, x + 3, y + 2, cup); g.set(x + 4, y + 2, cupShade);
+  g.hline(x + 1, x + 3, y + 3, cupShade); g.set(x, y + 2, cupShade);
+}
+
+// Memphis dry-rub slab on white butcher paper, with a cup of slaw and a cup of baked beans behind it.
 export function bbqPlate(): Pix {
   const g = new Pix(20, 14);
-  g.ellipse(10, 9, 9, 3, P.plateShade);
-  g.ellipse(10, 8, 9, 3, P.plate);
-  // rack of ribs
-  g.rect(4, 4, 12, 4, P.meat);
-  g.hline(4, 15, 4, P.meatHi);
-  for (let x = 5; x < 16; x += 3) g.vline(x, 4, 7, P.sauce);
-  g.set(17, 6, hex('#e8d9a8')); g.set(17, 5, hex('#e8d9a8'));
-  g.rect(2, 7, 2, 1, hex('#3c8a3a')); // pickle
+  const paper = P.plate, paperShade = P.plateShade, paperLit = hex('#ffffff');
+  const rub = hex('#7a2c16'), rubDark = hex('#4a1a0c'), rubLit = hex('#a84626'), spice = hex('#d8642e'), seed = hex('#f0c080');
+  const bone = hex('#eadcb8'), drip = hex('#c07040');
+  // butcher paper: a wide sheet with a dog-eared corner poking out on each side
+  g.ellipse(10, 9.6, 9, 3.4, paperShade);
+  g.ellipse(10, 8.6, 9, 3.4, paper);
+  g.set(0, 8, paper); g.set(19, 9, paper); g.set(1, 7, paperLit); g.set(18, 8, paperLit);
+  // slaw (left) and baked beans (right) behind the slab
+  sideCup(g, 6, 1, hex('#e8d47a'), hex('#fff0a8'), hex('#e8862e'));
+  sideCup(g, 11, 1, hex('#6e2610'), hex('#b0542a'), hex('#8e3a18'));
+  // sauce soaking the paper under the slab
+  g.hline(4, 15, 11, drip);
+  // the slab: long and thick, with a ragged top edge
+  g.poly([[2, 5], [16, 5], [17, 7], [16, 10], [3, 10], [2, 9]], rub);
+  g.hline(3, 15, 5, rubLit); g.set(5, 5, rub); g.set(11, 5, rub); g.set(16, 6, rubLit);
+  g.hline(3, 16, 10, rubDark);
+  // bone lines between the ribs
+  for (const x of [5, 8, 11, 14]) g.vline(x, 6, 9, rubDark);
+  // speckled dry rub: paprika flecks and a few mustard seeds
+  for (const [x, y] of [[4, 7], [7, 6], [10, 8], [13, 7], [15, 9], [9, 6]]) g.set(x, y, spice);
+  for (const [x, y] of [[6, 8], [12, 6], [16, 8]]) g.set(x, y, seed);
+  // bone ends peeking out the bottom edge
+  for (const x of [5, 8, 11, 14]) g.set(x, 11, bone);
   g.outline(P.ink);
   return g;
 }
 
+// Memphis wings drenched in glossy orange-red sauce, carrot and celery sticks, slaw cup, in white paper.
 export function wingsPlate(): Pix {
   const g = new Pix(20, 14);
-  g.ellipse(10, 9, 8, 3, P.plateShade);
-  g.ellipse(10, 8, 8, 3, P.plate);
-  for (const [x, y] of [[6, 6], [10, 5], [14, 6], [8, 7], [12, 7]]) { g.ellipse(x, y, 2, 1, P.meatHi); g.set(x - 1, y, P.meat); }
+  const paper = P.plate, paperShade = P.plateShade, paperLit = hex('#ffffff');
+  const sauce = hex('#d8461c'), sauceDark = hex('#8a220e'), sauceLit = hex('#f47c3c'), gloss = hex('#fff0d8');
+  const carrot = hex('#f6932a'), carrotDark = hex('#c0621a');
+  const celery = hex('#bcd860'), celeryDark = hex('#78a030');
+  // paper sheet, crinkled up at the back corners
+  g.ellipse(10, 9.6, 9, 3.4, paperShade);
+  g.ellipse(10, 8.6, 9, 3.4, paper);
+  g.set(1, 6, paperLit); g.set(2, 5, paperLit); g.set(18, 6, paper);
+  // celery and carrot sticks standing up behind the wings
+  g.line(12, 2, 14, 7, celery, 2); g.set(12, 2, celeryDark);
+  g.line(15, 3, 16, 7, carrot, 2); g.set(15, 3, carrotDark);
+  // the wings: back two, then the front one, each with a dark sauce rim so they read as separate pieces
+  const wing = (cx: number, cy: number, rx: number, ry: number) => {
+    g.ellipse(cx, cy, rx + 0.8, ry + 0.8, sauceDark);
+    g.ellipse(cx, cy, rx, ry, sauce);
+    g.hline(cx - rx + 1, cx + rx - 2, cy - ry, sauceLit);
+    g.set(cx - rx + 2, cy - ry, gloss);
+  };
+  wing(5.5, 6.5, 2.6, 1.2);
+  wing(10.5, 6, 2.4, 1.2);
+  wing(8, 9, 3.4, 1.3);
+  // drumette knob sticking out of the front wing
+  g.set(12, 10, sauceDark); g.set(12, 9, sauce); g.set(13, 9, sauceDark);
+  // a carrot stick across the front
+  g.line(2, 9, 4, 11, carrot, 2); g.set(2, 9, carrotDark);
+  // slaw cup in the front right corner
+  sideCup(g, 13, 8, hex('#f4f0d8'), hex('#ffffff'), hex('#9cc060'));
   g.outline(P.ink);
   return g;
 }
