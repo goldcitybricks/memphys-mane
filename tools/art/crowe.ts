@@ -20,8 +20,8 @@ const SCREEN = hex('#0c1630'), CLOUD = hex('#e8f4ff'), GZ_EYE = hex('#2a7ad8');
 const FLAME = hex('#ffb040'), FLAME_HI = hex('#fff1a8'), FLAME_C = hex('#7fe8ff');
 const STEEL = hex('#5a6070'), STEEL_L = hex('#8a92a4'), STEEL_D = hex('#363a46');
 
-type CFace = 'smug' | 'talk' | 'angry' | 'hurt' | 'ko' | 'crack' | 'peel' | 'gigaz' | 'gigazGrin';
-type CHand = 'fist' | 'open' | 'stick' | 'stickBack' | 'stickSwing' | 'phone' | 'phoneOut';
+type CFace = 'smug' | 'talk' | 'angry' | 'hurt' | 'ko' | 'crack' | 'peel' | 'gigaz' | 'gigazGrin' | 'confused';
+type CHand = 'fist' | 'open' | 'stick' | 'stickBack' | 'stickSwing' | 'phone' | 'phoneOut' | 'bottle' | 'bag' | 'rib';
 interface CPose {
   x?: number; y?: number; lean?: number; crouch?: number;
   fa: [number, number]; ba: [number, number]; // hand offsets from the shoulders
@@ -32,6 +32,9 @@ interface CPose {
   flames?: 0 | 1 | 2; // rocket boots
   sparks?: boolean;
   glitch?: number; // rows slip sideways
+  human?: boolean; // the real Victor (Mission 10): no jaw seam
+  apron?: boolean; // the post-credits job at Uncle T's
+  noVisor?: boolean; // memory wiped: just his own eyes
 }
 
 const BASE = 61;
@@ -101,6 +104,17 @@ function drawCrowe(p: CPose): Pix {
     if (hand === 'stickSwing') selfieStick(g, hx, hy, hx + 16, hy - 1);
     if (hand === 'phone') { g.rect(hx - 1, hy - 7, 4, 6, P.ink); g.rect(hx, hy - 6, 2, 4, LED); }
     if (hand === 'phoneOut') { g.rect(hx + 1, hy - 3, 6, 4, P.ink); g.rect(hx + 2, hy - 2, 4, 2, LED); g.set(hx + 6, hy - 2, P.white); }
+    if (hand === 'bottle') {
+      // a DeNile bottle: blue plastic, red label, white cap
+      g.rect(hx - 1, hy - 9, 4, 9, P.bottle); g.vline(hx + 2, hy - 9, hy - 1, P.bottleShade);
+      g.rect(hx - 1, hy - 6, 4, 3, P.red); g.rect(hx, hy - 11, 2, 2, P.bottleCap);
+    }
+    if (hand === 'bag') {
+      // a black trash bag, knotted at the top
+      g.ellipse(hx + 1, hy + 9, 6, 7, hex('#1c1c24')); g.ellipse(hx - 1, hy + 7, 2, 3, hex('#34343e'));
+      g.rect(hx, hy, 2, 3, hex('#1c1c24'));
+    }
+    if (hand === 'rib') { g.rect(hx - 1, hy - 4, 7, 3, P.meat); g.hline(hx - 1, hx + 5, hy - 4, P.meatHi); g.rect(hx + 6, hy - 4, 2, 1, P.plate); }
     g.circle(hx, hy, 2, front ? SKIN : SKIN_S);
     if (hand === 'fist' || !hand) g.set(hx + 1, hy - 1, SKIN_D);
   };
@@ -145,9 +159,17 @@ function drawCrowe(p: CPose): Pix {
     for (let y = hy - 4; y <= hy + 6; y++) g.set(hx - 5 + (y > hy + 3 ? 1 : 0), y, SKIN_S);
     g.set(hx - 2, hy + 1, SKIN_S); g.set(hx - 2, hy + 2, SKIN_D); // ear
     // the jaw seam: the giveaway that this is the robot
-    g.line(hx - 1, hy + 4, hx + 4, hy + 6, SKIN_D, 1);
+    if (!p.human) g.line(hx - 1, hy + 4, hx + 4, hy + 6, SKIN_D, 1);
   } else {
     g.set(hx - 4, hy - 4, hex('#24365a')); g.set(hx - 3, hy - 5, hex('#24365a')); // glass glint
+  }
+  if (p.apron) {
+    // Uncle T's spare apron, strings tied over the hoodie
+    g.poly([[shX - 3, shY + 3], [shX + 6, shY + 3], [cx + 6, hipY + 7], [cx - 5, hipY + 7]], P.apron);
+    g.hline(cx - 5, cx + 6, hipY + 7, P.apronShade); g.vline(shX - 3, shY + 3, hipY, P.apronShade);
+    g.line(shX - 2, shY + 3, shX + 1, shY - 1, P.apronShade, 1); g.line(shX + 5, shY + 3, shX + 3, shY - 1, P.apronShade, 1);
+    g.rect(cx - 2, hipY - 2, 5, 3, P.apronShade); // the pocket
+    g.set(cx - 1, hipY - 5, P.sauce); g.set(cx + 3, hipY + 2, P.sauce); // sauce stains
   }
   // the silver swoop with a dark undercut
   g.ellipse(hx - 1, hy - 5, 6, 3, HAIR);
@@ -166,6 +188,14 @@ function drawCrowe(p: CPose): Pix {
     g.hline(hx + 3, hx + 7, hy + 10, SKIN_D);
     g.set(hx + 5, hy + 7, VISOR_D); g.set(hx + 6, hy + 7, LED); // the visor dangling off the flap
     for (const [sx, sy] of [[hx + 1, hy - 3], [hx + 6, hy - 2], [hx - 1, hy + 4]]) g.set(sx, sy, FLAME_HI);
+  } else if (p.noVisor) {
+    // no visor, no stream: just a man who doesn't know where he is
+    g.set(hx + 3, eyeY, P.ink); g.set(hx + 6, eyeY, P.ink);
+    g.set(hx + 3, eyeY - 2, SKIN_D); g.set(hx + 6, eyeY - 3, SKIN_D);
+    const mY = hy + 3;
+    if (face === 'talk') { g.rect(hx + 3, mY, 3, 2, P.inkSoft); }
+    else if (face === 'confused') { g.rect(hx + 4, mY, 2, 2, P.inkSoft); }
+    else g.hline(hx + 3, hx + 5, mY, P.inkSoft);
   } else {
     // AR visor across the eyes, eyes glowing behind it
     g.hline(hx + 1, hx + 7, eyeY - 1, VISOR_D);
@@ -550,4 +580,111 @@ export function riverfrontExt(): Pix {
     }
   }
   return g;
+}
+
+// ------------------------------------------------------------------ Mission 10 "The Source": the real Victor, in person
+// Same look as his robot (it copied him), minus the jaw seam. He cheats: a fake pause, a DeNile refill, rocket boots.
+export function victorFrames() {
+  const frames: Pix[] = [];
+  const anims: Record<string, [number, number]> = {};
+  const add = (name: string, poses: (CPose | Pix)[]) => {
+    anims[name] = [frames.length, frames.length + poses.length - 1];
+    for (const p of poses) frames.push(p instanceof Pix ? p : drawCrowe({ human: true, ...p }));
+  };
+  const guard = (k: number, c = 0, face: CFace = 'smug'): CPose => ({ crouch: c, fa: [10, -4 + k], ba: [13, -1 + k], ff: [4, 0], bf: [-4, 0], face });
+  // he bounces on the boots: a little hover between steps
+  add('idle', [guard(0), { ...guard(1), flames: 1 }, guard(1, 1), { ...guard(0, 1), flames: 1 }]);
+  add('walk', [0, 1, 2, 3].map((i) => {
+    const s = Math.sin((i / 4) * Math.PI * 2);
+    return { ...guard(0), y: i % 2 ? -1 : 0, ff: [Math.round(-s * 5), i === 1 ? -2 : 0], bf: [Math.round(s * 5), i === 3 ? -2 : 0] } as CPose;
+  }));
+  add('jab', [
+    { lean: -1, fa: [3, -5], ba: [12, -1], ff: [3, 0], bf: [-5, 0], face: 'smug' },
+    { x: 2, lean: 3, fa: [19, -6], fab: 0, ba: [11, 0], ff: [5, 0], bf: [-6, 0], face: 'talk' },
+    { x: 1, lean: 1, fa: [13, -5], ba: [12, -1], ff: [4, 0], bf: [-5, 0], face: 'smug' },
+  ]);
+  add('stick', [
+    { lean: -2, fa: [-3, -12], fHand: 'stickBack', ba: [9, 2], ff: [3, 0], bf: [-5, 0], face: 'talk' },
+    { x: -2, lean: -4, crouch: 1, fa: [-5, -15], fHand: 'stickBack', ba: [8, 3], ff: [3, 0], bf: [-6, 0], face: 'talk' },
+    { x: 3, lean: 4, fa: [14, -4], fab: 0, fHand: 'stickSwing', ba: [-4, 4], ff: [6, 0], bf: [-6, 0], face: 'angry' },
+    { x: 2, lean: 3, fa: [10, 3], fHand: 'stickSwing', ba: [-4, 6], ff: [5, 0], bf: [-6, 0], face: 'smug' },
+  ]);
+  add('ping', [
+    { lean: -1, fa: [5, -12], fHand: 'phone', ba: [10, 0], ff: [3, 0], bf: [-4, 0], face: 'smug' },
+    { x: 2, lean: 3, fa: [16, -8], fab: 0, fHand: 'phoneOut', ba: [8, 2], ff: [5, 0], bf: [-5, 0], face: 'talk' },
+    { x: 1, lean: 1, fa: [11, -6], fHand: 'phoneOut', ba: [10, 0], ff: [4, 0], bf: [-4, 0], face: 'smug' },
+  ]);
+  add('rocket', [
+    { crouch: 4, lean: 3, fa: [6, 2], ba: [-8, 0], ff: [4, 0], bf: [-4, 0], flames: 1, face: 'angry' },
+    { y: -4, lean: 6, x: 2, fa: [17, -4], fab: 0, ba: [-11, 2], ff: [2, -2], bf: [-8, -4], flames: 2, face: 'angry' },
+  ]);
+  // the fake pause: phone held up at you ("PAUSED"), then the cheap shot: a rocket knee
+  add('pause', [
+    { lean: -1, fa: [9, -16], fHand: 'phoneOut', ba: [6, 2], ff: [3, 0], bf: [-4, 0], face: 'smug' },
+    { y: -3, lean: 5, x: 3, fa: [12, -6], ba: [-8, 0], ff: [9, -8], bf: [-6, -2], flames: 2, face: 'angry' },
+  ]);
+  // the refill: chugging a DeNile ("ZERO TASTE. FULL HEALTH.")
+  add('refill', [
+    { lean: -2, fa: [6, -15], fHand: 'bottle', ba: [9, 1], ff: [3, 0], bf: [-4, 0], face: 'talk' },
+    { lean: -3, fa: [4, -17], fHand: 'bottle', ba: [9, 2], ff: [3, 0], bf: [-4, 0], face: 'smug' },
+  ]);
+  const slump = (k: number): CPose => ({ crouch: 7, lean: 4, fa: [6, 9 + k], ba: [-4, 9], ff: [6, 0], bf: [-6, 0], face: 'hurt', sparks: k % 2 === 0 });
+  add('stuck', [slump(0), slump(1), slump(2)]);
+  add('block', [{ lean: -1, fa: [7, -12], ba: [10, -10], ff: [3, 0], bf: [-4, 0], face: 'angry' }]);
+  add('hurt', [
+    { x: -3, lean: -4, fa: [2, -10], ba: [-6, -8], ff: [3, 0], bf: [-3, 0], face: 'hurt' },
+    { x: -1, lean: -2, fa: [6, -4], ba: [-6, -4], ff: [3, 0], bf: [-3, 0], face: 'hurt' },
+  ]);
+  add('dazed', [
+    { lean: -2, fa: [6, 8], ba: [-5, 8], ff: [3, 0], bf: [-3, 0], face: 'ko' },
+    { lean: 2, fa: [7, 8], ba: [-5, 8], ff: [3, 0], bf: [-3, 0], face: 'hurt' },
+  ]);
+  add('knockdown', [
+    { x: -4, lean: -6, crouch: 2, fa: [4, -12], ba: [-8, -12], ff: [5, -3], bf: [2, -1], face: 'hurt' },
+    layFlat(drawCrowe({ human: true, fa: [10, -8], ba: [-8, -9], ff: [3, 0], bf: [-3, 0], face: 'ko' }), 61),
+  ]);
+  add('getup', [
+    { crouch: 8, lean: 3, fa: [8, 8], ba: [-6, 8], ff: [6, 0], bf: [-6, 0], face: 'hurt' },
+    { crouch: 2, fa: [9, -4], ba: [5, -2], ff: [4, 0], bf: [-4, 0], face: 'angry' },
+  ]);
+  add('taunt', [
+    { fa: [3, -16], fHand: 'stick', ba: [7, 3], bHand: 'open', ff: [4, 0], bf: [-4, 0], face: 'smug' },
+    { lean: 1, fa: [4, -17], fHand: 'stick', ba: [9, -1], bHand: 'open', ff: [4, 0], bf: [-4, 0], face: 'talk' },
+  ]);
+  add('sway', [{ x: -5, lean: -6, fa: [4, -6], ba: [9, -4], ff: [5, 0], bf: [-6, 0], face: 'smug' }]);
+  // crawling to the jar after the count
+  add('crawl', [
+    { crouch: 9, lean: 7, fa: [12, 10], ba: [4, 10], ff: [2, 0], bf: [-8, 0], face: 'hurt' },
+    { crouch: 9, lean: 7, fa: [8, 10], ba: [10, 10], ff: [-2, 0], bf: [-6, 0], face: 'talk' },
+  ]);
+  // pulled up into the jar: arms out, glitching
+  add('fuse', [
+    { y: -2, fa: [8, -16], ba: [-8, -16], ff: [2, 2], bf: [-3, 2], face: 'hurt', glitch: 3 },
+    { y: -4, fa: [10, -18], ba: [-6, -18], ff: [3, 3], bf: [-2, 3], face: 'ko', glitch: 6 },
+  ]);
+  // post-credits: memory wiped, in Uncle T's spare apron, taking out the trash
+  const job: CPose = { apron: true, noVisor: true, fa: [8, 6], fHand: 'bag', ba: [-4, 8], ff: [3, 0], bf: [-3, 0], face: 'smug' };
+  add('trash', [0, 1, 2, 3].map((i) => {
+    const s = Math.sin((i / 4) * Math.PI * 2);
+    return { ...job, y: i % 2 ? -1 : 0, ff: [Math.round(-s * 4), i === 1 ? -2 : 0], bf: [Math.round(s * 4), i === 3 ? -2 : 0] } as CPose;
+  }));
+  add('sniff', [
+    { apron: true, noVisor: true, fa: [7, -12], fHand: 'rib', ba: [-4, 8], ff: [3, 0], bf: [-3, 0], face: 'confused' },
+    { apron: true, noVisor: true, lean: 1, fa: [6, -14], fHand: 'rib', ba: [-4, 8], ff: [3, 0], bf: [-3, 0], face: 'talk' },
+  ]);
+  add('blank', [
+    { apron: true, noVisor: true, fa: [8, 6], ba: [-4, 8], ff: [3, 0], bf: [-3, 0], face: 'confused' },
+    { apron: true, noVisor: true, fa: [8, 7], ba: [-4, 7], ff: [3, 0], bf: [-3, 0], face: 'smug' },
+  ]);
+  return { frames, anims };
+}
+
+export function victorPortrait(): Pix[] {
+  const mk = (face: CFace) => {
+    const big = drawCrowe({ human: true, fa: [9, 8], ba: [-9, 8], ff: [3, 0], bf: [-3, 0], face });
+    const out = new Pix(32, 32);
+    for (let y = 0; y < 32; y++) for (let x = 0; x < 32; x++) { const c = big.get(x + 17, y + 5); if (c && c[3]) out.set(x, y, c); }
+    return out;
+  };
+  return [mk('smug'), mk('hurt'), mk('angry')];
 }

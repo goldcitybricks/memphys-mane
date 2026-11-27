@@ -2018,6 +2018,363 @@
   "lampCold": {
    "file": "lampCold.png"
   },
+  "victor": {
+   "file": "victor.png",
+   "frameWidth": 64,
+   "frameHeight": 64,
+   "anims": {
+    "idle": [
+     0,
+     3
+    ],
+    "walk": [
+     4,
+     7
+    ],
+    "jab": [
+     8,
+     10
+    ],
+    "stick": [
+     11,
+     14
+    ],
+    "ping": [
+     15,
+     17
+    ],
+    "rocket": [
+     18,
+     19
+    ],
+    "pause": [
+     20,
+     21
+    ],
+    "refill": [
+     22,
+     23
+    ],
+    "stuck": [
+     24,
+     26
+    ],
+    "block": [
+     27,
+     27
+    ],
+    "hurt": [
+     28,
+     29
+    ],
+    "dazed": [
+     30,
+     31
+    ],
+    "knockdown": [
+     32,
+     33
+    ],
+    "getup": [
+     34,
+     35
+    ],
+    "taunt": [
+     36,
+     37
+    ],
+    "sway": [
+     38,
+     38
+    ],
+    "crawl": [
+     39,
+     40
+    ],
+    "fuse": [
+     41,
+     42
+    ],
+    "trash": [
+     43,
+     46
+    ],
+    "sniff": [
+     47,
+     48
+    ],
+    "blank": [
+     49,
+     50
+    ]
+   }
+  },
+  "victorPortrait": {
+   "file": "victorPortrait.png",
+   "frameWidth": 32,
+   "frameHeight": 32
+  },
+  "pipBrawl": {
+   "file": "pipBrawl.png",
+   "frameWidth": 64,
+   "frameHeight": 64,
+   "anims": {
+    "idle": [
+     0,
+     3
+    ],
+    "walk": [
+     4,
+     7
+    ],
+    "punch": [
+     8,
+     10
+    ],
+    "throw": [
+     11,
+     13
+    ],
+    "hurt": [
+     14,
+     15
+    ],
+    "dazed": [
+     16,
+     17
+    ],
+    "knockdown": [
+     18,
+     20
+    ],
+    "taunt": [
+     21,
+     22
+    ]
+   }
+  },
+  "pharaoh": {
+   "file": "pharaoh.png",
+   "frameWidth": 128,
+   "frameHeight": 128,
+   "anims": {
+    "idle": [
+     0,
+     1
+    ],
+    "walk": [
+     2,
+     5
+    ],
+    "punch": [
+     6,
+     8
+    ],
+    "throw": [
+     9,
+     11
+    ],
+    "hurt": [
+     12,
+     13
+    ],
+    "dazed": [
+     14,
+     15
+    ],
+    "knockdown": [
+     16,
+     18
+    ],
+    "slam": [
+     19,
+     21
+    ],
+    "beam": [
+     22,
+     23
+    ],
+    "call": [
+     24,
+     25
+    ],
+    "drain": [
+     26,
+     27
+    ],
+    "kneel": [
+     28,
+     28
+    ],
+    "crown": [
+     29,
+     30
+    ],
+    "melt": [
+     31,
+     33
+    ]
+   }
+  },
+  "glowUncleT": {
+   "file": "glowUncleT.png",
+   "frameWidth": 64,
+   "frameHeight": 64,
+   "anims": {
+    "idle": [
+     0,
+     1
+    ],
+    "talk": [
+     2,
+     3
+    ],
+    "toss": [
+     4,
+     6
+    ],
+    "walk": [
+     7,
+     10
+    ]
+   }
+  },
+  "glowMalik": {
+   "file": "glowMalik.png",
+   "frameWidth": 64,
+   "frameHeight": 64,
+   "anims": {
+    "idle": [
+     0,
+     1
+    ],
+    "walk": [
+     2,
+     5
+    ],
+    "sip": [
+     6,
+     9
+    ],
+    "scared": [
+     10,
+     11
+    ]
+   }
+  },
+  "glowOG": {
+   "file": "glowOG.png",
+   "frameWidth": 64,
+   "frameHeight": 64,
+   "anims": {
+    "idle": [
+     0,
+     1
+    ],
+    "tip": [
+     2,
+     4
+    ],
+    "walk": [
+     5,
+     8
+    ]
+   }
+  },
+  "glowDrifter": {
+   "file": "glowDrifter.png",
+   "frameWidth": 48,
+   "frameHeight": 64,
+   "anims": {
+    "walk": [
+     0,
+     3
+    ],
+    "grab": [
+     4,
+     5
+    ],
+    "splash": [
+     6,
+     6
+    ],
+    "back": [
+     7,
+     8
+    ],
+    "idle": [
+     9,
+     9
+    ]
+   }
+  },
+  "glowDog": {
+   "file": "glowDog.png",
+   "frameWidth": 32,
+   "frameHeight": 32,
+   "anims": {
+    "idle": [
+     0,
+     1
+    ],
+    "run": [
+     2,
+     5
+    ],
+    "bark": [
+     6,
+     7
+    ],
+    "runMask": [
+     8,
+     11
+    ]
+   }
+  },
+  "bgSky10": {
+   "file": "bgSky10.png"
+  },
+  "bgFar10": {
+   "file": "bgFar10.png"
+  },
+  "bgWall10": {
+   "file": "bgWall10.png"
+  },
+  "bgGround10": {
+   "file": "bgGround10.png"
+  },
+  "sandPit": {
+   "file": "sandPit.png"
+  },
+  "columnStump": {
+   "file": "columnStump.png"
+  },
+  "crown": {
+   "file": "crown.png"
+  },
+  "crumpledCan": {
+   "file": "crumpledCan.png",
+   "frameWidth": 32,
+   "frameHeight": 32
+  },
+  "sourceArena": {
+   "file": "sourceArena.png"
+  },
+  "sourceExt": {
+   "file": "sourceExt.png"
+  },
+  "pitBack": {
+   "file": "pitBack.png"
+  },
+  "pitCounter": {
+   "file": "pitCounter.png"
+  },
+  "counterStuff": {
+   "file": "counterStuff.png"
+  },
+  "finalCard": {
+   "file": "finalCard.png"
+  },
   "font": {
    "file": "font.png",
    "frameWidth": 7,

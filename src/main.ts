@@ -11,6 +11,9 @@ import { Mission6 } from './missions/Mission6';
 import { Mission7 } from './missions/Mission7';
 import { Mission8 } from './missions/Mission8';
 import { Mission9 } from './missions/Mission9';
+import { Mission10 } from './missions/Mission10';
+import { Mission10B } from './missions/Mission10B';
+import { Finale } from './scenes/Finale';
 import { DriveUI } from './modes/driving/DriveUI';
 import { FightUI } from './modes/fight/FightUI';
 import { ShooterUI } from './modes/shooter/ShooterUI';
@@ -34,7 +37,7 @@ const game = new Phaser.Game({
   input: { activePointers: 4 },
   scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH, fullscreenTarget: 'game' },
   audio: { disableWebAudio: false },
-  scene: [Boot, Title, Mission1, Mission2, Mission3, Mission4, Mission5, Mission6, Mission7, Mission8, Mission9, UIScene, FightUI, DriveUI, ShooterUI, Results],
+  scene: [Boot, Title, Mission1, Mission2, Mission3, Mission4, Mission5, Mission6, Mission7, Mission8, Mission9, Mission10, Mission10B, Finale, UIScene, FightUI, DriveUI, ShooterUI, Results],
 });
 
 // only touch the game size when the width really changes (iPhone Safari fires resize a lot)

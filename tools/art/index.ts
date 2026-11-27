@@ -16,6 +16,7 @@ import * as B from './beale';
 import * as C from './crowe';
 import * as LP from './loop';
 import * as GG from './gigantum';
+import * as SR from './source';
 import { drawFont, FONT_CHARS, CELL_W, CELL_H } from './font';
 import { P } from './palette';
 
@@ -287,6 +288,40 @@ saveImage('coolPipe', GG.coolPipe());
 saveImage('rackProp', GG.rackProp());
 saveImage('aetherCrate', GG.aetherCrate());
 saveImage('lampCold', GG.lampCold());
+
+// ------------------------------------------------------------------ Mission 10: The Source (fight, then brawler, then the ending)
+{
+  const v = C.victorFrames();
+  saveSheet('victor', v.frames, v.anims);
+  saveSheet('victorPortrait', C.victorPortrait());
+  const pb = SR.pipBrawlFrames();
+  saveSheet('pipBrawl', pb.frames, pb.anims);
+  const ph = SR.pharaohFrames();
+  saveSheet('pharaoh', ph.frames, ph.anims);
+  // the people Mane saved, as reflections lit up in the water
+  for (const [k, o, d] of [['glowUncleT', uncleT, uncleTDef()], ['glowMalik', malik, malikDef()], ['glowOG', og, ogDef()]] as const) {
+    const s = humanSheet(o, d);
+    saveSheet(k, glowFrames(s.frames), s.anims);
+  }
+  const dr = PL.drifterFrames('drifterA');
+  saveSheet('glowDrifter', glowFrames(dr.frames), dr.anims);
+  const dg = W.dogFrames();
+  saveSheet('glowDog', glowFrames(dg.frames), dg.anims);
+}
+saveImage('bgSky10', SR.skyLayer10());
+saveImage('bgFar10', SR.farLayer10());
+saveImage('bgWall10', SR.wallLayer10());
+saveImage('bgGround10', SR.groundLayer10());
+saveImage('sandPit', SR.sandPit());
+saveImage('columnStump', SR.columnStump());
+saveImage('crown', SR.crownProp());
+saveSheet('crumpledCan', SR.crumpledCan());
+saveImage('sourceArena', SR.sourceArena());
+saveImage('sourceExt', SR.sourceExt());
+saveImage('pitBack', SR.pitBack());
+saveImage('pitCounter', SR.pitCounter());
+saveImage('counterStuff', SR.counterStuff());
+saveImage('finalCard', SR.finalCard());
 
 drawFont(P.white, P.ink).save(path.join(OUT, 'font.png'));
 manifest.font = { file: 'font.png', frameWidth: CELL_W, frameHeight: CELL_H };
