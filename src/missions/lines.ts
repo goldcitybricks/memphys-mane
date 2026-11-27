@@ -12,7 +12,7 @@ export const MANE = {
   complete: "ROYAL BY NATURE.",
   flaugin: "QUIT FLAUGIN'.",
   vsPip: "PIP, YOU LOOKIN' AHH PLASTIC.",
-  victory: "THAT'S ON THE 901.",
+  victory: 'I AM THE GREATEST WATER IN THE WORLD!',
 };
 
 // Mission 3: Pip, the DeNile Water mascot (more of his trash talk lives in modes/fight/Pip.ts)
