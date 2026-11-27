@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { fullscreenButton } from '../core/fullscreen';
 import type { BrawlerScene } from '../modes/brawler/BrawlerScene';
 import { MANE_MODE_SECONDS, MAX_CANS } from '../modes/brawler/Mane';
 import { Controls, Button } from '../core/controls';
@@ -109,6 +110,8 @@ export class UIScene extends Phaser.Scene {
     this.enemyName.setX(W - 6); this.enemyBack.setX(W - 6); this.enemyBar.setX(W - 7);
     this.toastText.setX(W / 2); this.go.setX(W - 10); this.tutorial.setX(W / 2); this.skipBtn.setX(W - 6);
     this.placeButtons();
+    // pause + continue menus are centered; shift them with the width
+    for (const l of [this.pauseLayer, this.contLayer]) if (l) l.setX((W - this.builtW) / 2);
   }
 
   refresh() {
@@ -266,22 +269,25 @@ export class UIScene extends Phaser.Scene {
   }
 
   // ---------------------------------------------------------------- pause + continue
+  private builtW = 0;
   private buildPause() {
     const W = this.scale.width;
-    const bg = this.add.rectangle(0, 0, 600, 216, 0x070a1c, 0.8).setOrigin(0);
+    this.builtW = W;
+    const bg = this.add.rectangle(-100, 0, 700, 216, 0x070a1c, 0.8).setOrigin(0);
     const t = px(this, W / 2, 60, 'PAUSED', COLORS.goldHi, 2).setOrigin(0.5);
     const resume = px(this, W / 2, 100, '> RESUME', 0xffffff).setOrigin(0.5).setInteractive({ useHandCursor: true });
     const mute = px(this, W / 2, 120, Audio.muted ? '> SOUND: OFF' : '> SOUND: ON', 0xffffff).setOrigin(0.5).setInteractive({ useHandCursor: true });
-    const quit = px(this, W / 2, 140, '> QUIT TO TITLE', 0xffffff).setOrigin(0.5).setInteractive({ useHandCursor: true });
+    const fs = fullscreenButton(this, W / 2, 140, 0xffffff, '> ').setOrigin(0.5);
+    const quit = px(this, W / 2, 160, '> QUIT TO TITLE', 0xffffff).setOrigin(0.5).setInteractive({ useHandCursor: true });
     resume.on('pointerdown', () => this.world.togglePause());
     mute.on('pointerdown', () => { const m = Audio.toggleMute(this.world); mute.setText(m ? '> SOUND: OFF' : '> SOUND: ON'); });
     quit.on('pointerdown', () => { this.world.togglePause(); Audio.stopMusic(); this.world.scene.start('Title'); });
-    this.pauseLayer = this.add.container(0, 0, [bg, t, resume, mute, quit]).setDepth(100).setVisible(false);
+    this.pauseLayer = this.add.container(0, 0, [bg, t, resume, mute, fs, quit]).setDepth(100).setVisible(false);
   }
 
   private buildContinue() {
     const W = this.scale.width;
-    const bg = this.add.rectangle(0, 0, 600, 216, 0x070a1c, 0.75).setOrigin(0);
+    const bg = this.add.rectangle(-100, 0, 700, 216, 0x070a1c, 0.75).setOrigin(0);
     const t = px(this, W / 2, 64, GAME.continue, COLORS.goldHi, 2).setOrigin(0.5).setName('t');
     const n = px(this, W / 2, 100, '9', 0xffffff, 3).setOrigin(0.5).setName('n');
     const hint = px(this, W / 2, 132, isTouch() ? 'TAP TO SIP' : 'PRESS Z TO SIP', 0xffffff).setOrigin(0.5).setName('h');

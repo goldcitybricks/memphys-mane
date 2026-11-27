@@ -6,6 +6,7 @@ import { Controls } from '../core/controls';
 import { isTouch } from '../ui/UIScene';
 import { Save } from '../core/save';
 import { CREDITS } from './credits';
+import { fullscreenButton, toggleFullscreen } from '../core/fullscreen';
 
 export class Title extends Phaser.Scene {
   private started = false;
@@ -41,8 +42,18 @@ export class Title extends Phaser.Scene {
     const mute = px(this, W - 6, 4, Audio.muted ? 'SOUND OFF' : 'SOUND ON', 0x9aa0c0).setOrigin(1, 0).setInteractive({ useHandCursor: true });
     mute.on('pointerdown', (_p: unknown, _x: unknown, _y: unknown, e: Phaser.Types.Input.EventData) => { e.stopPropagation(); const m = Audio.toggleMute(this); mute.setText(m ? 'SOUND OFF' : 'SOUND ON'); });
 
-    // keyboard/desktop help
-    if (!isTouch()) px(this, 6, 206, 'ARROWS MOVE  Z PUNCH  X JUMP  C SIP  V FLEX', 0x9aa0c0);
+
+    // full screen: bottom-left on phones, under BEST on desktop (F key too)
+    if (isTouch()) fullscreenButton(this, 6, 206, COLORS.goldHi);
+    else {
+      fullscreenButton(this, 6, 15, 0x9aa0c0, '', ' (F)');
+      px(this, 6, 206, 'ARROWS MOVE  Z PUNCH  X JUMP  C SIP  V FLEX', 0x9aa0c0);
+      this.input.keyboard?.on('keydown-F', () => toggleFullscreen(this));
+    }
+    // the screen shape changes going in or out of full screen: rebuild the title at the new width
+    const relayout = () => { if (!this.started) this.scene.restart(); };
+    this.scale.on('resize', relayout);
+    this.events.once('shutdown', () => this.scale.off('resize', relayout));
 
     this.input.on('pointerdown', () => this.go());
     this.input.keyboard?.on('keydown-ENTER', () => this.go());

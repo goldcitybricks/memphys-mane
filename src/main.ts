@@ -21,14 +21,18 @@ const game = new Phaser.Game({
   pixelArt: true,
   roundPixels: true,
   input: { activePointers: 4 },
-  scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
+  scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH, fullscreenTarget: 'game' },
   audio: { disableWebAudio: false },
   scene: [Boot, Title, Mission1, UIScene, Results],
 });
 
-window.addEventListener('resize', () => {
+function fitWidth() {
   const w = pickWidth();
   if (w !== game.scale.width) game.scale.setGameSize(w, VIEW_H);
-});
+  game.scale.refresh();
+}
+window.addEventListener('resize', fitWidth);
+// some browsers report the new size a beat after entering or leaving full screen
+for (const ev of ['enterfullscreen', 'leavefullscreen']) game.scale.on(ev, () => { fitWidth(); setTimeout(fitWidth, 250); });
 
 (window as any).__game = game;
