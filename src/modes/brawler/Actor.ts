@@ -49,8 +49,9 @@ export abstract class Actor {
     const px = this.x, py = this.y;
     this.x += this.vx * dt;
     this.y += this.vy * dt;
-    // solid props (picnic tables): slide along them instead of walking through
-    if (this.scene.solidAt(this.x, this.y, this.z)) {
+    // solid props (tables, jars, stalls): slide along them instead of walking through.
+    // If we somehow started inside one, let us walk out.
+    if (this.scene.solidAt(this.x, this.y, this.z) && !this.scene.solidAt(px, py, this.z)) {
       if (!this.scene.solidAt(this.x, py, this.z)) this.y = py;
       else if (!this.scene.solidAt(px, this.y, this.z)) this.x = px;
       else { this.x = px; this.y = py; }

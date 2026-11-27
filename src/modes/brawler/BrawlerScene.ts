@@ -27,6 +27,8 @@ export const ALLEY_LOOK: BrawlerLook = {
   pothole: 'pothole', table: 'picnic', breakable: 'trashCan', breakSfx: 'crash',
 };
 
+export interface Obstacle { x: number; y: number; hw: number; hd: number; h: number; top: boolean; on: boolean }
+
 export interface Hittable {
   x: number; y: number; z: number; radius: number; alive: boolean;
   takeHit(h: HitInfo): boolean;
@@ -53,7 +55,10 @@ export abstract class BrawlerScene extends Phaser.Scene {
   bottles: Bottle[] = [];
   cans: TrashCan[] = [];
   potholes: Pothole[] = [];
-  tables: { x: number; y: number; hw: number; hd: number; h: number }[] = [];
+  // Everything solid on the street. Walk around (in front of or behind) but never through.
+  // `h` is how tall it is; `top` means you can jump up and stand on it (picnic tables, benches).
+  // Turn `on` off when the thing is gone (a smashed jar).
+  obstacles: Obstacle[] = [];
   extras: Actor[] = []; // cutscene characters
   private tokens = new Set<Shiesty>();
   private bubbles: Bubble[] = [];
@@ -86,7 +91,7 @@ export abstract class BrawlerScene extends Phaser.Scene {
   viewBounds() { return { left: this.camX, right: this.camX + this.viewW }; }
 
   create() {
-    this.enemies = []; this.pickups = []; this.cars = []; this.bottles = []; this.cans = []; this.potholes = []; this.extras = []; this.tables = [];
+    this.enemies = []; this.pickups = []; this.cars = []; this.bottles = []; this.cans = []; this.potholes = []; this.extras = []; this.obstacles = [];
     this.tokens.clear(); this.bubbles = []; this.waiters = [];
     this.lockX = null; this.camX = 0; this.score = 0; this.kos = 0; this.pickupsTaken = 0; this.driveOutKOs = 0;
     this.elapsed = 0; this.inCutscene = false; this.skipping = false; this.paused = false; this.continuing = false; this.hitstopMs = 0;
@@ -302,20 +307,31 @@ export abstract class BrawlerScene extends Phaser.Scene {
   addTable(x: number, y: number) {
     this.add.image(x, y + 4, this.look.table).setOrigin(0.5, 1).setDepth(y);
     this.add.ellipse(x, y + 3, 50, 8, 0x000000, 0.3).setDepth(-980);
-    this.tables.push({ x, y, hw: 22, hd: 5, h: 18 });
+    this.addObstacle(x, y, 22, 5, 18, true);
   }
 
+  // A solid footprint on the ground: half-width hw, half-depth hd around (x, y).
+  addObstacle(x: number, y: number, hw: number, hd: number, h = 999, top = false): Obstacle {
+    const o: Obstacle = { x, y, hw, hd, h, top, on: true };
+    this.obstacles.push(o);
+    return o;
+  }
+
+  // Make a character (a vendor, a guard on watch) something you walk around.
+  addSolidActor(a: Actor, hw = 9, hd = 4) { return this.addObstacle(a.x, a.y, hw, hd); }
+
+  private inside(o: Obstacle, x: number, y: number) { return o.on && Math.abs(x - o.x) < o.hw && Math.abs(y - o.y) < o.hd; }
+
   solidAt(x: number, y: number, z: number) {
-    for (const t of this.tables) if (Math.abs(x - t.x) < t.hw && Math.abs(y - t.y) < t.hd && z < t.h - 2) return true;
+    for (const o of this.obstacles) if (this.inside(o, x, y) && z < o.h - 2) return true;
     return false;
   }
 
-  tableAt(x: number, y: number) {
-    return this.tables.find((t) => Math.abs(x - t.x) < t.hw && Math.abs(y - t.y) < t.hd);
-  }
+  obstacleAt(x: number, y: number) { return this.obstacles.find((o) => this.inside(o, x, y)); }
+  tableAt(x: number, y: number) { return this.obstacleAt(x, y); }
 
   floorAt(x: number, y: number) {
-    for (const t of this.tables) if (Math.abs(x - t.x) < t.hw && Math.abs(y - t.y) < t.hd) return t.h;
+    for (const o of this.obstacles) if (o.top && this.inside(o, x, y)) return o.h;
     return 0;
   }
 

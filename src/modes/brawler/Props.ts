@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import type { BrawlerScene } from './BrawlerScene';
+import type { BrawlerScene, Obstacle } from './BrawlerScene';
 import type { HitInfo } from './Actor';
 import type { SfxKey } from '../../core/assets';
 
@@ -66,7 +66,9 @@ export class TrashCan {
   constructor(public scene: BrawlerScene, public x: number, public y: number, public drop: PickupKind | null, tex = 'trashCan', private breakSfx: SfxKey = 'crash') {
     this.shadow = scene.add.image(x, y, 'shadow').setScale(0.8, 0.8).setDepth(y - 1);
     this.sprite = scene.add.sprite(x, y + 1, tex, 0).setOrigin(0.5, 1).setDepth(y);
+    this.solid = scene.addObstacle(x, y, 9, 4);
   }
+  solid: Obstacle;
   takeHit(h: HitInfo): boolean {
     if (this.broken) return false;
     this.hp--;
@@ -74,6 +76,7 @@ export class TrashCan {
     this.scene.tweens.add({ targets: this.sprite, x: this.x + h.dir * 3, duration: 50, yoyo: true });
     if (this.hp <= 0 || h.knockdown) {
       this.broken = true;
+      this.solid.on = false;
       this.sprite.setFrame(1);
       this.scene.tweens.add({ targets: this.sprite, angle: h.dir * 80, x: this.x + h.dir * 14, y: this.y + 2, duration: 220, ease: 'Quad.easeOut' });
       if (this.drop) this.scene.spawnPickup(this.drop, this.x + h.dir * 10, this.y + 2, true);
