@@ -46,7 +46,7 @@ export class Mission3 extends FightScene {
   }
 
   foeCount(kd: number): CountPlan {
-    // rounds 1 and 2 he beats the count and the bell saves him; round 3 he's recycled
+    // rounds 1 and 2 he beats the count and the round goes on; round 3 he's recycled
     if (this.round < 3) return { getUpAt: kd <= 1 ? 5 : 7 };
     return { getUpAt: null, lastWord: 'RECYCLED!' };
   }
@@ -204,11 +204,7 @@ export class Mission3 extends FightScene {
     await this.settle();
     this.startCutscene();
     const p = this.player, pip = this.pip;
-    if (how === 'foeDown') {
-      this.events.emit('banner', { top: 'SAVED BY', bottom: 'THE BELL!' });
-      this.sfx('ding', 0.8);
-      await this.wait(1600);
-    } else if (pip.hp < pip.maxHp) pip.hp = Math.min(pip.maxHp, pip.hp + 15);
+    if (pip.hp < pip.maxHp) pip.hp = Math.min(pip.maxHp, pip.hp + 15);
     await Promise.all([this.walkF(p, this.midX - 110), this.walkF(pip, this.midX + 110)]);
     p.facing = 1; pip.facing = -1;
 

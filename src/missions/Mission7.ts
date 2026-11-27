@@ -81,7 +81,7 @@ export class Mission7 extends FightScene {
   }
 
   foeCount(kd: number): CountPlan {
-    // rounds 1 and 2 it reboots and gets up; in the encore it goes offline
+    // rounds 1 and 2 it reboots, gets up and the round goes on; in the encore it goes offline
     if (this.round < 3) return { getUpAt: kd <= 1 ? 5 : 7 };
     return { getUpAt: null, lastWord: 'OFFLINE!' };
   }
@@ -338,11 +338,7 @@ export class Mission7 extends FightScene {
     await this.settle();
     this.startCutscene();
     const p = this.player, c = this.crowe;
-    if (how === 'foeDown') {
-      this.events.emit('banner', { top: 'SAVED BY', bottom: 'THE REBOOT!' });
-      this.sfx('glitch', 0.7);
-      await this.wait(1600);
-    } else if (c.hp < c.maxHp) c.hp = Math.min(c.maxHp, c.hp + 15);
+    if (c.hp < c.maxHp) c.hp = Math.min(c.maxHp, c.hp + 15);
     await Promise.all([this.walkF(p, this.midX - 110), this.walkF(c, this.midX + 110)]);
     p.facing = 1; c.facing = -1;
 
