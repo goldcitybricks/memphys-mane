@@ -9,14 +9,14 @@ import type { MissionStats } from '../brawler/BrawlerScene';
 
 // The reusable first-person engine (Chex Quest / Wolfenstein style raycaster, drawn pixel by pixel into a canvas).
 // A mission extends it: builds the map, places Drifters, Pips, props and pickups, and scripts the story.
-// Mission 5 (The Plant) runs the DeNile plant; Mission 9 (The Gigantum) can reuse it with new textures and a new boss.
+// Mission 5 (The Plant) runs the DeNile plant; Mission 9 (The Gigantum) reskins it (wall and floor sheets, fog, Drifter looks)
+// and adds security drones, shootable targets (memory banks, chillers) and a frozen trap in place of the cap.
 
 const H = 216;
 const HZ = 108; // horizon
 const CAM = 0.42; // camera height (walls are 1 tall): Mane is a can, so he sees the world from a little low
 const FOV = 0.66;
 const TEX = 64;
-const FOG: [number, number, number] = [8, 10, 26];
 const LEVELS = 16; // light levels: the banded, cartridge look
 const R = 0.24; // the player's radius
 
@@ -24,7 +24,7 @@ export const MAX_HP = 10;
 export const MAX_CANS = 3;
 export const MANE_MODE_SECONDS = 10;
 
-export type EntKind = 'drifter' | 'pip' | 'boss' | 'prop' | 'pickup' | 'shot' | 'cap' | 'fx' | 'deco';
+export type EntKind = 'drifter' | 'pip' | 'drone' | 'target' | 'boss' | 'prop' | 'pickup' | 'shot' | 'cap' | 'fx' | 'deco';
 export type PickKind = 'can' | 'bbq' | 'wings' | 'fact';
 export interface Ent {
   kind: EntKind;
@@ -62,7 +62,7 @@ interface Door { x: number; y: number; open: number; locked: boolean; opening: b
 interface TexData { data: Uint32Array; w: number; h: number }
 interface FrameData { tex: TexData; x: number; y: number; w: number; h: number }
 
-const WALL_TEX: Record<string, number> = { '#': 0, B: 1, D: 2, H: 3, W: 4, P: 5, A: 6, G: 7, p: 8, L: 9, M: 9, C: 10, R: 11, S: 12, N: 13 };
+const WALL_TEX: Record<string, number> = { '#': 0, B: 1, D: 2, H: 3, W: 4, P: 5, A: 6, G: 7, p: 8, L: 9, M: 9, C: 10, R: 11, S: 12, N: 13, K: 14, F: 15 };
 const DOORS = new Set(['D', 'L', 'M']);
 // floors: . concrete, > < ^ v conveyors (push that way), o drain, ~ DeNile spill (slow), h hazard stripes
 const FLOOR_TEX: Record<string, number> = { '.': 0, '>': 1, '<': 1, '^': 1, v: 1, o: 2, '~': 3, h: 6 };
@@ -100,7 +100,22 @@ export abstract class ShooterScene extends Phaser.Scene {
   elapsed = 0;
   kos = 0; // Drifters hydrated
   pipsDown = 0;
+  dronesDown = 0;
   sips = 0;
+  // the skin: a mission can swap these before create() runs (set them as field initializers)
+  wallSheet = 'plantWalls';
+  floorSheet = 'plantFloors';
+  fog: [number, number, number] = [8, 10, 26];
+  wallAlt: Record<number, number> = {}; // wall frames that blink: frame -> alternate frame
+  drifterLooks = ['drifterA', 'drifterB', 'drifterC'];
+  // the trap that locks Mane in place (Mission 5: a giant bottle cap; Mission 9: flash frozen)
+  trapTex = 'capOverlay';
+  trapTitle = 'CAPPED!';
+  trapLine = 'I AIN\'T SINGLE-USE, MANE.';
+  trapSfx: SfxKey = 'capPop';
+  bossLabel = 'FOREMAN';
+  spillTip = 'spill';
+  meter: { label: string; v: number } | null = null; // an extra bar under the goal (Mission 9: Uncle T's upload)
   // drawing
   private view!: Phaser.GameObjects.Image;
   private canvasTex?: Phaser.Textures.CanvasTexture;
@@ -136,7 +151,7 @@ export abstract class ShooterScene extends Phaser.Scene {
     this.hp = MAX_HP; this.cans = 0; this.maneT = 0; this.invuln = 0; this.fireCd = 0; this.fireAnim = 0; this.dollaCd = 0;
     this.bob = 0; this.lookDelta = 0; this.strafe = 0; this.capped = 0;
     this.playing = false; this.frozen = false; this.inCutscene = false; this.skipping = false; this.paused = false; this.continuing = false;
-    this.score = 0; this.elapsed = 0; this.kos = 0; this.pipsDown = 0; this.sips = 0;
+    this.score = 0; this.elapsed = 0; this.kos = 0; this.pipsDown = 0; this.dronesDown = 0; this.sips = 0; this.meter = null;
     this.spk = {}; this.bubbles = []; this.waiters = []; this.tips.clear(); this.hitstopMs = 0; this.clock = 0; this.stepT = 0;
     this.texCache = {}; this.frameCache = {};
     Controls.clear();
@@ -185,7 +200,7 @@ export abstract class ShooterScene extends Phaser.Scene {
     this.lut = new Uint8Array(LEVELS * 256 * 3);
     for (let l = 0; l < LEVELS; l++) {
       const s = l / (LEVELS - 1);
-      for (let v = 0; v < 256; v++) for (let c = 0; c < 3; c++) this.lut[(c * LEVELS + l) * 256 + v] = Math.round(v * s + FOG[c] * (1 - s));
+      for (let v = 0; v < 256; v++) for (let c = 0; c < 3; c++) this.lut[(c * LEVELS + l) * 256 + v] = Math.round(v * s + this.fog[c] * (1 - s));
     }
   }
   private shadeOf(dist: number, k = 1) {
@@ -261,10 +276,18 @@ export abstract class ShooterScene extends Phaser.Scene {
     return this.ent('pickup', x, y, tex, { pick: kind, h: kind === 'can' ? 0.24 : kind === 'fact' ? 0.26 : 0.14, z: 0.03, anim: glow ? { frames: [0, 1, 2, 3], fps: 8, loop: true, t0: Math.random() } : undefined });
   }
   drifter(x: number, y: number, look = 0) {
-    return this.ent('drifter', x, y, ['drifterA', 'drifterB', 'drifterC'][look % 3], { h: 0.64, r: 0.22, solid: true, hp: 1, state: 'wander', t: Math.random() * 2 });
+    return this.ent('drifter', x, y, this.drifterLooks[look % this.drifterLooks.length], { h: 0.64, r: 0.22, solid: true, hp: 1, state: 'wander', t: Math.random() * 2 });
   }
   pip(x: number, y: number, awake = true) {
     return this.ent('pip', x, y, 'pipMini', { h: 0.46, r: 0.18, solid: true, hp: 2, state: awake ? 'hop' : 'off', cd: 1.5 + Math.random() * 1.5, frame: awake ? 1 : 0 });
+  }
+  // AetherCorp security: hovers, keeps its distance, strafes, fires a laser bolt
+  drone(x: number, y: number) {
+    return this.ent('drone', x, y, 'drone', { h: 0.24, z: 0.5, r: 0.2, solid: false, hp: 2, state: 'patrol', cd: 1.5 + Math.random() * 1.5, t: Math.random() * 6 });
+  }
+  // something that takes water but isn't a person or a robot (memory banks, chillers): the mission handles the hit
+  target(x: number, y: number, tex: string, h: number, r: number, hp: number, o: Partial<Ent> = {}) {
+    return this.ent('target', x, y, tex, { h, r, solid: true, hp, ...o });
   }
   wakePip(e: Ent) { if (e.state !== 'off') return; e.state = 'hop'; e.cd = 0.8 + Math.random() * 1.6; e.t = Math.random() * 3; }
   fx(x: number, y: number, z: number, tex: string, frames: number[], fps: number, h = 0.3) {
@@ -413,7 +436,7 @@ export abstract class ShooterScene extends Phaser.Scene {
       const fwd = -Controls.moveY, side = this.strafe;
       const cell = this.cell(this.px, this.py);
       const slow = cell === '~' ? 0.5 : 1;
-      if (cell === '~') this.tip('spill');
+      if (cell === '~') this.tip(this.spillTip);
       const sp = 3.1 * mm * slow;
       const dx = Math.cos(this.pa), dy = Math.sin(this.pa);
       const mx = (dx * fwd - dy * side) * sp * dt, my = (dy * fwd + dx * side) * sp * dt;
@@ -478,7 +501,8 @@ export abstract class ShooterScene extends Phaser.Scene {
     if (e.gone) return false;
     if (e.kind === 'drifter') return e.state !== 'saved';
     if (e.kind === 'pip') return e.state !== 'crush' && e.state !== 'off';
-    if (e.kind === 'boss') return e.hp > 0;
+    if (e.kind === 'drone') return e.hp > 0;
+    if (e.kind === 'boss' || e.kind === 'target') return e.hp > 0 && !e.data?.noAim;
     return false;
   }
 
@@ -546,14 +570,14 @@ export abstract class ShooterScene extends Phaser.Scene {
     this.hurt(2);
     if (this.hp <= 0) return;
     this.capped = presses;
-    this.sfx('capPop', 0.9); this.sfx('clang', 0.8);
+    this.sfx(this.trapSfx, 0.9); this.sfx('clang', 0.8);
     this.events.emit('capped', presses);
   }
   uncap() {
     this.capped = 0;
-    this.sfx('capPop', 0.9);
+    this.sfx(this.trapSfx, 0.9);
     this.events.emit('capped', 0);
-    this.say(this.maneSpeaker(), 'I AIN\'T SINGLE-USE, MANE.', 1600);
+    this.say(this.maneSpeaker(), this.trapLine, 1600);
   }
 
   // ---------------------------------------------------------------- the world
@@ -564,10 +588,11 @@ export abstract class ShooterScene extends Phaser.Scene {
       if (e.flash > 0) e.flash -= dt;
       if (e.talkCd > 0) e.talkCd -= dt;
       e.losT -= dt;
-      if (e.losT <= 0 && (e.kind === 'drifter' || e.kind === 'pip')) { e.losT = 0.25; e.los = this.dist(e) < 12 && this.lineOfSight(e.x, e.y, this.px, this.py); }
+      if (e.losT <= 0 && (e.kind === 'drifter' || e.kind === 'pip' || e.kind === 'drone')) { e.losT = 0.25; e.los = this.dist(e) < 12 && this.lineOfSight(e.x, e.y, this.px, this.py); }
       switch (e.kind) {
         case 'drifter': this.updateDrifter(e, dt); break;
         case 'pip': this.updatePip(e, dt); break;
+        case 'drone': this.updateDrone(e, dt); break;
         case 'shot': this.updateShot(e, dt); break;
         case 'cap': this.updateCap(e, dt); break;
         case 'pickup':
@@ -726,9 +751,60 @@ export abstract class ShooterScene extends Phaser.Scene {
       this.onPipDown(e);
     } else { e.state = 'hurt'; e.data = { t: 0.25 }; }
   }
-  capShot(x: number, y: number, a: number, sp: number) {
-    this.ent('cap', x + Math.cos(a) * 0.3, y + Math.sin(a) * 0.3, 'capShot', { vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, h: 0.12, z: 0.25, life: 3, anim: { frames: [0, 1, 2, 3], fps: 14, loop: true, t0: this.clock } });
-    this.sfx('capPop', 0.35);
+  // drones
+  private updateDrone(e: Ent, dt: number) {
+    const d = this.dist(e);
+    e.t += dt;
+    if (e.state === 'fall') {
+      e.z = Math.max(0, e.z - dt * 1.6);
+      e.frame = 0;
+      if (e.z <= 0) { e.gone = true; this.fx(e.x, e.y, 0.05, 'spark', [0, 1, 2], 16, 0.3); this.sfx('crash', 0.35); }
+      return;
+    }
+    e.frame = Math.floor(e.t * 16) % 2;
+    e.z = 0.48 + Math.sin(e.t * 3) * 0.05;
+    if (e.state === 'patrol') {
+      // drift around home until it sees Mane
+      this.moveEnt(e, Math.cos(e.t * 0.7 + e.homeX) * 0.5 * dt, Math.sin(e.t * 0.9 + e.homeY) * 0.5 * dt);
+      if (e.los && d < 8) { e.state = 'hunt'; this.tip('drone'); if (e.talkCd <= 0) { e.talkCd = 6; this.say(this.entSpeaker(e), this.droneLine(), 1500); } }
+      return;
+    }
+    const a = Math.atan2(this.py - e.y, this.px - e.x);
+    const want = d > 4.5 ? 1 : d < 2.4 ? -1 : 0;
+    const side = Math.sin(e.t * 1.1 + e.homeX) * 1.1;
+    const sp = 1.5;
+    this.moveEnt(e, (Math.cos(a) * want - Math.sin(a) * side) * sp * dt, (Math.sin(a) * want + Math.cos(a) * side) * sp * dt);
+    if (e.state === 'charge') {
+      e.data.t -= dt;
+      e.flash = Math.floor(e.data.t * 20) % 2 ? 0.05 : 0;
+      if (e.data.t <= 0) { e.flash = 0; this.capShot(e.x, e.y, Math.atan2(this.py - e.y, this.px - e.x), 4.6, 'laserShot', 0.45); this.sfx('zap', 0.5); e.state = 'hunt'; e.cd = 1.8 + Math.random() * 1.4; }
+      return;
+    }
+    e.cd -= dt;
+    if (e.cd <= 0 && e.los && d < 9) { e.state = 'charge'; e.data = { t: 0.4 }; }
+    if (e.talkCd <= 0 && d < 6 && e.los) { e.talkCd = 8 + Math.random() * 8; this.say(this.entSpeaker(e), this.droneLine(), 1500); }
+  }
+  droneLine() { return ['PLEASE HOLD STILL.', 'SMILE. YOU ARE BEING REMEMBERED.', 'UNAUTHORIZED CAN.', 'SECURITY. SECURITY.'][Math.floor(Math.random() * 4)]; }
+  hitDrone(e: Ent, dmg: number) {
+    if (e.state === 'patrol') e.state = 'hunt';
+    e.hp -= dmg; e.flash = 0.12;
+    this.sfx('clang', 0.5);
+    if (e.hp <= 0) {
+      e.state = 'fall'; e.solid = false; e.flash = 0;
+      this.fx(e.x, e.y, e.z, 'spark', [0, 1, 2], 18, 0.3);
+      this.dronesDown++;
+      this.addScore(150);
+      this.toast('DRONE DOWN! +150');
+      this.events.emit('hud');
+      this.onDroneDown(e);
+    }
+  }
+  onDroneDown(_e: Ent) { /* override */ }
+  onTargetShot(_e: Ent, _dmg: number) { /* override */ }
+
+  capShot(x: number, y: number, a: number, sp: number, tex = 'capShot', z = 0.25) {
+    this.ent('cap', x + Math.cos(a) * 0.3, y + Math.sin(a) * 0.3, tex, { vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, h: 0.12, z, life: 3, anim: { frames: [0, 1, 2, 3], fps: 14, loop: true, t0: this.clock } });
+    if (tex === 'capShot') this.sfx('capPop', 0.35);
   }
 
   private updateShot(e: Ent, dt: number) {
@@ -746,6 +822,12 @@ export abstract class ShooterScene extends Phaser.Scene {
         }
         if (o.kind === 'pip' && o.state !== 'crush' && Math.hypot(o.x - e.x, o.y - e.y) < 0.32) {
           e.gone = true; this.splashAt(e.x, e.y, 0.2, e.gold); this.hitPip(o, e.gold ? 2 : 1); return;
+        }
+        if (o.kind === 'drone' && o.state !== 'fall' && Math.hypot(o.x - e.x, o.y - e.y) < 0.3) {
+          e.gone = true; this.splashAt(e.x, e.y, o.z, e.gold); this.hitDrone(o, e.gold ? 2 : 1); return;
+        }
+        if (o.kind === 'target' && o.hp > 0 && Math.hypot(o.x - e.x, o.y - e.y) < o.r + 0.1) {
+          e.gone = true; this.splashAt(e.x, e.y, 0.35, e.gold); this.onTargetShot(o, e.gold ? 2 : 1); return;
         }
         if (o.kind === 'boss' && o.hp > 0 && Math.hypot(o.x - e.x, o.y - e.y) < o.r + 0.1) {
           e.gone = true; this.splashAt(e.x, e.y, 0.4, e.gold); this.onBossShot(o, e.gold ? 2 : 1); return;
@@ -768,7 +850,9 @@ export abstract class ShooterScene extends Phaser.Scene {
     const dirX = Math.cos(this.pa), dirY = Math.sin(this.pa);
     const plX = -dirY * FOV, plY = dirX * FOV;
     const pX = this.px, pY = this.py;
-    const walls = this.texData('plantWalls'), floors = this.texData('plantFloors');
+    const walls = this.texData(this.wallSheet), floors = this.texData(this.floorSheet);
+    const alt = this.wallAlt, blink = (this.clock * 2.2) | 0;
+    const FOG = this.fog;
     const wd = walls.data, ww = walls.w, fd = floors.data, fw = floors.w;
     const belt = (this.clock * 1.3 * TEX) | 0;
     // floor and ceiling, row by row
@@ -813,8 +897,9 @@ export abstract class ShooterScene extends Phaser.Scene {
         if (sdx < sdy) { sdx += ddx; mx += sx; side = 0; } else { sdy += ddy; my += sy; side = 1; }
         if (mx < 0 || my < 0 || mx >= this.mapW || my >= this.mapH) break;
         const c = this.map[my][mx];
-        const ti = WALL_TEX[c];
+        let ti = WALL_TEX[c];
         if (ti === undefined) continue;
+        if (alt[ti] !== undefined && ((mx * 7 + my * 13 + blink) & 1)) ti = alt[ti];
         const pd = side === 0 ? sdx - ddx : sdy - ddy;
         let wx = side === 0 ? pY + pd * ry : pX + pd * rx;
         wx -= Math.floor(wx);
@@ -830,7 +915,8 @@ export abstract class ShooterScene extends Phaser.Scene {
       zb[x] = perp;
       if (!hit) continue;
       let tx = (u * TEX) | 0;
-      if ((side === 0 && rx > 0) || (side === 1 && ry < 0)) tx = TEX - 1 - tx;
+      // the camera plane points to the right of the view, so these two faces need mirroring for text to read left to right
+      if ((side === 0 && rx < 0) || (side === 1 && ry > 0)) tx = TEX - 1 - tx;
       const lineH = H / perp;
       const top = HZ - (1 - CAM) * lineH;
       const y0 = Math.max(0, Math.ceil(top)), y1 = Math.min(H - 1, Math.floor(HZ + CAM * lineH));
@@ -937,7 +1023,7 @@ export abstract class ShooterScene extends Phaser.Scene {
   // ---------------------------------------------------------------- talking
   private spk: Record<string, Speaker> = {};
   maneSpeaker(): Speaker { const s = this; return (this.spk.mane ??= { __mane: true, get x() { return s.W / 2; }, get headY() { return 150; } } as Speaker); }
-  radioSpeaker(): Speaker { return (this.spk.radio ??= { __radio: true, get x() { return 92; }, get headY() { return 204; } } as Speaker); }
+  radioSpeaker(who = 'MALIK'): Speaker { return (this.spk['radio' + who] ??= { __radio: who, get x() { return 92; }, get headY() { return 204; } } as Speaker); }
   entSpeaker(e: Ent): Speaker { return ((e as any).spk ??= { get x() { return e.sx; }, get headY() { return e.seen ? e.top - 2 : -100; } }); }
   speaker(s: { x: number; y: number }, head: number): Speaker { return { get x() { return s.x; }, get headY() { return s.y - head; } }; }
 
@@ -946,7 +1032,7 @@ export abstract class ShooterScene extends Phaser.Scene {
     this.bubbles = this.bubbles.filter((b) => b.who !== who);
     const mane = !!(who as any).__mane;
     const radio = !!(who as any).__radio;
-    const t = px(this, 0, 0, wrap(radio ? `MALIK (RADIO): ${text}` : text, 24), mane ? COLORS.goldHi : radio ? 0xa8dcff : 0xffffff);
+    const t = px(this, 0, 0, wrap(radio ? `${(who as any).__radio} (RADIO): ${text}` : text, 24), mane ? COLORS.goldHi : radio ? 0xa8dcff : 0xffffff);
     const w = t.width + 8, h = t.height + 6;
     t.setPosition(-w / 2 + 4, -h + 3);
     const g = this.add.graphics();
@@ -1013,6 +1099,6 @@ export abstract class ShooterScene extends Phaser.Scene {
   inArea(x0: number, y0: number, x1: number, y1: number) { return this.px >= x0 && this.px <= x1 + 1 && this.py >= y0 && this.py <= y1 + 1; }
 
   stats(): MissionStats {
-    return { score: this.score, timeMs: this.elapsed, kos: this.kos, sips: this.sips, cans: 0, drivers: this.pipsDown };
+    return { score: this.score, timeMs: this.elapsed, kos: this.kos, sips: this.sips, cans: 0, drivers: this.pipsDown + this.dronesDown };
   }
 }

@@ -199,34 +199,48 @@ export function plantFloors(): Pix[] {
 // Plant workers who drank DeNile: blank white eyes, arms out, shuffling the same loop.
 type DFace = 'blank' | 'splash' | 'back' | 'huh';
 interface DPose { step: number; arms: 'out' | 'reach' | 'down' | 'scratch' | 'grab'; face: DFace; bob: number; wet?: boolean }
-interface DLook { skin: RGBA; skinD: RGBA; hair: RGBA; cap: boolean; beard?: boolean; braids?: boolean }
+interface DLook { skin: RGBA; skinD: RGBA; hair: RGBA; cap: boolean; beard?: boolean; braids?: boolean;
+  // Mission 9's data-center techs: AetherCorp hoodies, a cloud patch, a badge on a lanyard, a headset
+  suit?: [RGBA, RGBA, RGBA]; patch?: RGBA; patchHi?: RGBA; badge?: boolean; headset?: boolean }
 export const DRIFTER_LOOKS: Record<string, DLook> = {
   drifterA: { skin: P.skin1, skinD: P.skin1Shade, hair: hex('#1a1210'), cap: true },
   drifterB: { skin: P.skin2, skinD: P.skin2Shade, hair: hex('#2a1a12'), cap: false, braids: true },
   drifterC: { skin: P.skin3, skinD: P.skin3Shade, hair: hex('#16100c'), cap: true, beard: true },
+  techA: { skin: P.skin2, skinD: P.skin2Shade, hair: hex('#1a1210'), cap: false, suit: [hex('#5a6072'), hex('#40465a'), hex('#7a8296')], patch: hex('#eef2f8'), patchHi: hex('#5ce1ff'), badge: true, headset: true },
+  techB: { skin: P.skin1, skinD: P.skin1Shade, hair: hex('#2a1a12'), cap: false, braids: true, suit: [hex('#2e3550'), hex('#1e2438'), hex('#454e70')], patch: hex('#eef2f8'), patchHi: hex('#5ce1ff'), badge: true },
+  techC: { skin: P.skin3, skinD: P.skin3Shade, hair: hex('#16100c'), cap: false, beard: true, suit: [hex('#d8dee8'), hex('#a8b0c0'), hex('#f4f6fa')], patch: hex('#2a7ad8'), patchHi: hex('#5ce1ff'), badge: true, headset: true },
 };
 function drawDrifter(L: DLook, p: DPose): Pix {
   const g = new Pix(48, 64);
   const cx = 24, base = 63 + p.bob;
   const hipY = base - 18;
+  const [SU, SU_D, SU_H] = L.suit ?? [COVER, COVER_D, COVER_H];
   // legs and boots
   for (const s of [-1, 1]) {
     const lift = (s < 0 ? p.step : -p.step) > 0 ? 3 : 0;
     const x = cx + s * 5;
-    g.rect(x - 3, hipY, 6, 15 - lift, COVER_D);
+    g.rect(x - 3, hipY, 6, 15 - lift, L.suit ? hex('#23263a') : COVER_D);
     g.rect(x - 4, base - 4 - lift, 8, 4, hex('#2a2018'));
   }
   // coveralls
   const top = hipY - 20;
-  g.rect(cx - 11, top, 22, 22, COVER);
-  g.vline(cx - 11, top, hipY + 1, COVER_D); g.vline(cx + 10, top, hipY + 1, COVER_H);
-  g.rect(cx - 6, top + 4, 7, 6, DN); g.set(cx - 3, top + 6, DN_HI); g.set(cx - 3, top + 7, DN_HI); // the DeNile patch
-  g.hline(cx - 11, cx + 10, hipY - 3, COVER_D); // belt line
+  g.rect(cx - 11, top, 22, 22, SU);
+  g.vline(cx - 11, top, hipY + 1, SU_D); g.vline(cx + 10, top, hipY + 1, SU_H);
+  if (L.suit) {
+    // a little cloud on the chest, a badge on a lanyard
+    const pc = L.patch!, ph = L.patchHi!;
+    g.circle(cx - 5, top + 7, 2, pc); g.circle(cx - 2, top + 6, 2, pc); g.rect(cx - 7, top + 7, 7, 2, pc); g.set(cx - 4, top + 7, ph); g.set(cx - 2, top + 7, ph);
+    if (L.badge) { g.line(cx - 3, top, cx + 3, top + 9, hex('#2a7ad8')); g.line(cx + 3, top, cx + 3, top + 9, hex('#2a7ad8')); g.rect(cx + 1, top + 9, 5, 6, P.white); g.hline(cx + 2, cx + 4, top + 11, hex('#5ce1ff')); }
+    g.hline(cx - 11, cx + 10, hipY - 1, SU_D); // hoodie hem
+  } else {
+    g.rect(cx - 6, top + 4, 7, 6, DN); g.set(cx - 3, top + 6, DN_HI); g.set(cx - 3, top + 7, DN_HI); // the DeNile patch
+    g.hline(cx - 11, cx + 10, hipY - 3, COVER_D); // belt line
+  }
   if (p.wet) for (let k = 0; k < 6; k++) g.set(cx - 9 + k * 4, top + 3 + (k % 3) * 5, hex('#bfefff'));
   // arms
   const sh = top + 3;
   const arm = (s: number, hx: number, hy: number) => {
-    g.line(cx + s * 11, sh, hx, hy, COVER_D, 3);
+    g.line(cx + s * 11, sh, hx, hy, SU_D, 3);
     g.circle(hx, hy, 2, L.skin);
   };
   if (p.arms === 'out') { arm(-1, cx - 13, sh + 8); arm(1, cx + 13, sh + 8); g.rect(cx - 15, sh + 6, 5, 4, L.skin); g.rect(cx + 10, sh + 6, 5, 4, L.skin); }
@@ -243,6 +257,7 @@ function drawDrifter(L: DLook, p: DPose): Pix {
   else g.rect(cx - 7, hy - 8, 15, 4, L.hair);
   if (L.cap) { g.rect(cx - 8, hy - 9, 17, 4, DN); g.rect(cx - 9, hy - 5, 19, 2, TILE_D); g.set(cx, hy - 8, P.white); }
   if (L.beard) g.rect(cx - 5, hy + 4, 11, 4, L.hair);
+  if (L.headset) { g.rect(cx - 9, hy - 2, 3, 5, hex('#2a2c38')); g.line(cx - 8, hy + 3, cx - 3, hy + 5, hex('#2a2c38')); g.set(cx - 3, hy + 5, hex('#5ce1ff')); g.hline(cx - 7, cx + 7, hy - 9, hex('#2a2c38')); }
   // eyes and mouth
   const ey = hy - 1;
   if (p.face === 'blank') {
