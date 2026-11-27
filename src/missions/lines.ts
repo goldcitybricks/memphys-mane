@@ -9,7 +9,7 @@ export const MANE = {
   goofy: "LOOKIN' AHH.",
   super: "WATCH THIS JUNT.",
   getUp: "GET UP. GET YOURS. GET HYDRATED.",
-  complete: "THAT'S ON THE 901.",
+  complete: "ROYAL BY NATURE.",
 };
 
 export const SHIESTY_TALK = [

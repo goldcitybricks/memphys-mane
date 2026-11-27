@@ -535,6 +535,16 @@ export function wallLayer(): Pix {
   g.rect(tX + 40, 80, 120, groundY - 80, hex('#2a2a3a')); // roll-up door
   for (let y = 82; y < groundY; y += 4) g.hline(tX + 42, tX + 158, y, hex('#383848'));
   text(g, 'TIRES', tX + 210, 74, hex('#e8e0c0'), 2);
+  // BLUES CLUB: blue neon sign up on the roof
+  const bcX = tX + 236, bcY = 18;
+  g.rect(bcX - 6, bcY - 5, 132, 28, hex('#0c1430'));
+  g.rect(bcX - 4, bcY - 3, 128, 24, hex('#121c44'));
+  for (let x = bcX - 4; x < bcX + 124; x++) { g.set(x, bcY - 3, hex('#4a8aff')); g.set(x, bcY + 20, hex('#4a8aff')); }
+  for (let y = bcY - 3; y <= bcY + 20; y++) { g.set(bcX - 4, y, hex('#4a8aff')); g.set(bcX + 123, y, hex('#4a8aff')); }
+  text(g, 'BLUES CLUB', bcX + 1 + 1, bcY + 2 + 1, hex('#1a3a9a'), 2);
+  text(g, 'BLUES CLUB', bcX + 1, bcY + 2, hex('#9fd0ff'), 2);
+  for (let y = bcY + 21; y < 56; y++) { g.set(bcX + 20, y, hex('#3a3a46')); g.set(bcX + 100, y, hex('#3a3a46')); }
+  for (let y = bcY - 8; y < bcY + 26; y++) for (let x = bcX - 10; x < bcX + 130; x++) if (!g.alpha(x, y)) g.set(x, y, [74, 138, 255, 22]);
   text(g, 'USED + NEW', tX + 212, 94, hex('#c8c0a0'));
   for (const [x, n] of [[tX + 190, 4], [tX + 222, 3], [tX + 300, 5], [tX + 330, 2]]) {
     for (let k = 0; k < n; k++) { g.rect(x, groundY - 8 - k * 8, 26, 8, hex('#16161c')); g.hline(x + 3, x + 22, groundY - 5 - k * 8, hex('#3a3a44')); }
