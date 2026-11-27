@@ -45,9 +45,33 @@ function fitWidth() {
   const w = pickWidth();
   if (w !== game.scale.width) game.scale.setGameSize(w, VIEW_H);
 }
-window.addEventListener('resize', fitWidth);
+
+// iPhone Safari reports the new screen size late after the phone is turned, and Phaser can keep the
+// portrait size, leaving a small game in the corner. So pin the game box to the real window size in
+// pixels and refit a few times while Safari settles.
+const box = document.getElementById('game')!;
+function syncViewport() {
+  const w = window.innerWidth, h = window.innerHeight;
+  box.style.width = w + 'px';
+  box.style.height = h + 'px';
+  // Safari can leave the page scrolled after a rotation, which pushes the game down and right
+  if (window.scrollX || window.scrollY) window.scrollTo(0, 0);
+  fitWidth();
+  game.scale.refresh();
+}
+let settle: number[] = [];
+function onViewportChange() {
+  settle.forEach(clearTimeout);
+  syncViewport();
+  settle = [100, 300, 600, 1000].map((ms) => window.setTimeout(syncViewport, ms));
+}
+window.addEventListener('resize', onViewportChange);
+window.addEventListener('orientationchange', onViewportChange);
+window.visualViewport?.addEventListener('resize', onViewportChange);
+window.addEventListener('pageshow', onViewportChange);
+game.events.once('ready', onViewportChange);
 // some browsers report the new size a beat after entering or leaving full screen
-for (const ev of ['enterfullscreen', 'leavefullscreen']) game.scale.on(ev, () => { fitWidth(); setTimeout(() => { fitWidth(); game.scale.refresh(); }, 250); });
+for (const ev of ['enterfullscreen', 'leavefullscreen']) game.scale.on(ev, onViewportChange);
 // a refused fullscreen request must never surface as an error
 window.addEventListener('unhandledrejection', (e) => { if (String(e.reason).match(/fullscreen|permission/i)) e.preventDefault(); });
 
