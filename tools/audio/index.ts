@@ -816,3 +816,57 @@ const S7: Record<string, Buf> = {
 for (const [k, b] of Object.entries(S7)) writeAudio(b, path.join(OUT, `${k}.mp3`), { kbps: 96 });
 writeAudio(croweTrack(), path.join(OUT, 'music_crowe.mp3'), { kbps: 112 });
 writeAudio(glitchTrack(), path.join(OUT, 'music_glitch.mp3'), { kbps: 112 });
+
+
+// ------------------------------------------------------------------ Mission 8: "The Loop" (Soul station, driving)
+// A four-bar figure that keeps coming back around, like the highway: 150 BPM in D minor, Memphis-soul horn stabs
+// over an organ and a rolling 808, and a tape-rewind sweep every 8 bars (the city trying to forget). Original.
+const rewind = (dur: number, g = 0.25) => tone({ wave: 'saw', freq: (t) => 1600 - (t / dur) * 1450, dur, a: 0.02, d: dur, s: 0.6, r: 0.05, gain: g, lp: 3000, vib: 0.04, vibRate: 18 });
+function loopTrack(convoy: boolean) {
+  const bpm = convoy ? 156 : 150, beat = 60 / bpm, bar = beat * 4, bars = 16;
+  const len = bar * bars;
+  const m = new Buf(len + 2);
+  // Dm - Bb - Gm - A
+  const prog = [[62, 65, 69], [58, 62, 65], [55, 58, 62], [57, 61, 64]];
+  const roots = [26, 22, 31, 21];
+  // the horn line that loops (soul stabs on the and-of-2 and the 4)
+  const stab = [[1.5, 0.4], [3, 0.6]];
+  const riff = [[0, 74, 0.5], [0.5, 77, 0.5], [1, 76, 0.5], [1.5, 74, 1], [3, 69, 0.75]];
+  for (let b = 0; b < bars; b++) {
+    const t0 = b * bar, ch = b % 4, sec = Math.floor(b / 4);
+    // drums: a driving backbeat with a tambourine, busier with the convoy
+    m.mix(kick(), t0); m.mix(kick(0.8), t0 + beat * 1.5); m.mix(kick(0.85), t0 + beat * 2.5);
+    if (convoy) m.mix(kick(0.7), t0 + beat * 3.5);
+    m.mix(snare(0.9), t0 + beat); m.mix(snare(0.9), t0 + beat * 3); m.mix(clap(0.5), t0 + beat * 3);
+    for (let k = 0; k < 8; k++) m.mix(hat(k % 2 ? 0.45 : 0.8, k === 7), t0 + k * (beat / 2));
+    for (let k = 0; k < 4; k++) m.mix(tamb(0.25), t0 + k * beat + beat / 2);
+    // rolling 808 that slides up into each change
+    m.mix(b808(roots[ch], beat * 1.4), t0, 0.9);
+    m.mix(b808(roots[ch] + 12, beat * 0.45, roots[ch]), t0 + beat * 2, 0.7);
+    m.mix(b808(roots[(ch + 1) % 4], beat * 0.5, roots[ch] + 7), t0 + beat * 3.5, 0.6);
+    // organ bed
+    m.mix(organ(prog[ch], bar * 0.95, 0.045), t0);
+    // horn stabs and, from the second pass, the riff
+    for (const [st, d] of stab) m.mix(horn(prog[ch].map((n) => n + 12), beat * d, convoy ? 0.1 : 0.08), t0 + st * beat);
+    if (sec >= 1 && ch % 2 === 0) for (const [st, n, d] of riff) m.mix(horn([n - (ch === 2 ? 7 : 0)], beat * d * 0.9, 0.07), t0 + st * beat);
+    if (convoy && sec >= 2) for (let k = 0; k < 8; k++) m.mix(guitar([prog[ch][0], prog[ch][0] + 7], beat * 0.25, 0.06), t0 + k * (beat / 2));
+    // the rewind every 8 bars
+    if (b % 8 === 7) m.mix(rewind(beat * 1.5, 0.12), t0 + beat * 2.5);
+  }
+  m.wrapTo(len);
+  m.softClip(1.25);
+  m.normalize(0.8);
+  return m;
+}
+const S8: Record<string, Buf> = {
+  // driving under a gold light: a bright rising chime (the city remembering)
+  remember: sfx(0.9, (b) => { [79, 83, 86, 91].forEach((n, i) => b.mix(bell(n, 0.4, 0.35), i * 0.06)); b.mix(tone({ wave: 'sine', freq: (t) => 600 + t * 900, dur: 0.5, a: 0.01, d: 0.4, s: 0.3, r: 0.1, gain: 0.2 }), 0); }, 0.6),
+  // a blue light: a wobbly falling tone, like a tape slowing down (forgetting)
+  forget: sfx(0.9, (b) => {
+    b.mix(tone({ wave: 'tri', freq: (t) => 700 * Math.pow(0.25, t / 0.8), dur: 0.8, a: 0.01, d: 0.6, s: 0.4, r: 0.1, gain: 0.45, vib: 0.05, vibRate: 9, lp: 2400 }), 0);
+    b.mix(tone({ wave: 'noise', freq: 1, dur: 0.5, a: 0.05, d: 0.4, s: 0.2, r: 0.1, gain: 0.15, lp: 2000, hp: 400 }), 0.1);
+  }, 0.6),
+};
+for (const [k, b] of Object.entries(S8)) writeAudio(b, path.join(OUT, `${k}.mp3`), { kbps: 96 });
+writeAudio(loopTrack(false), path.join(OUT, 'music_loop.mp3'), { kbps: 112 });
+writeAudio(loopTrack(true), path.join(OUT, 'music_convoy.mp3'), { kbps: 112 });

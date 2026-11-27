@@ -1745,6 +1745,107 @@
   "riverfrontExt": {
    "file": "riverfrontExt.png"
   },
+  "gantry": {
+   "file": "gantry.png",
+   "frameWidth": 160,
+   "frameHeight": 64
+  },
+  "overpass": {
+   "file": "overpass.png"
+  },
+  "hwyLamp": {
+   "file": "hwyLamp.png"
+  },
+  "exitAirways": {
+   "file": "exitAirways.png",
+   "frameWidth": 87,
+   "frameHeight": 60
+  },
+  "exitLamar": {
+   "file": "exitLamar.png",
+   "frameWidth": 69,
+   "frameHeight": 60
+  },
+  "exitGetwell": {
+   "file": "exitGetwell.png",
+   "frameWidth": 75,
+   "frameHeight": 60
+  },
+  "exitPoplar": {
+   "file": "exitPoplar.png",
+   "frameWidth": 75,
+   "frameHeight": 60
+  },
+  "exitWalnut": {
+   "file": "exitWalnut.png",
+   "frameWidth": 105,
+   "frameHeight": 60
+  },
+  "shield240": {
+   "file": "shield240.png"
+  },
+  "signGigantum": {
+   "file": "signGigantum.png"
+  },
+  "bbqBoard": {
+   "file": "bbqBoard.png",
+   "frameWidth": 120,
+   "frameHeight": 76
+  },
+  "boardRemembers": {
+   "file": "boardRemembers.png"
+  },
+  "barricade": {
+   "file": "barricade.png",
+   "frameWidth": 160,
+   "frameHeight": 44
+  },
+  "ogRear": {
+   "file": "ogRear.png",
+   "frameWidth": 64,
+   "frameHeight": 40
+  },
+  "potholeWindow": {
+   "file": "potholeWindow.png",
+   "frameWidth": 26,
+   "frameHeight": 20,
+   "anims": {
+    "flap": [
+     0,
+     2
+    ]
+   }
+  },
+  "pitFront": {
+   "file": "pitFront.png"
+  },
+  "pitSign": {
+   "file": "pitSign.png",
+   "frameWidth": 104,
+   "frameHeight": 20
+  },
+  "streetSign": {
+   "file": "streetSign.png",
+   "frameWidth": 48,
+   "frameHeight": 64
+  },
+  "cornerLight": {
+   "file": "cornerLight.png",
+   "frameWidth": 40,
+   "frameHeight": 84
+  },
+  "loopSky": {
+   "file": "loopSky.png"
+  },
+  "loopFar": {
+   "file": "loopFar.png"
+  },
+  "gigantumExt": {
+   "file": "gigantumExt.png"
+  },
+  "rampStrip": {
+   "file": "rampStrip.png"
+  },
   "font": {
    "file": "font.png",
    "frameWidth": 7,

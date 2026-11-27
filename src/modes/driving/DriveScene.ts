@@ -10,7 +10,8 @@ import type { MissionStats } from '../brawler/BrawlerScene';
 
 // The reusable driving engine (Mario Kart / arcade racer style, pseudo-3D, seen from behind the car).
 // A mission extends it: builds the course, places traffic, cans, item boxes and hazards, and scripts the story.
-// Mission 4 (Bridge Run) chases a tanker point-to-point; Mission 8 (The Loop) can run laps on a looping Track.
+// Mission 4 (Bridge Run) chases a tanker point-to-point; Mission 8 (The Loop) runs laps on a looping Track,
+// with allies (O.G.'s convoy) that drive in formation and plow anything they touch.
 
 // camera and projection
 const H = 216, HY = 108; // screen height, horizon
@@ -27,15 +28,18 @@ export const MAX_SPEED = SEG_LEN * 45; // 45 segments a second
 export const MAX_CANS = 3;
 export const MANE_MODE_SECONDS = 7;
 
-export type CarKind = 'traffic' | 'aether' | 'escort';
+export type CarKind = 'traffic' | 'aether' | 'escort' | 'ally';
 export interface Car {
   z: number; x: number; tx: number; speed: number; base: number; tex: string; kind: CarKind;
   spinT: number; ang: number; w: number; bumpCd: number; talkCd: number; gone?: boolean;
   sx: number; sy: number; seen: boolean; // where it was drawn this frame (speech bubbles follow it)
+  lead?: number; slot?: number; // allies: where they hold formation (world units ahead of you, and across the road from you)
 }
 export type HazKind = 'pothole' | 'sauce' | 'bones' | 'barrel' | 'sauceShot';
 export interface Haz { z: number; x: number; vx: number; kind: HazKind; vz: number; t: number; w: number; gone?: boolean }
-export interface Pick { z: number; x: number; kind: 'can' | 'box'; taken: boolean; back: number }
+export interface Pick { z: number; x: number; kind: 'can' | 'box' | 'card'; taken: boolean; back: number }
+// a bar in the HUD's top-right corner when there's no tanker (Mission 8: how much Memphis still remembers)
+export interface Meter { label: string; value: number; max: number; color: number; icon: string; frame?: number; scale?: number }
 export interface Tanker {
   z: number; x: number; tx: number; speed: number; hp: number; maxHp: number;
   surgeT: number; dropT: number; swerveT: number; ramCd: number; hitT: number;
@@ -75,6 +79,14 @@ export abstract class DriveScene extends Phaser.Scene {
   tanker: Tanker | null = null;
   escapeZ = Infinity; // where the tanker gets away
   archLights: 'normal' | 'glyph' = 'normal';
+  // laps (a looping track) and the HUD's extra bar
+  lap = 1;
+  lapsTotal = 0;
+  meter: Meter | null = null;
+  // per-mission look
+  skyKey = 'driveSky';
+  farKey = 'driveFar';
+  continueTitle = 'THE TANKER GOT AWAY!';
   // flow
   racing = false; // the player has control
   frozen = false; // the world stops (cutscenes that pose everything)
@@ -116,11 +128,14 @@ export abstract class DriveScene extends Phaser.Scene {
   onTankerRam(_hp: number) { /* override */ }
   onTankerDown() { /* override */ }
   onTankerEscaped() { this.showContinue(); }
+  onLap(_lap: number) { /* override: called when a looping track's start line is crossed */ }
+  onBump(_c: Car) { /* override: a car hit you (not in Mane Mode) */ }
+  onPickCard() { /* override: picked up the hidden Aquifer Fact card */ }
 
   create() {
     this.position = 0; this.playerX = 0; this.speed = 0; this.steer = 0; this.boostT = 0; this.spinT = 0; this.hopT = 0; this.wallCd = 0;
     this.drift = { on: false, dir: 0, t: 0, sfxT: 0 }; this.maneT = 0; this.cans = 0; this.item = null; this.rolling = 0;
-    this.cars = []; this.hazards = []; this.picks = []; this.tanker = null; this.escapeZ = Infinity; this.archLights = 'normal';
+    this.cars = []; this.hazards = []; this.picks = []; this.tanker = null; this.escapeZ = Infinity; this.archLights = 'normal'; this.lap = 1;
     this.racing = false; this.frozen = false; this.inCutscene = false; this.skipping = false; this.paused = false; this.continuing = false;
     this.score = 0; this.elapsed = 0; this.kos = 0; this.rams = 0; this.sips = 0;
     this.pool = []; this.bands = []; this.spk = {}; this.bubbles = []; this.waiters = []; this.tips.clear(); this.hitstopMs = 0; this.clock = 0;
@@ -130,8 +145,8 @@ export abstract class DriveScene extends Phaser.Scene {
     this.track = this.buildTrack();
     this.proj = Array.from({ length: DRAW }, () => ({ X1: 0, X2: 0, Y1: 0, Y2: 0, W1: 0, W2: 0, s1: 0, s2: 0, ok: false, seg: this.track.segs[0], z1: 0 }));
 
-    this.sky = this.add.tileSprite(0, 0, this.W, H, 'driveSky').setOrigin(0).setDepth(-20).setScrollFactor(0);
-    this.far = this.add.tileSprite(0, 0, this.W, H, 'driveFar').setOrigin(0).setDepth(-19).setScrollFactor(0);
+    this.sky = this.add.tileSprite(0, 0, this.W, H, this.skyKey).setOrigin(0).setDepth(-20).setScrollFactor(0);
+    this.far = this.add.tileSprite(0, 0, this.W, H, this.farKey).setOrigin(0).setDepth(-19).setScrollFactor(0);
     this.roadG = this.add.graphics().setDepth(50);
     for (let b = 0; b < DRAW / BAND; b++) this.bands.push(this.add.graphics().setDepth(100 + (DRAW - (b * BAND + BAND)) * 2));
     this.fx = this.add.graphics().setDepth(5000);
@@ -240,6 +255,7 @@ export abstract class DriveScene extends Phaser.Scene {
         this.updateTanker(dt);
         this.updateCars(dt);
         this.updateHazards(dt);
+        if (this.track.loop) this.wrapWorld();
         this.collide();
       }
     }
@@ -247,6 +263,15 @@ export abstract class DriveScene extends Phaser.Scene {
     this.render();
     this.updateBubbles();
     for (const w of [...this.waiters]) if (w.pred()) { this.waiters.splice(this.waiters.indexOf(w), 1); w.resolve(); }
+  }
+
+  // on a looping track everything keeps its distance from you inside half a lap, so "ahead" and "behind" stay true
+  private wrapWorld() {
+    const L = this.track.length, pz = this.playerZ;
+    const near = (z: number) => pz + ((((z - pz) % L) + L * 1.5) % L) - L / 2;
+    for (const c of this.cars) c.z = near(c.z);
+    for (const h of this.hazards) h.z = near(h.z);
+    for (const p of this.picks) p.z = near(p.z);
   }
 
   private updatePlayer(dt: number) {
@@ -306,8 +331,14 @@ export abstract class DriveScene extends Phaser.Scene {
     if (this.wallCd > 0) this.wallCd -= dt;
     if (this.hopT > 0) this.hopT -= dt;
     if (this.rolling > 0) { this.rolling -= dt; if (this.rolling <= 0) this.events.emit('item'); }
+    const before = this.position;
     this.position += this.speed * dt;
-    if (this.track.loop) this.position = ((this.position % this.track.length) + this.track.length) % this.track.length;
+    if (this.track.loop) {
+      const L = this.track.length;
+      this.position = ((this.position % L) + L) % L;
+      // crossed the start line going forward: next lap
+      if (this.racing && this.position < before - L / 2) { this.lap++; this.events.emit('hud'); this.onLap(this.lap); }
+    }
     else this.position = Math.min(this.position, this.track.length - PLAYER_Z - SEG_LEN * (DRAW + 2));
     // using things
     if (this.racing && this.spinT <= 0) {
@@ -391,7 +422,7 @@ export abstract class DriveScene extends Phaser.Scene {
     this.cars.push(c);
     return c;
   }
-  addPick(z: number, x: number, kind: 'can' | 'box') { this.picks.push({ z, x, kind, taken: false, back: 0 }); }
+  addPick(z: number, x: number, kind: Pick['kind']) { this.picks.push({ z, x, kind, taken: false, back: 0 }); }
   addHaz(z: number, x: number, kind: HazKind) {
     const w = kind === 'pothole' ? 0.17 : kind === 'barrel' ? 0.12 : 0.2;
     this.hazards.push({ z, x, vx: 0, kind, vz: 0, t: 999, w });
@@ -439,6 +470,7 @@ export abstract class DriveScene extends Phaser.Scene {
     for (const c of this.cars) {
       if (c.gone) continue;
       const dz = c.z - pz;
+      if (c.kind === 'ally') { this.updateAlly(c, dt); continue; }
       if (c.spinT > 0) {
         c.spinT -= dt;
         c.ang += dt * 900;
@@ -464,6 +496,28 @@ export abstract class DriveScene extends Phaser.Scene {
     this.cars = this.cars.filter((c) => !c.gone);
   }
 
+  // an ally holds its place in the formation: `lead` ahead of you, `slot` across from wherever you steer
+  updateAlly(c: Car, dt: number) {
+    const want = this.playerZ + (c.lead ?? SEG_LEN * 4);
+    c.speed = Math.max(0, this.speed + Phaser.Math.Clamp((want - c.z) * 2.2, -MAX_SPEED * 0.6, MAX_SPEED * 0.9));
+    c.z += c.speed * dt;
+    c.tx = Phaser.Math.Clamp(this.playerX + (c.slot ?? 0), -0.85, 0.85);
+    c.x += Math.sign(c.tx - c.x) * Math.min(Math.abs(c.tx - c.x), 0.9 * dt);
+    if (c.talkCd > 0) c.talkCd -= dt;
+    // it plows anything it runs into
+    for (const o of this.cars) {
+      if (o === c || o.kind === 'ally' || o.spinT > 0 || Math.abs(o.z - c.z) > CAR_LEN || Math.abs(o.x - c.x) > (o.w + c.w) / 2) continue;
+      o.tx = o.x + (o.x >= c.x ? 0.7 : -0.7);
+      o.x += o.x >= c.x ? 0.12 : -0.12;
+      o.z += 160;
+      this.spinCar(o, o.kind === 'traffic' ? 'AYE!' : 'RECALCULATING...');
+      this.addScore(200);
+      this.sfx('crash', 0.4);
+      this.onAllyPlow(c, o);
+    }
+  }
+  onAllyPlow(_ally: Car, _hit: Car) { /* override */ }
+
   private updateHazards(dt: number) {
     for (const h of this.hazards) {
       if (h.vz) h.z += h.vz * dt;
@@ -475,7 +529,7 @@ export abstract class DriveScene extends Phaser.Scene {
       // cars run into slicks, bones and each other's barrels
       if (h.kind !== 'pothole' && h.kind !== 'barrel') {
         for (const c of this.cars) {
-          if (c.spinT > 0 || Math.abs(c.z - h.z) > CAR_LEN || Math.abs(c.x - h.x) > (c.w + h.w) / 2) continue;
+          if (c.kind === 'ally' || c.spinT > 0 || Math.abs(c.z - h.z) > CAR_LEN || Math.abs(c.x - h.x) > (c.w + h.w) / 2) continue;
           this.spinCar(c, h.kind === 'bones' ? 'POP! RECALCULATING...' : 'RECALCULATING...');
           if (h.kind === 'sauceShot') { h.kind = 'sauce'; h.vz = 0; h.t = 20; }
           this.addScore(200);
@@ -503,6 +557,7 @@ export abstract class DriveScene extends Phaser.Scene {
     const mm = this.maneT > 0;
     // cars
     for (const c of this.cars) {
+      if (c.kind === 'ally') continue;
       if (c.bumpCd > 0 || Math.abs(c.z - pz) > CAR_LEN || Math.abs(c.x - px0) > (pw + c.w) / 2 * 0.9) continue;
       c.bumpCd = 0.6;
       const talk = c.kind === 'traffic' ? ['AYE, WATCH IT!', 'BRO!', 'MY CAR!'][Math.floor(Math.random() * 3)] : ['RECALCULATING...', 'RECALCULATING...', 'YIELD. YIELD. YIELD.', 'ROUTE BLOCKED.'][Math.floor(Math.random() * 4)];
@@ -519,6 +574,7 @@ export abstract class DriveScene extends Phaser.Scene {
       }
       this.sfx('crash', 0.55);
       this.shake(150, 0.007);
+      this.onBump(c);
       if (c.z >= pz) {
         // rear-ended them: you slow down, they get shoved
         this.speed = Math.min(this.speed, c.speed * 0.85);
@@ -541,6 +597,7 @@ export abstract class DriveScene extends Phaser.Scene {
       if (Math.abs(p.z - (pz + 100)) > 260 || Math.abs(p.x - px0) > 0.3) continue;
       p.taken = true;
       if (p.kind === 'can') this.addCan();
+      else if (p.kind === 'card') this.onPickCard();
       else { p.back = this.clock + 3; this.giveItem(); }
     }
     // hazards
@@ -743,7 +800,7 @@ export abstract class DriveScene extends Phaser.Scene {
     }
     for (const pk of this.picks) {
       if (pk.taken) continue;
-      const img = put(pk.z, pk.x, pk.kind === 'can' ? 'canPickup' : 'itemBox', Math.floor(t * 8) % 4, 0.3);
+      const img = put(pk.z, pk.x, pk.kind === 'can' ? 'canPickup' : pk.kind === 'card' ? 'factCard' : 'itemBox', Math.floor(t * 8) % 4, 0.3);
       if (img) img.setY(img.y - (6 + Math.sin(t * 5 + pk.z) * 2) * img.scaleX);
     }
     for (const c of this.cars) {

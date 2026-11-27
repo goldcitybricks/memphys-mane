@@ -16,9 +16,10 @@ export const SFX = [
   'spray', 'hydrate', 'radio', 'alarm', 'piston', 'whistle',
   'drill', 'drone', 'drain', 'rumble', 'mural',
   'rocket', 'glitch', 'notify', 'peel',
+  'remember', 'forget',
 ] as const;
 export type SfxKey = (typeof SFX)[number];
-export const MUSIC = ['music_pitstop', 'music_backdoor', 'music_victory', 'music_river', 'music_jackal', 'music_fight', 'music_bridge', 'music_plant', 'music_foreman', 'music_beale', 'music_soul', 'music_driller', 'music_lost', 'music_crowe', 'music_glitch'] as const;
+export const MUSIC = ['music_pitstop', 'music_backdoor', 'music_victory', 'music_river', 'music_jackal', 'music_fight', 'music_bridge', 'music_plant', 'music_foreman', 'music_beale', 'music_soul', 'music_driller', 'music_lost', 'music_crowe', 'music_glitch', 'music_loop', 'music_convoy'] as const;
 
 const FPS: Record<string, number> = {
   idle: 5, walk: 11, run: 12, jump: 8, punch1: 16, punch2: 15, punch3: 11, kick: 12, hurt: 10, knockdown: 8, taunt: 8,
@@ -32,8 +33,10 @@ const FPS: Record<string, number> = {
   play: 4, lifted: 6, blank: 2, slam: 6, hover: 16,
   // Crowe Live
   sway: 1, glitch: 12, peel: 3, gigaz: 3,
+  // The Loop
+  flap: 14,
 };
-const LOOP = new Set(['idle', 'walk', 'run', 'idleShades', 'dazed', 'talk', 'glow', 'spin', 'rise', 'scared', 'runMask', 'bark', 'flicker', 'dash', 'howl', 'bow', 'laugh', 'carry', 'stuck', 'crinkle', 'refill', 'mic', 'standOver', 'wave', 'block', 'play', 'lifted', 'blank', 'hover', 'glitch', 'gigaz']);
+const LOOP = new Set(['idle', 'walk', 'run', 'idleShades', 'dazed', 'talk', 'glow', 'spin', 'rise', 'scared', 'runMask', 'bark', 'flicker', 'dash', 'howl', 'bow', 'laugh', 'carry', 'stuck', 'crinkle', 'refill', 'mic', 'standOver', 'wave', 'block', 'play', 'lifted', 'blank', 'hover', 'glitch', 'gigaz', 'flap']);
 
 export function preloadAll(scene: Phaser.Scene) {
   const base = 'assets/';

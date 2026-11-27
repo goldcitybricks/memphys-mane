@@ -14,6 +14,7 @@ import * as D from './drive';
 import * as PL from './plant';
 import * as B from './beale';
 import * as C from './crowe';
+import * as LP from './loop';
 import { drawFont, FONT_CHARS, CELL_W, CELL_H } from './font';
 import { P } from './palette';
 
@@ -249,6 +250,27 @@ saveSheet('pingShot', C.pingShot(), { spin: [0, 3] });
 saveImage('facePlate', C.facePlate());
 saveImage('riverStage', C.riverStage());
 saveImage('riverfrontExt', C.riverfrontExt());
+
+// ------------------------------------------------------------------ Mission 8: The Loop
+saveSheet('gantry', LP.gantryFrames());
+saveImage('overpass', LP.overpass());
+saveImage('hwyLamp', LP.hwyLamp());
+for (const [k, l1] of [['exitAirways', 'AIRWAYS BLVD'], ['exitLamar', 'LAMAR AVE'], ['exitGetwell', 'GETWELL RD'], ['exitPoplar', 'POPLAR AVE'], ['exitWalnut', 'WALNUT GROVE RD']] as const) saveSheet(k, LP.exitSign(l1));
+saveImage('shield240', LP.shield240());
+saveImage('signGigantum', LP.signGigantum());
+saveSheet('bbqBoard', LP.bbqBoard());
+saveImage('boardRemembers', LP.boardRemembers());
+saveSheet('barricade', LP.barricadeFrames());
+saveSheet('ogRear', LP.ogRearFrames());
+saveSheet('potholeWindow', LP.potholeWindow(), { flap: [0, 2] });
+saveImage('pitFront', LP.pitFront());
+saveSheet('pitSign', LP.pitSign());
+saveSheet('streetSign', LP.streetSign());
+saveSheet('cornerLight', LP.cornerLight());
+saveImage('loopSky', LP.loopSky());
+saveImage('loopFar', LP.loopFar());
+saveImage('gigantumExt', LP.gigantumExt());
+saveImage('rampStrip', LP.rampStrip());
 
 drawFont(P.white, P.ink).save(path.join(OUT, 'font.png'));
 manifest.font = { file: 'font.png', frameWidth: CELL_W, frameHeight: CELL_H };

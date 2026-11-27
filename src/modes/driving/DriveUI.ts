@@ -17,6 +17,11 @@ const TIPS_TOUCH: Record<string, string> = {
   tanker: 'RAM THE BACK OF THE TANKER!\nBOOST OR MANE MODE INTO IT FOR BIG HITS.',
   barrel: 'COOLANT BARRELS! STEER AROUND THEM.',
   driftHow: 'HOLD DRIFT WHILE YOU TURN.\nLET GO WHEN THE SPARKS GO GOLD.',
+  // Mission 8
+  startLoop: 'BIG BLUE DRIVES HERSELF. LEFT THUMB STEERS.\n3 LAPS AROUND I-240 TO THE LAST EXIT.',
+  gantry: 'DRIVE UNDER THE GOLD LIGHT: MEMPHIS REMEMBERS.\nBLUE LIGHTS MAKE THE CITY FORGET.',
+  memory: 'KEEP THE MEMORY BAR UP!\nGOLD LIGHTS AND MEMPHYS SIPS BRING IT BACK.',
+  convoy: 'THE CONVOY RIDES WITH YOU.\nSTEER AND THE WEDGE STEERS WITH YOU.',
 };
 const TIPS_KEYS: Record<string, string> = {
   ...TIPS_TOUCH,
@@ -24,6 +29,7 @@ const TIPS_KEYS: Record<string, string> = {
   item: 'GOT AN ITEM! PRESS Z TO USE IT.\nTEA = BOOST. SAUCE = THROW. BONES = DROP.',
   sip: 'MEMPHYS CAN! PRESS C FOR MANE MODE:\nFASTER, AND YOU BASH THROUGH ANYTHING.',
   driftHow: 'HOLD X WHILE YOU TURN.\nLET GO WHEN THE SPARKS GO GOLD.',
+  startLoop: 'LEFT / RIGHT STEER. BIG BLUE DRIVES HERSELF.\n3 LAPS AROUND I-240.   Z ITEM   X DRIFT   C SIP',
 };
 const ITEM_TEX: Record<string, string> = { tea: 'itemTea', sauce: 'itemSauce', bones: 'itemBones' };
 
@@ -42,6 +48,14 @@ export class DriveUI extends Phaser.Scene {
   private progBack!: Phaser.GameObjects.Rectangle;
   private progMe!: Phaser.GameObjects.Rectangle;
   private progTk!: Phaser.GameObjects.Rectangle;
+  private progL1!: Phaser.GameObjects.BitmapText;
+  private progL2!: Phaser.GameObjects.BitmapText;
+  private meterObjs: Phaser.GameObjects.GameObject[] = [];
+  private meterBar!: Phaser.GameObjects.Rectangle;
+  private meterIcon!: Phaser.GameObjects.Image;
+  private meterName!: Phaser.GameObjects.BitmapText;
+  private meterPct!: Phaser.GameObjects.BitmapText;
+  private factLayer?: Phaser.GameObjects.Container;
   private tk: Phaser.GameObjects.GameObject[] = [];
   private tkBar!: Phaser.GameObjects.Rectangle;
   private barW = 90;
@@ -65,7 +79,7 @@ export class DriveUI extends Phaser.Scene {
   init(data: { world: DriveScene }) { this.world = data.world; }
 
   create() {
-    this.hud = []; this.touch = []; this.buttons = []; this.canIcons = []; this.tk = [];
+    this.hud = []; this.touch = []; this.buttons = []; this.canIcons = []; this.tk = []; this.meterObjs = [];
     this.stick = { id: -1, ox: 0, oy: 0 };
     this.input.addPointer(3);
     const W = this.scale.width;
@@ -86,8 +100,9 @@ export class DriveUI extends Phaser.Scene {
     this.mph = px(this, W / 2, 4, '0 MPH', 0xffffff).setOrigin(0.5, 0);
     const pw = Math.min(150, W - 270);
     this.progBack = this.add.rectangle(W / 2 - pw / 2, 20, pw, 3, 0x2a3058).setOrigin(0, 0.5);
-    const l1 = px(this, W / 2 - pw / 2 - 3, 16, 'TN', 0x9aa0c0).setOrigin(1, 0);
-    const l2 = px(this, W / 2 + pw / 2 + 3, 16, 'AR', 0x9aa0c0).setOrigin(0, 0);
+    const laps = this.world.lapsTotal > 0;
+    const l1 = this.progL1 = px(this, W / 2 - pw / 2 - 3, 16, laps ? 'LAP' : 'TN', laps ? 0xffffff : 0x9aa0c0).setOrigin(1, 0);
+    const l2 = this.progL2 = px(this, W / 2 + pw / 2 + 3, 16, laps ? `1/${this.world.lapsTotal}` : 'AR', laps ? COLORS.goldHi : 0x9aa0c0).setOrigin(0, 0);
     this.progTk = this.add.rectangle(W / 2, 20, 5, 7, 0xd8dee8).setStrokeStyle(1, COLORS.ink).setVisible(false);
     this.progMe = this.add.rectangle(W / 2, 20, 5, 7, 0x2f6fd6).setStrokeStyle(1, COLORS.goldHi);
     // the tanker, top-right
@@ -98,6 +113,15 @@ export class DriveUI extends Phaser.Scene {
     const tb = this.add.rectangle(W - 44, 15, this.barW + 2, 7, 0x0b0f26).setOrigin(1, 0).setStrokeStyle(1, COLORS.ink);
     this.tkBar = this.add.rectangle(W - 45, 16, this.barW, 5, COLORS.red).setOrigin(1, 0);
     this.tk.push(tf, tp, tn, tb, this.tkBar);
+    // or the mission's own bar (Mission 8: Memphis's memory) in the same spot
+    const mf2 = this.add.rectangle(W - 40, 4, 36, 36, 0x0b0f26, 0.85).setOrigin(0).setStrokeStyle(1, 0x7fc4ff);
+    this.meterIcon = this.add.image(W - 22, 22, '__DEFAULT');
+    this.meterName = px(this, W - 44, 4, '', 0xa8dcff).setOrigin(1, 0);
+    const mb2 = this.add.rectangle(W - 44, 15, this.barW + 2, 7, 0x0b0f26).setOrigin(1, 0).setStrokeStyle(1, COLORS.ink);
+    this.meterBar = this.add.rectangle(W - 45, 16, this.barW, 5, COLORS.gold).setOrigin(1, 0);
+    this.meterPct = px(this, W - 44, 25, '', 0xffffff).setOrigin(1, 0);
+    this.meterObjs.push(mf2, this.meterIcon, this.meterName, mb2, this.meterBar, this.meterPct);
+    this.hud.push(...this.meterObjs);
     this.hud.push(strip, mf, this.portrait, name, ...this.canIcons, this.mmBack, this.mmBar, this.scoreText, this.itemFrame, this.itemIcon, itemLbl, this.mph, this.progBack, l1, l2, this.progTk, this.progMe, ...this.tk);
 
     this.toastText = px(this, W / 2, 46, '', COLORS.goldHi).setOrigin(0.5, 0).setAlpha(0);
@@ -121,6 +145,7 @@ export class DriveUI extends Phaser.Scene {
     on('itemRoll', () => this.roll());
     on('item', () => this.showItem());
     on('count', (s: string, c?: number) => this.count(s, c));
+    on('fact', (title: string, body: string) => this.showFact(title, body));
     this.setCutscene(this.world.inCutscene);
     this.refresh();
   }
@@ -141,6 +166,14 @@ export class DriveUI extends Phaser.Scene {
     const t = w.tanker;
     for (const o of this.tk) (o as any).setVisible(!!t);
     this.progTk.setVisible(!!t);
+    const m = !t ? w.meter : null;
+    for (const o of this.meterObjs) (o as any).setVisible(!!m);
+    if (m) {
+      this.meterName.setText(m.label);
+      if (this.meterIcon.texture.key !== m.icon) this.meterIcon.setTexture(m.icon, m.frame ?? 0);
+      this.meterIcon.setScale(m.scale ?? 1);
+    }
+    if (w.lapsTotal > 0) this.progL2.setText(`${Math.min(w.lap, w.lapsTotal)}/${w.lapsTotal}`);
     this.showItem();
   }
 
@@ -153,10 +186,19 @@ export class DriveUI extends Phaser.Scene {
     this.scoreText.setVisible(!mm);
     if (mm) { this.mmBar.width = Math.round(34 * (w.maneT / MANE_MODE_SECONDS)); this.mmBar.fillColor = Math.floor(this.time.now / 120) % 2 ? COLORS.goldHi : COLORS.gold; }
     this.mph.setText(`${Math.round((w.speed / MAX_SPEED) * 88)} MPH`).setTint(w.boostT > 0 || mm ? COLORS.goldHi : 0xffffff);
-    // progress toward Arkansas
+    // progress toward Arkansas (or around this lap)
     const end = Number.isFinite(w.escapeZ) ? w.escapeZ : w.track.length;
     const x0 = this.progBack.x, pw = this.progBack.width;
-    this.progMe.setX(x0 + pw * Phaser.Math.Clamp(w.playerZ / end, 0, 1));
+    const prog = w.track.loop ? (w.playerZ % w.track.length) / w.track.length : w.playerZ / end;
+    this.progMe.setX(x0 + pw * Phaser.Math.Clamp(prog, 0, 1));
+    const m = !w.tanker ? w.meter : null;
+    if (m) {
+      const k = Phaser.Math.Clamp(m.value / m.max, 0, 1);
+      this.meterBar.width += (Math.round(this.barW * k) - this.meterBar.width) * 0.25;
+      const low = k < 0.3;
+      this.meterBar.fillColor = low && Math.floor(this.time.now / 200) % 2 ? 0x5ce1ff : m.color;
+      this.meterPct.setText(`${Math.ceil(m.value)}%`).setTint(low ? 0x7fd8ff : 0xffffff);
+    }
     if (w.tanker) {
       this.progTk.setX(x0 + pw * Phaser.Math.Clamp(w.tanker.z / end, 0, 1));
       const tw = Math.round(this.barW * Math.max(0, w.tanker.hp / w.tanker.maxHp));
@@ -199,6 +241,20 @@ export class DriveUI extends Phaser.Scene {
     this.tweens.add({ targets: bar, scaleY: 1, duration: 200 });
     this.tweens.add({ targets: [a, b], alpha: 1, duration: 200, delay: 150 });
     this.time.delayedCall(1500, () => this.tweens.add({ targets: [bar, a, b], alpha: 0, duration: 300, onComplete: () => { bar.destroy(); a.destroy(); b.destroy(); } }));
+  }
+
+  // the Aquifer Fact card: shows for a few seconds without stopping the race
+  showFact(title: string, body: string) {
+    const W = this.scale.width;
+    this.factLayer?.destroy();
+    const t = px(this, 0, 22, body, 0xffffff).setCenterAlign().setOrigin(0.5, 0);
+    const h = t.height + 30;
+    const bg = this.add.rectangle(0, 0, Math.max(t.width + 24, 180), h, 0x141c40, 0.95).setOrigin(0.5, 0).setStrokeStyle(1, COLORS.goldHi);
+    const n = px(this, 0, 6, title, COLORS.goldHi).setOrigin(0.5, 0);
+    const card = this.add.image(-bg.width / 2 + 12, 12, 'factCard', 2).setScale(0.6);
+    this.factLayer = this.add.container(W / 2, 112 - h / 2, [bg, n, t, card]).setDepth(40).setAlpha(0);
+    this.tweens.add({ targets: this.factLayer, alpha: 1, duration: 200 });
+    this.tweens.add({ targets: this.factLayer, alpha: 0, delay: 6000, duration: 500 });
   }
 
   // a big number for the countdown
@@ -311,7 +367,7 @@ export class DriveUI extends Phaser.Scene {
   private buildContinue() {
     const W = this.scale.width;
     const bg = this.add.rectangle(-100, 0, 700, 216, 0x070a1c, 0.75).setOrigin(0);
-    const top = px(this, W / 2, 40, 'THE TANKER GOT AWAY!', 0xffffff).setOrigin(0.5);
+    const top = px(this, W / 2, 40, this.world.continueTitle, 0xffffff).setOrigin(0.5);
     const t = px(this, W / 2, 64, GAME.continue, COLORS.goldHi, 2).setOrigin(0.5).setName('t');
     const n = px(this, W / 2, 100, '9', 0xffffff, 3).setOrigin(0.5).setName('n');
     const hint = px(this, W / 2, 132, isTouch() ? 'TAP TO SIP' : 'PRESS Z TO SIP', 0xffffff).setOrigin(0.5).setName('h');
