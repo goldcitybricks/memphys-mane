@@ -38,15 +38,19 @@ const FPS: Record<string, number> = {
 };
 const LOOP = new Set(['idle', 'walk', 'run', 'idleShades', 'dazed', 'talk', 'glow', 'spin', 'rise', 'scared', 'runMask', 'bark', 'flicker', 'dash', 'howl', 'bow', 'laugh', 'carry', 'stuck', 'crinkle', 'refill', 'mic', 'standOver', 'wave', 'block', 'play', 'lifted', 'blank', 'hover', 'glitch', 'gigaz', 'flap']);
 
+declare const __BUILD__: string;
+
 export function preloadAll(scene: Phaser.Scene) {
   const base = 'assets/';
+  // every deploy gets fresh URLs, so a cached sheet from an older build can't be sliced with new frame sizes
+  const v = '?v=' + __BUILD__;
   for (const [key, s] of Object.entries(sprites)) {
-    if (key === 'font') { scene.load.image('font', base + 'art/' + s.file); continue; }
-    if (s.frameWidth) scene.load.spritesheet(key, base + 'art/' + s.file, { frameWidth: s.frameWidth, frameHeight: s.frameHeight! });
-    else scene.load.image(key, base + 'art/' + s.file);
+    if (key === 'font') { scene.load.image('font', base + 'art/' + s.file + v); continue; }
+    if (s.frameWidth) scene.load.spritesheet(key, base + 'art/' + s.file + v, { frameWidth: s.frameWidth, frameHeight: s.frameHeight! });
+    else scene.load.image(key, base + 'art/' + s.file + v);
   }
-  for (const k of SFX) scene.load.audio(k, base + 'audio/' + k + '.mp3');
-  for (const k of MUSIC) scene.load.audio(k, base + 'audio/' + k + '.mp3');
+  for (const k of SFX) scene.load.audio(k, base + 'audio/' + k + '.mp3' + v);
+  for (const k of MUSIC) scene.load.audio(k, base + 'audio/' + k + '.mp3' + v);
 }
 
 export function createAnims(scene: Phaser.Scene) {
