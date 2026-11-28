@@ -11,6 +11,7 @@ import * as W from './world';
 import * as E from './egypt';
 import * as F from './fight';
 import * as D from './drive';
+import * as TR from './trucks';
 import * as PL from './plant';
 import * as B from './beale';
 import * as C from './crowe';
@@ -159,6 +160,10 @@ saveImage('btnSuper', W.touchButton('SUPER', hex('#e0a82e'), 20));
   saveSheet('altimaRearBlack', D.sedanRearFrames(hex('#2a2c34'), hex('#16171c'), 'altima'));
   saveSheet('infinitiRear', D.sedanRearFrames(hex('#b8bcc4'), hex('#7e828c'), 'infiniti'));
   saveSheet('tanker', D.tankerFrames());
+  // 18-wheelers in traffic and the state trooper (Missions 4 and 8)
+  for (const [k, st] of Object.entries(TR.SEMIS)) saveSheet(k, TR.semiFrames(st));
+  saveSheet('trooper', TR.trooperFrames());
+  saveSheet('trooperMirror', TR.trooperMirrorFrames());
   saveSheet('itemBox', D.itemBoxFrames(), { glow: [0, 3] });
   saveSheet('barrel', D.barrelFrames(), { spin: [0, 1] });
 }

@@ -1058,6 +1058,36 @@
    "frameWidth": 128,
    "frameHeight": 112
   },
+  "semiMemphys": {
+   "file": "semiMemphys.png",
+   "frameWidth": 88,
+   "frameHeight": 104
+  },
+  "semiRed": {
+   "file": "semiRed.png",
+   "frameWidth": 88,
+   "frameHeight": 104
+  },
+  "semiGreen": {
+   "file": "semiGreen.png",
+   "frameWidth": 88,
+   "frameHeight": 104
+  },
+  "semiBlue": {
+   "file": "semiBlue.png",
+   "frameWidth": 88,
+   "frameHeight": 104
+  },
+  "trooper": {
+   "file": "trooper.png",
+   "frameWidth": 72,
+   "frameHeight": 48
+  },
+  "trooperMirror": {
+   "file": "trooperMirror.png",
+   "frameWidth": 32,
+   "frameHeight": 20
+  },
   "itemBox": {
    "file": "itemBox.png",
    "frameWidth": 28,

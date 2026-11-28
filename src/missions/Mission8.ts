@@ -114,6 +114,8 @@ export class Mission8 extends DriveScene {
     const sedans = ['altimaRear', 'altimaRearBlack', 'infinitiRear'];
     for (let i = 0; i < 12; i++) this.spawnCar('traffic', (260 + i * 160 + rnd.between(-30, 30)) * S, L[rnd.between(0, 2)], MAX_SPEED * rnd.realInRange(0.42, 0.56), sedans[i % 3]);
     for (let i = 0; i < 8; i++) this.spawnCar('aether', (420 + i * 210 + rnd.between(-20, 20)) * S, L[rnd.between(0, 2)], MAX_SPEED * rnd.realInRange(0.5, 0.62), 'aetherCar');
+    // 18-wheelers on the Loop (their own seed, so the cars above stay where they were)
+    this.addSemis(new Phaser.Math.RandomDataGenerator(['the-loop-semis']), 300, 1950, 11);
     this.meter = { label: 'MEMPHIS MEMORY', value: 100, max: 100, color: COLORS.gold, icon: 'glyph', scale: 0.45 };
     this.shuffleGantries(1);
   }
@@ -358,6 +360,9 @@ export class Mission8 extends DriveScene {
     for (let i = 0; i < 2; i++) this.spawnCar('escort', this.playerZ - SEG_LEN * (16 + i * 7), L[(i * 2 + this.lap) % 3], MAX_SPEED * 0.72, 'aetherCar');
     this.say(this.malikSpeaker(), 'ROBOT CARS COMIN\' UP BEHIND US!', 1600);
   }
+
+  // the trooper leaves you alone once O.G.'s convoy shows up
+  trooperAllowed() { return !this.finale && this.convoy.length === 0; }
 
   // a sip brings some of the city back too
   sip() {
